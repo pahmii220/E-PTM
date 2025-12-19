@@ -19,50 +19,51 @@ class LoginController extends Controller
     /**
      * Proses login
      */
-    public function login(Request $request)
-    {
-        // Validasi input
-        $request->validate([
-            'Username' => 'required|string',
-            'password' => 'required|string',
-        ]);
+public function login(Request $request)
+{
+    $request->validate([
+        'Username' => 'required|string',
+        'password' => 'required|string',
+    ]);
 
-        $credentials = $request->only('Username', 'password');
+    $credentials = $request->only('Username', 'password');
 
-        // Attempt login
-        if (Auth::attempt($credentials, $request->filled('remember'))) {
-            $request->session()->regenerate(); // regenerasi session
+    if (Auth::attempt($credentials, $request->filled('remember'))) {
+        $request->session()->regenerate();
 
-            // Redirect sesuai role
-            $user = Auth::user();
+        $user = Auth::user();
 
-            switch ($user->role_name) {
-                case 'admin':
-                    return redirect()->route('admin.dashboard')
-                        ->with('success', 'Login berhasil!');
+        // 🔥 WAJIB: paksa ganti password jika hasil reset admin
 
-                case 'petugas':
-                    return redirect()->route('petugas.dashboard')
-                        ->with('success', 'Login berhasil!');
 
-                case 'operator':
-                    return redirect()->route('dashboard.operator')
-                        ->with('success', 'Login berhasil!');
+        // Redirect sesuai role
+        switch ($user->role_name) {
+            case 'admin':
+                return redirect()->route('admin.dashboard')
+                    ->with('success', 'Login berhasil!');
 
-                case 'pengguna': // ← tambahan untuk pegawai Dinkes
-                    return redirect()->route('pengguna.dashboard')
-                        ->with('success', 'Login berhasil!');
+            case 'petugas':
+                return redirect()->route('petugas.dashboard')
+                    ->with('success', 'Login berhasil!');
 
-                default:
-                    Auth::logout();
-                    return redirect()->route('login')
-                        ->with('error', 'Role tidak dikenali.');
-            }
+            case 'operator':
+                return redirect()->route('dashboard.operator')
+                    ->with('success', 'Login berhasil!');
+
+            case 'pengguna':
+                return redirect()->route('pengguna.dashboard')
+                    ->with('success', 'Login berhasil!');
+
+            default:
+                Auth::logout();
+                return redirect()->route('login')
+                    ->with('error', 'Role tidak dikenali.');
         }
-
-        // Login gagal
-        return back()->with('error', 'Username atau password salah.');
     }
+
+    return back()->with('error', 'Username atau password salah.');
+}
+
 
     /**
      * Logout

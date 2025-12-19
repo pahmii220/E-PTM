@@ -2,169 +2,110 @@
 
 namespace App\Http\Controllers\Petugas;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use App\Http\Controllers\Controller;
+use Carbon\Carbon;
+
 use App\Models\Pasien;
 use App\Models\Rujukan;
-use App\Models\TindakLanjut;
 use App\Models\DeteksiDiniPTM;
-use App\Models\FaktorResikoPtM; // sesuaikan nama model jika berbeda
+use App\Models\FaktorResikoPtM;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // Redirect admin yang masuk ke route petugas
+        // Redirect jika admin salah masuk
         if (Auth::user() && Auth::user()->role_name === 'admin') {
             return redirect()->route('admin.dashboard');
         }
 
-        // Default values
-        $totalPasien = 0;
-        $totalRujukan = 0;
-        $totalTindakLanjut = 0;
-        $totalDeteksi = 0;
-        $totalFaktor = 0;
+        /* =====================
+           DEFAULT VALUE (AMAN)
+        ====================== */
+        $totalPasien   = 0;
+        $totalDeteksi  = 0;
+        $totalFaktor   = 0;
         $highRiskCount = 0;
-        $recentDeteksi = collect();
-        $recentFaktor = collect();
+
+        // 🔥 DATA GRAFIK BULANAN
+        $totalPeserta = 0;
+        $monthLabels  = collect();
+        $monthTotals  = collect();
 
         try {
-            // Basic counts (safe)
-            $totalPasien = class_exists(Pasien::class) ? Pasien::count() : 0;
-            $totalRujukan = class_exists(Rujukan::class) ? Rujukan::count() : 0;
-            $totalTindakLanjut = class_exists(TindakLanjut::class) ? TindakLanjut::count() : 0;
+            /* =====================
+               PASIEN
+            ====================== */
+            if (class_exists(Pasien::class)) {
+                $totalPasien   = Pasien::count();
+                $totalPeserta = $totalPasien;
+            }
 
-            // Deteksi dini stats (jika model ada)
+            /* =====================
+               DETEKSI DINI
+            ====================== */
             if (class_exists(DeteksiDiniPTM::class)) {
                 $totalDeteksi = DeteksiDiniPTM::count();
-                $highRiskCount = schemaHasColumn('deteksi_dini_ptm', 'hasil_skrining')
-                    ? DeteksiDiniPTM::where('hasil_skrining', 'Risiko Tinggi')->count()
-                    : 0;
 
-                $recentDeteksi = DeteksiDiniPTM::with(['pasien'])->orderBy('created_at', 'desc')->limit(8)->get();
-            }
-
-            // Faktor risiko -> ambil dari tabel / model faktor_resiko_ptm jika tersedia
-            if (class_exists(FaktorResikoPtM::class) || DB::getSchemaBuilder()->hasTable('faktor_resiko_ptm')) {
-
-                // prefer model if exists
-                if (class_exists(FaktorResikoPtM::class)) {
-                    $modelQuery = FaktorResikoPtM::query();
-                    $table = (new FaktorResikoPtM())->getTable();
-                } else {
-                    $modelQuery = DB::table('faktor_resiko_ptm');
-                    $table = 'faktor_resiko_ptm';
-                }
-
-                // kolom yang kita inginkan: kurang_aktifitas & alkohol
-                $colA = 'kurang_aktifitas';
-                $colB = 'alkohol';
-
-                // cek ketersediaan kolom, fallback ke kandidat lain bila tidak ada
-                $existingCols = [];
-                if (Schema::hasColumn($table, $colA)) $existingCols[] = $colA;
-                if (Schema::hasColumn($table, $colB)) $existingCols[] = $colB;
-
-                // fallback candidate names (cek beberapa varian umum)
-                if (empty($existingCols)) {
-                    $candidates = ['kurang_aktifitas','kurang_aktif','aktifitas','aktivitas_fisik','aktivitas','alkohol','konsumsi_alkohol','minum_alkohol'];
-                    foreach ($candidates as $c) {
-                        if (Schema::hasColumn($table, $c) && !in_array($c, $existingCols)) {
-                            $existingCols[] = $c;
-                        }
-                    }
-                }
-
-                // jika masih kosong => ambil seluruh tabel count & recent sebagai fallback
-                if (empty($existingCols)) {
-                    // total baris
-                    $totalFaktor = $modelQuery->count();
-                    // recent faktor (ambil semua kolom, limit 8)
-                    $recentFaktor = class_exists(FaktorResikoPtM::class)
-                        ? FaktorResikoPtM::with(['pasien'])->orderBy('created_at','desc')->limit(8)->get()
-                        : DB::table('faktor_resiko_ptm')->orderBy('created_at','desc')->limit(8)->get();
-                } else {
-                    // bangun kondisi: minimal salah satu kolom punya nilai bermakna
-                    $query = (class_exists(FaktorResikoPtM::class) ? FaktorResikoPtM::query() : DB::table('faktor_resiko_ptm'))
-                        ->where(function($q) use ($existingCols) {
-                            foreach ($existingCols as $col) {
-                                $q->orWhere(function($q2) use ($col) {
-                                    $q2->whereNotNull($col)
-                                       ->where($col, '<>', '')
-                                       ->where($col, '<>', 0);
-                                });
-                            }
-                        });
-
-                    // count & recent select
-                    $totalFaktor = $query->count();
-
-                    // select fields for recentFaktor
-                    $selectCols = array_merge(['id','pasien_id','tanggal_pemeriksaan','created_at'], $existingCols);
-
-                    if (class_exists(FaktorResikoPtM::class)) {
-                        $recentFaktor = FaktorResikoPtM::with(['pasien'])
-                                        ->select($selectCols)
-                                        ->where(function($q) use ($existingCols) {
-                                            foreach ($existingCols as $col) {
-                                                $q->orWhere(function($q2) use ($col) {
-                                                    $q2->whereNotNull($col)
-                                                       ->where($col, '<>', '')
-                                                       ->where($col, '<>', 0);
-                                                });
-                                            }
-                                        })
-                                        ->orderBy('created_at','desc')
-                                        ->limit(8)
-                                        ->get();
-                    } else {
-                        $recentFaktor = DB::table('faktor_resiko_ptm')
-                                        ->select($selectCols)
-                                        ->where(function($q) use ($existingCols) {
-                                            foreach ($existingCols as $col) {
-                                                $q->orWhere(function($q2) use ($col) {
-                                                    $q2->whereNotNull($col)
-                                                       ->where($col, '<>', '')
-                                                       ->where($col, '<>', 0);
-                                                });
-                                            }
-                                        })
-                                        ->orderBy('created_at','desc')
-                                        ->limit(8)
-                                        ->get();
-                    }
+                if (Schema::hasColumn('deteksi_dini_ptm', 'hasil_skrining')) {
+                    $highRiskCount = DeteksiDiniPTM::where(
+                        'hasil_skrining',
+                        'Risiko Tinggi'
+                    )->count();
                 }
             }
+
+            /* =====================
+               FAKTOR RISIKO
+            ====================== */
+            if (class_exists(FaktorResikoPtM::class)) {
+                $totalFaktor = FaktorResikoPtM::count();
+            } elseif (Schema::hasTable('faktor_resiko_ptm')) {
+                $totalFaktor = DB::table('faktor_resiko_ptm')->count();
+            }
+
+            /* =====================
+               🔥 TREN BULANAN PESERTA (DATA ASLI)
+            ====================== */
+            $year = now()->year;
+
+            if (class_exists(Pasien::class)) {
+                $monthlyData = Pasien::select(
+                        DB::raw('MONTH(created_at) as bulan'),
+                        DB::raw('COUNT(*) as total')
+                    )
+                    ->whereYear('created_at', $year)
+                    ->groupBy('bulan')
+                    ->orderBy('bulan')
+                    ->get();
+
+                // Label bulan Jan–Des
+                $monthLabels = collect(range(1, 12))->map(function ($m) {
+                    return Carbon::create()->month($m)->translatedFormat('F');
+                });
+
+                // Total peserta per bulan (default 0)
+                $monthTotals = collect(range(1, 12))->map(function ($m) use ($monthlyData) {
+                    return $monthlyData->firstWhere('bulan', $m)->total ?? 0;
+                });
+            }
+
         } catch (\Throwable $e) {
-            Log::warning('DashboardController@index error: '.$e->getMessage());
-            // biarkan view tetap render dengan nilai default
+            Log::warning('Dashboard Petugas Error: ' . $e->getMessage());
         }
 
         return view('petugas.dashboard', compact(
             'totalPasien',
-            'totalRujukan',
-            'totalTindakLanjut',
             'totalDeteksi',
             'totalFaktor',
             'highRiskCount',
-            'recentDeteksi',
-            'recentFaktor'
+            'totalPeserta',
+            'monthLabels',
+            'monthTotals'
         ));
-    }
-}
-
-/**
- * helper kecil untuk mengecek kolom dengan aman (menghindari import Schema berkali2)
- */
-function schemaHasColumn(string $table, string $column): bool
-{
-    try {
-        return \Illuminate\Support\Facades\Schema::hasColumn($table, $column);
-    } catch (\Throwable $e) {
-        return false;
     }
 }

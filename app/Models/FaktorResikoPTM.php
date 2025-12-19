@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use App\Models\Puskesmas;
 class FaktorResikoPTM extends Model
 {
     use HasFactory;
@@ -13,14 +13,14 @@ class FaktorResikoPTM extends Model
 
     protected $fillable = [
         'pasien_id',
+        'puskesmas_id',              // ✅ GANTI
         'tanggal_pemeriksaan',
         'merokok',
         'alkohol',
         'kurang_aktivitas_fisik',
         'obesitas',
         'makanan_tidak_sehat',
-        'keterangan',            // opsional ringkasan / catatan
-        'puskesmas',
+        'keterangan',
         'petugas_id',
 
         // fields verifikasi
@@ -36,7 +36,7 @@ class FaktorResikoPTM extends Model
     ];
 
     // -----------------------
-    // Relasi
+    // RELASI
     // -----------------------
 
     // Relasi ke Pasien
@@ -44,6 +44,13 @@ class FaktorResikoPTM extends Model
     {
         return $this->belongsTo(Pasien::class, 'pasien_id');
     }
+
+    // Relasi ke Puskesmas
+    public function puskesmas()
+{
+    return $this->belongsTo(Puskesmas::class, 'puskesmas_id', 'id');
+}
+
 
     // Relasi ke Petugas (penginput)
     public function petugas()
@@ -58,12 +65,11 @@ class FaktorResikoPTM extends Model
     }
 
     // -----------------------
-    // Helper
+    // HELPER
     // -----------------------
-
-    // Teks label status (pending / approved / rejected)
     public function getStatusLabelAttribute()
     {
         return ucfirst($this->verification_status ?? 'pending');
     }
 }
+

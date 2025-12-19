@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Petugas;
+use App\Models\Puskesmas;
 use Illuminate\Http\Request;
 
 class PetugasController extends Controller
@@ -15,22 +16,23 @@ class PetugasController extends Controller
 
     public function index()
     {
-        $petugas = Petugas::orderBy('nama_pegawai')->paginate(15);
+        // eager load puskesmas untuk menghindari N+1
+        $petugas = Petugas::with('puskesmas')->orderBy('nama_pegawai')->paginate(15);
         return view('admin.data_petugas.index', compact('petugas'));
     }
 
     public function create()
     {
-        return view('admin.data_petugas.create');
+        // ambil daftar puskesmas untuk dropdown
+        $puskesmas = Puskesmas::orderBy('nama_puskesmas')->get();
+        return view('admin.data_petugas.create', compact('puskesmas'));
     }
 
     public function print()
-{
-    $petugas = Petugas::all();
-    return view('admin.data_petugas.print', compact('petugas'));
-}
-
-
+    {
+        $petugas = Petugas::with('puskesmas')->get();
+        return view('admin.data_petugas.print', compact('petugas'));
+    }
 
     public function store(Request $request)
     {
@@ -42,6 +44,7 @@ class PetugasController extends Controller
             'jabatan' => 'required|string|max:100',
             'bidang' => 'nullable|string|max:100',
             'telepon' => 'nullable|string|max:30',
+            'puskesmas_id' => 'nullable|exists:puskesmas,id', // relasi ke puskesmas
         ]);
 
         Petugas::create($validated);
@@ -52,12 +55,14 @@ class PetugasController extends Controller
 
     public function show(Petugas $petugas)
     {
+        $petugas->load('puskesmas');
         return view('admin.data_petugas.show', compact('petugas'));
     }
 
     public function edit(Petugas $petugas)
     {
-        return view('admin.data_petugas.edit', compact('petugas'));
+        $puskesmas = Puskesmas::orderBy('nama_puskesmas')->get();
+        return view('admin.data_petugas.edit', compact('petugas', 'puskesmas'));
     }
 
     public function update(Request $request, Petugas $petugas)
@@ -70,6 +75,7 @@ class PetugasController extends Controller
             'jabatan' => 'required|string|max:100',
             'bidang' => 'nullable|string|max:100',
             'telepon' => 'nullable|string|max:30',
+            'puskesmas_id' => 'nullable|exists:puskesmas,id',
         ]);
 
         $petugas->update($validated);

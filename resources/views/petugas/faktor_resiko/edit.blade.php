@@ -30,9 +30,9 @@
                     {{-- Pasien + Tanggal --}}
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Nama Pasien</label>
+                            <label class="form-label">Nama Peserta</label>
                             <select name="pasien_id" class="form-select" required>
-                                <option value="">-- Pilih Pasien --</option>
+                                <option value="">-- Pilih Peserta --</option>
                                 @foreach($pasien as $p)
                                     <option value="{{ $p->id }}" {{ old('pasien_id', $faktor->pasien_id) == $p->id ? 'selected' : '' }}>
                                         {{ $p->nama_lengkap }}
@@ -80,11 +80,22 @@
                     {{-- Puskesmas --}}
                     <div class="row mb-3">
                         <div class="col-md-12">
-                            <label class="form-label">Puskesmas</label>
-                            <input type="text" name="puskesmas" class="form-control"
-                                value="{{ old('puskesmas', $faktor->puskesmas) }}" required>
+                            <label class="form-label fw-semibold">Puskesmas</label>
+                            <select name="puskesmas_id" class="form-select @error('puskesmas_id') is-invalid @enderror" required>
+                                <option value="">-- Pilih Puskesmas --</option>
+                                @foreach($puskesmas as $pkm)
+                                    <option value="{{ $pkm->id }}" {{ old('puskesmas_id', $faktor->puskesmas_id) == $pkm->id ? 'selected' : '' }}>
+                                        {{ $pkm->nama_puskesmas }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            @error('puskesmas_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
+
 
                     {{-- Tombol --}}
                     <div class="text-end">

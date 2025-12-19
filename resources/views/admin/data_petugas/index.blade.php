@@ -46,6 +46,7 @@
                                 <th style="width: 20%">Nama</th>
                                 <th style="width: 15%">Jabatan</th>
                                 <th style="width: 15%">Bidang</th>
+                                <th style="width: 20%">Puskesmas</th> {{-- kolom baru --}}
                                 <th style="width: 13%">Telepon</th>
                                 <th style="width: 10%">Aksi</th>
                             </tr>
@@ -58,15 +59,17 @@
                                     <td class="text-start">{{ $p->nama_pegawai }}</td>
                                     <td>{{ Str::limit($p->jabatan ?? '-', 25) }}</td>
                                     <td>{{ Str::limit($p->bidang ?? '-', 25) }}</td>
+                                    <td class="text-start">
+                                        {{ $p->puskesmas->nama_puskesmas ?? '-' }}
+                                    </td>
                                     <td>{{ $p->telepon ?? '-' }}</td>
                                     <td>
-                                        <a href="{{ route('admin.data_petugas.edit', $p->id) }}"
-                                            class="btn btn-sm btn-warning me-1" title="Edit">
+                                        <a href="{{ route('admin.data_petugas.edit', $p->id) }}" class="btn btn-sm btn-warning me-1"
+                                            title="Edit">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
 
-                                        <form action="{{ route('admin.data_petugas.destroy', $p->id) }}" method="POST"
-                                            class="d-inline"
+                                        <form action="{{ route('admin.data_petugas.destroy', $p->id) }}" method="POST" class="d-inline"
                                             onsubmit="return confirm('Yakin ingin menghapus data petugas ini?')">
                                             @csrf
                                             @method('DELETE')
@@ -80,13 +83,14 @@
 
                             @if($petugas->isEmpty())
                                 <tr>
-                                    <td colspan="7" class="text-center py-3">
+                                    <td colspan="8" class="text-center py-3">
                                         Belum ada data petugas.
                                     </td>
                                 </tr>
                             @endif
                         </tbody>
                     </table>
+
                 </div>
             </div>
         </div>

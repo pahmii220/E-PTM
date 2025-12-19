@@ -45,16 +45,29 @@
                         </div>
 
                         {{-- Puskesmas --}}
-                        <div class="col-md-6">
-                            <label for="puskesmas" class="form-label fw-semibold">Puskesmas <span
-                                    class="text-danger">*</span></label>
-                            <input id="puskesmas" type="text" name="puskesmas"
-                                class="form-control @error('puskesmas') is-invalid @enderror"
-                                value="{{ old('puskesmas', $pasien->puskesmas) }}" required>
-                            @error('puskesmas')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                Puskesmas <span class="text-danger">*</span>
+                            </label>
+
+                            <select name="puskesmas_id" class="form-select @error('puskesmas_id') is-invalid @enderror" required>
+
+                                <option value="">-- Pilih Puskesmas --</option>
+
+                                @foreach ($puskesmas as $item)
+                                    <option value="{{ $item->id }}" {{ old('puskesmas_id', $pasien->puskesmas_id) == $item->id ? 'selected' : '' }}>
+                                        {{ $item->nama_puskesmas }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            @error('puskesmas_id')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
                             @enderror
                         </div>
+
 
                         {{-- Nomor Rekam Medis --}}
                         <div class="col-md-6">

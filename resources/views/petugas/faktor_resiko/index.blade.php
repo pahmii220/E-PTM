@@ -29,7 +29,7 @@
                         <thead class="bg-success text-white">
                             <tr>
                                 <th>No</th>
-                                <th>Nama Pasien</th>
+                                <th>Nama Peserta</th>
                                 <th>Tanggal Pemeriksaan</th>
                                 <th>Merokok</th>
                                 <th>Alkohol</th>
@@ -61,7 +61,11 @@
                                         </span>
                                     </td>
 
-                                    <td>{{ $f->puskesmas }}</td>
+                                    <td class="text-start">
+                                        {{ $f->puskesmas->nama_puskesmas }}
+                                    </td>
+
+
 
                                     <td>
                                         {{-- Tombol Edit --}}

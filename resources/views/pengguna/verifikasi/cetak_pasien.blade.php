@@ -189,7 +189,7 @@
         <hr class="top">
 
         <div style="text-align:center; margin-bottom:10px;">
-            <h3 style="margin:0; font-size:15px; letter-spacing:0.6px;">LAPORAN DATA PESERTA</h3>
+            <h3 style="margin:0; font-size:15px; letter-spacing:0.6px;">LAPORAN PESERTA</h3>
         </div>
 
         {{-- MASSAL --}}
@@ -200,7 +200,7 @@
                         <th style="width:40px">No</th>
                         <th>No. RM</th>
                         <th>Tanggal Lahir</th>
-                        <th>Nama Pasien</th>
+                        <th>Nama Peserta</th>
                         <th>Puskesmas</th>
                         <th>Kontak</th>
                         <th>Alamat</th>
@@ -215,7 +215,7 @@
                                 {{ $row->tanggal_lahir ? \Carbon\Carbon::parse($row->tanggal_lahir)->format('d-m-Y') : '-' }}
                             </td>
                             <td>{{ $row->nama_lengkap ?? '-' }}</td>
-                            <td>{{ $row->puskesmas ?? '-' }}</td>
+                            <td>{{ optional($row->puskesmas)->nama_puskesmas ?? '-' }}</td>
                             <td>{{ $row->kontak ?? '-' }}</td>
                             <td>{{ $row->alamat ?? '-' }}</td>
                         </tr>
@@ -231,7 +231,7 @@
                         <th style="width:40px">No</th>
                         <th>No. RM</th>
                         <th>Tanggal Lahir</th>
-                        <th>Nama Pasien</th>
+                        <th>Nama Peserta</th>
                         <th>Puskesmas</th>
                         <th>Kontak</th>
                         <th>Alamat</th>
@@ -246,7 +246,7 @@
                             {{ $item->tanggal_lahir ? \Carbon\Carbon::parse($item->tanggal_lahir)->format('d-m-Y') : '-' }}
                         </td>
                         <td>{{ $item->nama_lengkap ?? '-' }}</td>
-                        <td>{{ $item->puskesmas ?? '-' }}</td>
+                        <td>{{ optional($item->puskesmas)->nama_puskesmas ?? '-' }}</td>
                         <td>{{ $item->kontak ?? '-' }}</td>
                         <td>{{ $item->alamat ?? '-' }}</td>
                     </tr>

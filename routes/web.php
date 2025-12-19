@@ -1,166 +1,228 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+/*
+|--------------------------------------------------------------------------
+| AUTH CONTROLLERS
+|--------------------------------------------------------------------------
+*/
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
-use App\Http\Controllers\Admin\PetugasController;  
+use App\Http\Controllers\Auth\ForgotPasswordManualController;
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN CONTROLLERS
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\PetugasController;
+use App\Http\Controllers\Admin\DataPuskesmasController;
+use App\Http\Controllers\Admin\ResetPasswordRequestController;
+
+/*
+|--------------------------------------------------------------------------
+| PETUGAS CONTROLLERS
+|--------------------------------------------------------------------------
+*/
 use App\Http\Controllers\Petugas\DashboardController as PetugasDashboardController;
 use App\Http\Controllers\Petugas\PasienController;
+use App\Http\Controllers\Petugas\DeteksiDiniPTMController;
+use App\Http\Controllers\Petugas\FaktorResikoPTMController;
+
+/*
+|--------------------------------------------------------------------------
+| PENGGUNA CONTROLLERS
+|--------------------------------------------------------------------------
+*/
 use App\Http\Controllers\PenggunaDashboardController;
 use App\Http\Controllers\Pengguna\VerifikasiController;
 
-// ---------------------------
-// Halaman awal
-// ---------------------------
-Route::get('/', function () {
-    return redirect()->route('login'); // langsung ke login
-});
+/*
+|--------------------------------------------------------------------------
+| MODELS
+|--------------------------------------------------------------------------
+*/
+use App\Models\User;
+use App\Models\PasswordResetRequest;
 
-// ---------------------------
-// REGISTER
-// ---------------------------
-Route::get('/register', [RegisterController::class, 'showRegisterForm'])->name('register');
-Route::post('/register', [RegisterController::class, 'register']);
+/*
+|--------------------------------------------------------------------------
+| ROOT
+|--------------------------------------------------------------------------
+*/
+Route::get('/', fn () => redirect()->route('login'));
 
-// ---------------------------
-// LOGIN
-// ---------------------------
+/*
+|--------------------------------------------------------------------------
+| AUTH (LOGIN, REGISTER, LOGOUT)
+|--------------------------------------------------------------------------
+*/
 Route::get('/login', [LoginController::class,'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class,'login']);
-
-// ---------------------------
-// LOGOUT
-// ---------------------------
 Route::post('/logout', [LoginController::class,'logout'])->name('logout')->middleware('auth');
 
-// ---------------------------
-// DASHBOARD ADMIN
-// ---------------------------
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/admin/dashboard', function () {
-        return view('admin.dashboard'); // atau controller
-    })->name('admin.dashboard');
-});
-Route::prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
-});
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
-});
+Route::get('/register', [RegisterController::class,'showRegisterForm'])->name('register');
+Route::post('/register', [RegisterController::class,'register']);
 
-Route::prefix('admin')->name('admin.')->middleware(['auth','role:admin'])->group(function () {
-    Route::resource('data_petugas', PetugasController::class);
-});
+/*
+|--------------------------------------------------------------------------
+| RESET PASSWORD (MANUAL, TANPA EMAIL)
+|--------------------------------------------------------------------------
+*/
+Route::get('/forgot-password', fn () =>
+    view('auth.forgot-password-manual')
+)->name('password.request.manual');
 
-Route::middleware(['auth','role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::post('/forgot-password',
+    [ForgotPasswordManualController::class, 'store']
+)->name('password.request.manual.store');
 
-    Route::get('/laporan', function () {
-        return view('laporan.index');
-    })->name('laporan.index');
+/*
+|--------------------------------------------------------------------------
+| 🔄 CEK STATUS RESET PASSWORD (AUTO REFRESH / POLLING)
+|--------------------------------------------------------------------------
+*/
+Route::get('/reset-status/{username}', function ($username) {
+    $reset = PasswordResetRequest::where('username', $username)->first();
 
-        Route::get('/data-petugas/print', [App\Http\Controllers\Admin\PetugasController::class, 'print'])
-        ->name('data_petugas.print');
-});
+    return response()->json([
+        'status' => $reset?->status ?? 'none'
+    ]);
+})->name('password.reset.status');
 
-Route::prefix('admin')->name('admin.')->middleware(['auth','role:admin'])->group(function () {
-    Route::resource('data_puskesmas', \App\Http\Controllers\Admin\DataPuskesmasController::class);
-});
+/*
+|--------------------------------------------------------------------------
+| SET PASSWORD BARU (SETELAH ADMIN APPROVE)
+|--------------------------------------------------------------------------
+*/
+Route::get('/set-password/{username}', function ($username) {
 
-Route::prefix('admin')->name('admin.')->middleware(['auth','role:admin'])->group(function () {
-    Route::resource('data_puskesmas', App\Http\Controllers\Admin\DataPuskesmasController::class);
-});
+    PasswordResetRequest::where('username', $username)
+        ->where('status', 'approved')
+        ->firstOrFail();
 
-Route::get('data_puskesmas/print', 
-    [App\Http\Controllers\Admin\DataPuskesmasController::class, 'print']
-)->name('admin.data_puskesmas.print');
+    return view('auth.set-password', compact('username'));
 
+})->name('password.set');
 
+Route::post('/set-password/{username}', function (Request $request, $username) {
 
-// ---------------------------
-// DASHBOARD PETUGAS
-// ---------------------------
-Route::middleware(['auth', 'role:petugas'])->group(function () {
-    Route::get('/petugas/dashboard', [PetugasDashboardController::class, 'index'])
-        ->name('petugas.dashboard');
-});
+    $request->validate([
+        'password' => 'required|min:6|confirmed'
+    ]);
 
-Route::prefix('petugas')->name('petugas.')->group(function () {
-    Route::resource('pasien', PasienController::class);
-});
+    $reset = PasswordResetRequest::where('username', $username)
+        ->where('status', 'approved')
+        ->firstOrFail();
 
-Route::put('petugas/pasien/{id}', [App\Http\Controllers\Petugas\PasienController::class, 'update'])->name('petugas.pasien.update');
+    $user = User::where('Username', $username)->firstOrFail();
+    $user->password = Hash::make($request->password);
+    $user->save();
 
+    $reset->status = 'used';
+    $reset->save();
 
-Route::prefix('petugas')->name('petugas.')->group(function () {
-    Route::get('/dashboard', [App\Http\Controllers\Petugas\DashboardController::class, 'index'])->name('dashboard');
-});
-Route::prefix('petugas')->name('petugas.')->middleware(['auth', 'role:petugas,admin'])->group(function () {
-    Route::get('/dashboard', [App\Http\Controllers\Petugas\DashboardController::class, 'index'])->name('dashboard');
-});
+    return redirect()->route('login')
+        ->with('success', 'Password berhasil dibuat, silakan login.');
 
-Route::prefix('petugas')->name('petugas.')->middleware(['auth', 'role:petugas,admin'])->group(function () {
-    Route::resource('deteksi_dini', App\Http\Controllers\Petugas\DeteksiDiniPTMController::class);
-});
+})->name('password.set.store');
 
-Route::prefix('petugas')->name('petugas.')->middleware(['auth', 'role:petugas,admin'])->group(function () {
-    Route::resource('faktor_resiko', App\Http\Controllers\Petugas\FaktorResikoPTMController::class);
-});
-
-
-// Semua route untuk role 'pengguna' (staff dinkes bagian PTM)
-Route::prefix('pengguna')
-    ->name('pengguna.')
-    ->middleware(['auth',])
+/*
+|--------------------------------------------------------------------------
+| ADMIN
+|--------------------------------------------------------------------------
+*/
+Route::prefix('admin')
+    ->name('admin.')
+    ->middleware(['auth','role:admin'])
     ->group(function () {
 
-        // Dashboard pengguna
-        Route::get('/dashboard', [PenggunaDashboardController::class, 'index'])
-            ->name('dashboard');
+    Route::get('/dashboard', [AdminDashboardController::class,'index'])
+        ->name('dashboard');
 
-        // Halaman utama verifikasi (gabungan)
-        Route::get('/verifikasi', [VerifikasiController::class, 'index'])
-            ->name('verifikasi.index');
+    // Petugas
+    Route::get('data_petugas/print', [PetugasController::class,'print'])
+        ->name('data_petugas.print');
 
-        // Daftar per-tipe (support filter via query ?status=...)
-        // NOTE: memanggil method 'pasien' di controller (bukan pasienPending)
-        Route::get('/verifikasi/pasien', [VerifikasiController::class, 'pasien'])
-            ->name('verifikasi.pasien');
+    Route::get('data_petugas/print/pdf', [PetugasController::class,'exportPdf'])
+        ->name('data_petugas.print.pdf');
 
-        Route::get('/verifikasi/deteksi', [VerifikasiController::class, 'deteksiPending'])
-            ->name('verifikasi.deteksi');
+    Route::resource('data_petugas', PetugasController::class)
+        ->parameters(['data_petugas' => 'petugas']);
 
-        Route::get('/verifikasi/faktor', [VerifikasiController::class, 'faktorPending'])
-            ->name('verifikasi.faktor');
+    // Puskesmas
+    Route::get('data_puskesmas/print', [DataPuskesmasController::class,'print'])
+        ->name('data_puskesmas.print');
 
-        // Aksi verifikasi (POST) — update status
-        Route::post('/verifikasi/pasien/{id}', [VerifikasiController::class, 'pasienVerify'])
-            ->name('verifikasi.pasien.verify');
+    Route::get('data_puskesmas/print/pdf', [DataPuskesmasController::class,'exportPdf'])
+        ->name('data_puskesmas.print.pdf');
 
-        Route::post('/verifikasi/deteksi/{id}', [VerifikasiController::class, 'deteksiVerify'])
-            ->name('verifikasi.deteksi.verify');
+    Route::resource('data_puskesmas', DataPuskesmasController::class);
 
-        Route::post('/verifikasi/faktor/{id}', [VerifikasiController::class, 'faktorVerify'])
-            ->name('verifikasi.faktor.verify');
+    // Laporan
+    Route::get('/laporan', fn () => view('laporan.index'))
+        ->name('laporan.index');
 
-        // jadi relatif terhadap grup 'pengguna'
-Route::post('/verifikasi/process', [VerifikasiController::class, 'process'])
-    ->name('verifikasi.process');
+    // Reset Password Approval
+    Route::get('/reset-requests',
+        [ResetPasswordRequestController::class, 'index']
+    )->name('reset.requests');
 
-
-        // Rute cetak deteksi (massal / single via ?id=)
-
-     Route::get('verifikasi/print/deteksi', [VerifikasiController::class,'printDeteksi'])
-    ->middleware('auth')
-    ->name('verifikasi.print.deteksi');
-
-        Route::get('verifikasi/print/pasien', [VerifikasiController::class,'printPasien'])
-    ->middleware('auth')
-    ->name('verifikasi.print.pasien');
-
-// Rute cetak faktor (jika ada)
-Route::get('verifikasi/print/faktor', [VerifikasiController::class,'printFaktor'])
-    ->middleware('auth')
-    ->name('verifikasi.print.faktor');
-
-
+    Route::post('/reset-requests/{id}/approve',
+        [ResetPasswordRequestController::class, 'approve']
+    )->name('reset.requests.approve');
 });
+
+/*
+|--------------------------------------------------------------------------
+| PETUGAS
+|--------------------------------------------------------------------------
+*/
+Route::prefix('petugas')
+    ->name('petugas.')
+    ->middleware(['auth','role:petugas'])
+    ->group(function () {
+
+    Route::get('/dashboard', [PetugasDashboardController::class,'index'])
+        ->name('dashboard');
+
+    Route::resource('pasien', PasienController::class);
+    Route::resource('deteksi_dini', DeteksiDiniPTMController::class);
+    Route::resource('faktor_resiko', FaktorResikoPTMController::class);
+});
+
+/*
+|--------------------------------------------------------------------------
+| PENGGUNA (DINAS KESEHATAN)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('pengguna')
+    ->name('pengguna.')
+    ->middleware(['auth'])
+    ->group(function () {
+
+    Route::get('/dashboard', [PenggunaDashboardController::class,'index'])
+        ->name('dashboard');
+
+    Route::get('/verifikasi', [VerifikasiController::class,'index'])->name('verifikasi.index');
+    Route::get('/verifikasi/pasien', [VerifikasiController::class,'pasien'])->name('verifikasi.pasien');
+    Route::get('/verifikasi/deteksi', [VerifikasiController::class,'deteksiPending'])->name('verifikasi.deteksi');
+    Route::get('/verifikasi/faktor', [VerifikasiController::class,'faktorPending'])->name('verifikasi.faktor');
+
+    // ROUTE MODAL GENERIC (INI YANG KURANG)
+    Route::post('/verifikasi/process', [VerifikasiController::class,'process'])
+        ->name('verifikasi.process');
+
+    Route::post('/verifikasi/pasien/{id}', [VerifikasiController::class,'pasienVerify'])->name('verifikasi.pasien.verify');
+    Route::post('/verifikasi/deteksi/{id}', [VerifikasiController::class,'deteksiVerify'])->name('verifikasi.deteksi.verify');
+    Route::post('/verifikasi/faktor/{id}', [VerifikasiController::class,'faktorVerify'])->name('verifikasi.faktor.verify');
+
+    Route::get('/verifikasi/print/deteksi', [VerifikasiController::class,'printDeteksi'])->name('verifikasi.print.deteksi');
+    Route::get('/verifikasi/print/pasien', [VerifikasiController::class,'printPasien'])->name('verifikasi.print.pasien');
+    Route::get('/verifikasi/print/faktor', [VerifikasiController::class,'printFaktor'])->name('verifikasi.print.faktor');
+});
+

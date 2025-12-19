@@ -111,7 +111,7 @@
 
         {{-- Guard: pastikan $items adalah collection --}}
         @php
-            $items = $items ?? collect();
+$items = $items ?? collect();
         @endphp
 
         {{-- Debug block (akan tampil jika kosong atau jika ada variabel debug) --}}
@@ -128,7 +128,7 @@
             <thead>
                 <tr>
                     <th style="width:40px">No</th>
-                    <th>Pasien</th>
+                    <th>Peserta</th>
                     <th style="width:110px">Tanggal</th>
                     <th style="width:80px">Merokok</th>
                     <th style="width:80px">Alkohol</th>
@@ -146,7 +146,8 @@
                         </td>
                         <td style="text-align:center;">{{ $row->merokok ?? '-' }}</td>
                         <td style="text-align:center;">{{ $row->alkohol ?? '-' }}</td>
-                        <td>{{ $row->puskesmas ?? optional($row->petugas)->nama_pegawai ?? optional($row->petugas)->nama ?? '-' }}
+                        <td>
+                            {{ optional($row->puskesmas)->nama_puskesmas ?? '-' }}
                         </td>
                     </tr>
                 @empty

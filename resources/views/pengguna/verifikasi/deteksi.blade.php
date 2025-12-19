@@ -36,7 +36,7 @@
                         <thead class="bg-light">
                             <tr>
                                 <th class="ps-3">No</th>
-                                <th>Pasien</th>
+                                <th>Peserta</th>
                                 <th>Tanggal</th>
                                 <th>Tekanan</th>
                                 <th>Gula</th>
@@ -56,7 +56,9 @@
                                     <td>{{ $row->tanggal_pemeriksaan?->format('d-m-Y') ?? '-' }}</td>
                                     <td>{{ $row->tekanan_darah ?? '-' }}</td>
                                     <td>{{ $row->gula_darah ?? '-' }}</td>
-                                    <td>{{ $row->puskesmas ?? optional($row->petugas)->nama_pegawai ?? '-' }}</td>
+                                    <td>
+                                        {{ optional($row->puskesmas)->nama_puskesmas ?? '-' }}
+                                    </td>
 
                                     <td>
                                         @if ($row->verification_status == 'approved')

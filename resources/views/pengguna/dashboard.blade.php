@@ -18,7 +18,7 @@
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="kpi-text-wrapper">
-                                    <span class="kpi-label">Total Pasien</span>
+                                    <span class="kpi-label">Total Peserta</span>
                                     <div class="kpi-value pb-1">{{ number_format($totalPasien ?? 0) }}</div>
                                     <span class="kpi-sub">Terdaftar</span>
                                 </div>
@@ -97,16 +97,7 @@
                                 <canvas id="monitorChart"></canvas>
                             </div>
 
-                            <div class="d-flex gap-5 mt-4 pt-3 border-top">
-                                <div>
-                                    <small class="text-muted d-block mb-1">Rata-rata / Hari</small>
-                                    <div class="h5 fw-bold mb-0">{{ $avgPerDay ?? 0 }}</div>
-                                </div>
-                                <div>
-                                    <small class="text-muted d-block mb-1">Total Minggu Ini</small>
-                                    <div class="h5 fw-bold mb-0">{{ $weeklyTotal ?? 0 }}</div>
-                                </div>
-                            </div>
+                            <br>
                         </div>
                     </div>
                 </div>
@@ -159,75 +150,16 @@
                     </div>
                 </div>
             </div>
-
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-body">
-                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
-                                <div>
-                                    <h5 class="mb-0 fw-bold">Recent Deteksi</h5>
-                                </div>
-                                <div class="btn-group btn-group-sm" role="group">
-                                    @php $q = request()->except('status'); @endphp
-                                    <a href="{{ url()->current() . (count($q) ? '?' . http_build_query($q) : '') }}" 
-                                       class="btn {{ empty($statusFilter) ? 'btn-primary' : 'btn-outline-secondary' }}">All</a>
-                                    <a href="{{ url()->current() . '?' . http_build_query(array_merge($q, ['status' => 'approved'])) }}" 
-                                       class="btn {{ $statusFilter === 'approved' ? 'btn-primary' : 'btn-outline-secondary' }}">Approved</a>
-                                    <a href="{{ url()->current() . '?' . http_build_query(array_merge($q, ['status' => 'pending'])) }}" 
-                                       class="btn {{ $statusFilter === 'pending' ? 'btn-warning text-dark' : 'btn-outline-secondary' }}">Pending</a>
-                                </div>
-                            </div>
-
-                            @if ($recentDeteksi->isEmpty())
-                                <div class="alert alert-light text-center">Belum ada data terbaru.</div>
-                            @else
-                                <div class="table-responsive">
-                                    <table class="table table-borderless align-middle mb-0">
-                                        <thead class="bg-light text-muted small text-uppercase">
-                                            <tr>
-                                                <th class="ps-3">Pasien</th>
-                                                <th>Waktu</th>
-                                                <th class="text-end pe-3">Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach ($recentDeteksi as $d)
-                                                <tr class="border-bottom">
-                                                    <td class="ps-3">
-                                                        <div class="fw-bold text-dark">{{ optional($d->pasien)->nama ?? 'Tanpa Nama' }}</div>
-                                                        <div class="small text-muted">ID: #{{ $d->id }}</div>
-                                                    </td>
-                                                    <td class="small text-muted">
-                                                        {{ $d->created_at->format('d M Y, H:i') }}
-                                                    </td>
-                                                    <td class="text-end pe-3">
-                                                        <span class="badge rounded-pill 
-                                                            @if ($d->verification_status == 'approved') bg-success-soft text-success
-                                                            @elseif($d->verification_status == 'rejected') bg-danger-soft text-danger
-                                                            @else bg-warning-soft text-warning @endif">
-                                                            {{ ucfirst($d->verification_status ?? 'pending') }}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 @endsection
 
 @push('styles')
     <style>
         /* 1. FORCE VISIBLE OVERFLOW (KUNCI PERBAIKAN) */
-        .kpi-card, .card-body {
-            overflow: visible !important;
-        }
+        .kpi-card .card-body {
+    overflow: visible;
+}
+
 
         /* 2. AREA TEKS */
         .kpi-text-wrapper {
@@ -311,7 +243,7 @@
             new Chart(ctx.getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: ['Deteksi', 'Faktor', 'Pending', 'Pasien'],
+                    labels: ['Deteksi', 'Faktor', 'Pending', 'Peserta'],
                     datasets: [{
                         label: 'Jumlah',
                         data: dataValues,

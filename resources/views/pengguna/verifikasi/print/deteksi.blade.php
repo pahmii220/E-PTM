@@ -175,7 +175,7 @@
             <thead>
                 <tr>
                     <th style="width:40px">No</th>
-                    <th>Pasien</th>
+                    <th>Peserta</th>
                     <th style="width:120px">Tanggal Pemeriksaan</th>
                     <th style="width:90px">Tekanan</th>
                     <th style="width:80px">Gula</th>
@@ -201,7 +201,7 @@
                         <td style="text-align:center;">{{ $row->gula_darah ?? '-' }}</td>
 
                         <td>
-                            {{ $row->puskesmas ?? optional($row->petugas)->puskesmas ?? optional($row->petugas)->nama_pegawai ?? '-' }}
+                            {{ optional($row->puskesmas)->nama_puskesmas ?? '-' }}
                         </td>
                     </tr>
                 @empty

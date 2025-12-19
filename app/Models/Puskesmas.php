@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Pasien;
 
 class Puskesmas extends Model
 {
@@ -21,6 +22,12 @@ class Puskesmas extends Model
         'email',
     ];
 
+    // ✅ RELASI KE PASIEN
+    public function pasien()
+    {
+        return $this->hasMany(Pasien::class, 'puskesmas_id');
+    }
+
     /**
      * Optional: accessor to show full address nicely
      */
@@ -35,3 +42,4 @@ class Puskesmas extends Model
         return implode(', ', $parts);
     }
 }
+

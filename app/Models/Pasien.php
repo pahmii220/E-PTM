@@ -9,16 +9,23 @@ class Pasien extends Model
 {
     use HasFactory;
 
-    protected $table = 'pasien'; // <--- tambahkan ini
+    protected $table = 'pasien';
+
     protected $fillable = [
+        'puskesmas_id',
         'nama_lengkap',
         'no_rekam_medis',
         'tanggal_lahir',
         'jenis_kelamin',
         'alamat',
         'kontak',
-        'puskesmas',
     ];
+
+    // ✅ RELASI WAJIB
+    public function puskesmas()
+    {
+        return $this->belongsTo(Puskesmas::class);
+    }
 
     public function deteksiDini()
 {

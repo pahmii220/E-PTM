@@ -37,7 +37,7 @@
                         <thead class="bg-light">
                             <tr>
                                 <th class="ps-3">No</th>
-                                <th>Pasien</th>
+                                <th>Peserta</th>
                                 <th>Tanggal</th>
                                 <th>Merokok</th>
                                 <th>Alkohol</th>
@@ -62,12 +62,7 @@
                                     <td class="text-center">{{ $row->alkohol ?? '-' }}</td>
 
                                     <td>
-                                        {{
-                                            $row->puskesmas
-                                            ?? optional($row->petugas)->puskesmas
-                                            ?? optional($row->petugas)->nama_pegawai
-                                            ?? '-'
-                                        }}
+                                        {{ optional($row->puskesmas)->nama_puskesmas ?? '-' }}
                                     </td>
 
                                     <td>

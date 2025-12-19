@@ -40,36 +40,38 @@
                         </thead>
                         <tbody>
                             @foreach($pasien as $index => $p)
-                                <tr>
-                                    <td>{{ $index + 1 }}</td>
-                                    <td class="text-start">{{ $p->nama_lengkap }}</td>
-                                    <td>{{ $p->no_rekam_medis }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($p->tanggal_lahir)->format('d-m-Y') }}</td>
-                                    <td>
-                                        @php
-                                            $badge = $p->jenis_kelamin === 'Laki-laki' ? 'primary' : 'pink';
-                                        @endphp
-                                        <span class="badge bg-{{ $badge }}">{{ $p->jenis_kelamin }}</span>
-                                    </td>
-                                    <td class="text-start">{{ Str::limit($p->alamat, 40, '...') }}</td>
-                                    <td>{{ $p->kontak }}</td>
-                                    <td>{{ $p->puskesmas }}</td>
-                                    <td>
-                                        <a href="{{ route('petugas.pasien.edit', $p->id) }}"
-                                            class="btn btn-sm btn-warning me-1">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
-                                        <form action="{{ route('petugas.pasien.destroy', $p->id) }}" method="POST"
-                                            class="d-inline"
-                                            onsubmit="return confirm('Yakin ingin menghapus data pasien ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button class="btn btn-sm btn-danger">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
+                                                            <tr>
+                                                                <td>{{ $index + 1 }}</td>
+                                                                <td class="text-start">{{ $p->nama_lengkap }}</td>
+                                                                <td>{{ $p->no_rekam_medis }}</td>
+                                                                <td>{{ \Carbon\Carbon::parse($p->tanggal_lahir)->format('d-m-Y') }}</td>
+                                                                <td>
+                                                                    @php
+                                $badge = $p->jenis_kelamin === 'Laki-laki' ? 'primary' : 'pink';
+                                                                    @endphp
+                                                                    <span class="badge bg-{{ $badge }}">{{ $p->jenis_kelamin }}</span>
+                                                                </td>
+                                                                <td class="text-start">{{ Str::limit($p->alamat, 40, '...') }}</td>
+                                                                <td>{{ $p->kontak }}</td>
+                                                                <td>
+                                                                    {{ $p->puskesmas->nama_puskesmas ?? '-' }}
+                                                                </td>
+                                                                <td>
+                                                                    <a href="{{ route('petugas.pasien.edit', $p->id) }}"
+                                                                        class="btn btn-sm btn-warning me-1">
+                                                                        <i class="bi bi-pencil-square"></i>
+                                                                    </a>
+                                                                    <form action="{{ route('petugas.pasien.destroy', $p->id) }}" method="POST"
+                                                                        class="d-inline"
+                                                                        onsubmit="return confirm('Yakin ingin menghapus data pasien ini?')">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <button class="btn btn-sm btn-danger">
+                                                                            <i class="bi bi-trash"></i>
+                                                                        </button>
+                                                                    </form>
+                                                                </td>
+                                                            </tr>
                             @endforeach
                         </tbody>
                     </table>

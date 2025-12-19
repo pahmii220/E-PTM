@@ -86,7 +86,7 @@
                             @empty
                                 <tr>
                                     <td colspan="7" class="text-center py-4 text-muted">
-                                        Tidak ada data pasien ditemukan.
+                                        Tidak ada data Peserta ditemukan.
                                     </td>
                                 </tr>
                             @endforelse

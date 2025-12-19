@@ -48,10 +48,29 @@
                             <label for="kontak" class="form-label">Nomor Kontak / HP</label>
                             <input type="text" name="kontak" id="kontak" class="form-control" required>
                         </div>
-                        <div class="col-md-6">
-                            <label for="puskesmas" class="form-label">Puskesmas</label>
-                            <input type="text" name="puskesmas" id="puskesmas" class="form-control" required>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                Puskesmas <span class="text-danger">*</span>
+                            </label>
+
+                            <select name="puskesmas_id" class="form-select @error('puskesmas_id') is-invalid @enderror" required>
+
+                                <option value="">-- Pilih Puskesmas --</option>
+
+                                @foreach ($puskesmas as $item)
+                                    <option value="{{ $item->id }}" {{ old('puskesmas_id') == $item->id ? 'selected' : '' }}>
+                                        {{ $item->nama_puskesmas }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            @error('puskesmas_id')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
                         </div>
+
                     </div>
 
                     <div class="text-end">

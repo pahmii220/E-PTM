@@ -14,58 +14,99 @@
                     @csrf
 
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Nama Pasien</label>
-                            <select name="pasien_id" class="form-select" required>
-                                <option value="">-- Pilih Pasien --</option>
-                                @foreach($pasien as $p)
-                                    <option value="{{ $p->id }}" {{ old('pasien_id') == $p->id ? 'selected' : '' }}>
-                                        {{ $p->nama_lengkap }}</option>
-                                @endforeach
-                            </select>
+
+                        {{-- Pasien --}}
+                        <div class="row g-3">
+
+                            {{-- PASIEN --}}
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Peserta</label>
+                                <select name="pasien_id" class="form-select @error('pasien_id') is-invalid @enderror" required>
+                                    <option value="">-- Pilih Peserta --</option>
+                                    @foreach($pasien as $p)
+                                        <option value="{{ $p->id }}" {{ old('pasien_id') == $p->id ? 'selected' : '' }}>
+                                            {{ $p->nama_lengkap }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('pasien_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            {{-- PUSKESMAS --}}
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Puskesmas</label>
+                                <select name="puskesmas_id" class="form-select @error('puskesmas_id') is-invalid @enderror" required>
+                                    <option value="">-- Pilih Puskesmas --</option>
+                                    @foreach($puskesmas as $pkm)
+                                        <option value="{{ $pkm->id }}" {{ old('puskesmas_id') == $pkm->id ? 'selected' : '' }}>
+                                            {{ $pkm->nama_puskesmas }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('puskesmas_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
                         </div>
 
+
+                        {{-- Tanggal --}}
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Tanggal Pemeriksaan</label>
-                            <input type="date" name="tanggal_pemeriksaan" class="form-control"
+                            <input type="date" name="tanggal_pemeriksaan"
+                                class="form-control @error('tanggal_pemeriksaan') is-invalid @enderror"
                                 value="{{ old('tanggal_pemeriksaan') }}" required>
+                            @error('tanggal_pemeriksaan')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
 
+                        {{-- Tekanan Darah --}}
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Tekanan Darah (mmHg)</label>
                             <input type="text" name="tekanan_darah" class="form-control" placeholder="120/80"
-                                value="{{ old('tekanan_darah') }}" required>
+                                value="{{ old('tekanan_darah') }}">
                         </div>
 
+                        {{-- Gula Darah --}}
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Gula Darah (mg/dL)</label>
                             <input type="number" step="0.1" name="gula_darah" class="form-control" placeholder="Contoh: 110"
                                 value="{{ old('gula_darah') }}">
                         </div>
 
+                        {{-- Kolesterol --}}
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Kolesterol (mg/dL)</label>
                             <input type="number" step="0.1" name="kolesterol" class="form-control" placeholder="Contoh: 190"
                                 value="{{ old('kolesterol') }}">
                         </div>
 
+                        {{-- Berat Badan --}}
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Berat Badan (kg)</label>
-                            <input type="number" step="0.01" name="berat_badan" id="berat_badan" class="form-control"
-                                placeholder="Contoh: 60" value="{{ old('berat_badan') }}">
+                            <input type="number" step="0.01" name="berat_badan" id="berat_badan"
+                                class="form-control @error('berat_badan') is-invalid @enderror" placeholder="Contoh: 60"
+                                value="{{ old('berat_badan') }}" required>
+                            @error('berat_badan')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
 
+                        {{-- Tinggi Badan --}}
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Tinggi Badan (cm)</label>
-                            <input type="number" step="0.1" name="tinggi_badan" id="tinggi_badan" class="form-control"
-                                placeholder="Contoh: 165" value="{{ old('tinggi_badan') }}">
+                            <input type="number" step="0.1" name="tinggi_badan" id="tinggi_badan"
+                                class="form-control @error('tinggi_badan') is-invalid @enderror" placeholder="Contoh: 165"
+                                value="{{ old('tinggi_badan') }}" required>
+                            @error('tinggi_badan')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
 
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Puskesmas</label>
-                            <input type="text" name="puskesmas" class="form-control" placeholder="Nama Puskesmas"
-                                value="{{ old('puskesmas') }}" required>
-                        </div>
                     </div>
 
                     <div class="mt-4 text-end">
@@ -81,24 +122,21 @@
         </div>
     </div>
 
-    {{-- Script Hitung IMT Otomatis (hanya preview; tidak wajib) --}}
+    {{-- Preview IMT (opsional, tidak disimpan) --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const beratInput = document.getElementById('berat_badan');
-            const tinggiInput = document.getElementById('tinggi_badan');
+            const berat = document.getElementById('berat_badan');
+            const tinggi = document.getElementById('tinggi_badan');
 
-            function hitungIMT() {
-                const berat = parseFloat(beratInput.value);
-                const tinggi = parseFloat(tinggiInput.value) / 100; // ubah cm ke meter
-                // hanya ubah preview console, jangan akses element yang tidak ada
-                if (berat > 0 && tinggi > 0) {
-                    const imt = berat / (tinggi * tinggi);
+            function previewIMT() {
+                if (berat.value && tinggi.value) {
+                    const imt = berat.value / Math.pow(tinggi.value / 100, 2);
                     console.log('IMT preview:', imt.toFixed(1));
                 }
             }
 
-            if (beratInput) beratInput.addEventListener('input', hitungIMT);
-            if (tinggiInput) tinggiInput.addEventListener('input', hitungIMT);
+            berat.addEventListener('input', previewIMT);
+            tinggi.addEventListener('input', previewIMT);
         });
     </script>
 @endsection
