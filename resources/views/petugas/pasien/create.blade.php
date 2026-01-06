@@ -48,28 +48,38 @@
                             <label for="kontak" class="form-label">Nomor Kontak / HP</label>
                             <input type="text" name="kontak" id="kontak" class="form-control" required>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">
-                                Puskesmas <span class="text-danger">*</span>
-                            </label>
+                        
+                        {{-- PUSKESMAS --}}
+<div class="col-md-6">
+    <label class="form-label fw-semibold">
+        Puskesmas <span class="text-danger">*</span>
+    </label>
 
-                            <select name="puskesmas_id" class="form-select @error('puskesmas_id') is-invalid @enderror" required>
+    @if(auth()->user()->role_name === 'admin')
+        {{-- ADMIN: PILIH PUSKESMAS --}}
+        <select name="puskesmas_id"
+            class="form-select @error('puskesmas_id') is-invalid @enderror" required>
+            <option value="">-- Pilih Puskesmas --</option>
+            @foreach($puskesmas as $pkm)
+                <option value="{{ $pkm->id }}">
+                    {{ $pkm->nama_puskesmas }}
+                </option>
+            @endforeach
+        </select>
+    @else
+        {{-- PETUGAS: TERKUNCI --}}
+        <input type="text" class="form-control"
+            value="{{ auth()->user()->petugas->puskesmas->nama_puskesmas }}" readonly>
+        <input type="hidden" name="puskesmas_id"
+            value="{{ auth()->user()->petugas->puskesmas_id }}">
+    @endif
 
-                                <option value="">-- Pilih Puskesmas --</option>
+    @error('puskesmas_id')
+        <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
+</div>
 
-                                @foreach ($puskesmas as $item)
-                                    <option value="{{ $item->id }}" {{ old('puskesmas_id') == $item->id ? 'selected' : '' }}>
-                                        {{ $item->nama_puskesmas }}
-                                    </option>
-                                @endforeach
-                            </select>
 
-                            @error('puskesmas_id')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
-                                </div>
-                            @enderror
-                        </div>
 
                     </div>
 

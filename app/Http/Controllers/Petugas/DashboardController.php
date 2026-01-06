@@ -98,14 +98,55 @@ class DashboardController extends Controller
             Log::warning('Dashboard Petugas Error: ' . $e->getMessage());
         }
 
-        return view('petugas.dashboard', compact(
-            'totalPasien',
-            'totalDeteksi',
-            'totalFaktor',
-            'highRiskCount',
-            'totalPeserta',
-            'monthLabels',
-            'monthTotals'
-        ));
+        /* =====================
+   🔥 DATA MINGGUAN (7 HARI TERAKHIR)
+===================== */
+$weeklyLabels = collect();
+$weeklyTotals = collect();
+
+if (class_exists(Pasien::class)) {
+    for ($i = 6; $i >= 0; $i--) {
+        $date = Carbon::today()->subDays($i);
+
+        $weeklyLabels->push(
+            $date->translatedFormat('D') // Sen, Sel, Rab
+        );
+
+        $weeklyTotals->push(
+            Pasien::whereDate('created_at', $date)->count()
+        );
+    }
+}
+
+    /* =====================
+   🔥 DATA HARIAN (PER JAM HARI INI)
+===================== */
+$dailyLabels = collect();
+$dailyTotals = collect();
+
+for ($i = 0; $i < 24; $i++) {
+    $dailyLabels->push(sprintf('%02d:00', $i));
+
+    $dailyTotals->push(
+        Pasien::whereDate('created_at', today())
+            ->whereRaw('HOUR(created_at) = ?', [$i])
+            ->count()
+    );
+}
+
+       return view('petugas.dashboard', compact(
+    'totalPasien',
+    'totalDeteksi',
+    'totalFaktor',
+    'highRiskCount',
+    'totalPeserta',
+    'monthLabels',
+    'monthTotals',
+    'weeklyLabels',
+    'weeklyTotals',
+    'dailyLabels',
+    'dailyTotals'
+));
+
     }
 }

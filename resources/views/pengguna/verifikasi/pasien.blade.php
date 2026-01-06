@@ -6,8 +6,7 @@
         <!-- HEADER: Judul di Kiri, Tools (Cetak & Filter) di Kanan -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="mb-0">Verifikasi - Data Peserta</h4>
-            <br>
-            <br> 
+
             <div class="d-flex gap-2 align-items-center">
                 {{-- Tombol Cetak Semua --}}
                 <a href="{{ route('pengguna.verifikasi.print.pasien', ['status' => $status]) }}"
@@ -27,7 +26,7 @@
                 </form>
             </div>
         </div>
-
+<br>
         <div class="card shadow-sm border-0">
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -65,23 +64,44 @@
                                     <td>{{ $row->created_at->format('d-m-Y H:i') }}</td>
 
                                     <td class="text-end pe-3">
-                                        {{-- Aksi hanya muncul jika status masih tertunda --}}
-                                        @if ($row->verification_status == 'pending')
-                                            <button class="btn btn-success btn-sm" data-bs-toggle="modal"
-                                                data-bs-target="#verifyModal" data-id="{{ $row->id }}" data-type="pasien"
-                                                data-action="approve">
-                                                Diterima
-                                            </button>
 
-                                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                                data-bs-target="#verifyModal" data-id="{{ $row->id }}" data-type="pasien"
-                                                data-action="reject">
-                                                Ditolak
-                                            </button>
-                                        @else
-                                            <span class="text-muted small">-</span>
-                                        @endif
-                                    </td>
+    {{-- LIHAT DETAIL --}}
+<a href="{{ route('pengguna.verifikasi.pasien.show', $row->id) }}"
+    class="btn btn-outline-primary btn-sm me-1"
+    title="Lihat Detail">
+    <i class="bi bi-eye"></i>
+</a>
+
+
+    {{-- AKSI VERIFIKASI (HANYA JIKA PENDING) --}}
+    @if ($row->verification_status === 'pending')
+
+        {{-- TERIMA --}}
+        <button class="btn btn-success btn-sm me-1"
+            title="Terima"
+            data-bs-toggle="modal"
+            data-bs-target="#verifyModal"
+            data-id="{{ $row->id }}"
+            data-type="pasien"
+            data-action="approve">
+            <i class="bi bi-check-lg"></i>
+        </button>
+
+        {{-- TOLAK --}}
+        <button class="btn btn-danger btn-sm"
+            title="Tolak"
+            data-bs-toggle="modal"
+            data-bs-target="#verifyModal"
+            data-id="{{ $row->id }}"
+            data-type="pasien"
+            data-action="reject">
+            <i class="bi bi-x-lg"></i>
+        </button>
+
+    @endif
+</td>
+
+
                                 </tr>
                             @empty
                                 <tr>

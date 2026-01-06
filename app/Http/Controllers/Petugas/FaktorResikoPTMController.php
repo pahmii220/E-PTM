@@ -27,12 +27,17 @@ class FaktorResikoPTMController extends Controller
      * Form tambah data
      */
     public function create()
-    {
-        $pasien = Pasien::orderBy('nama_lengkap')->get();
-        $puskesmas = Puskesmas::orderBy('nama_puskesmas')->get();
+{
+    // Ambil pasien yang BELUM punya data faktor risiko
+    $pasien = Pasien::whereDoesntHave('faktorResikoPTM')
+        ->orderBy('nama_lengkap')
+        ->get();
 
-        return view('petugas.faktor_resiko.create', compact('pasien', 'puskesmas'));
-    }
+    $puskesmas = Puskesmas::orderBy('nama_puskesmas')->get();
+
+    return view('petugas.faktor_resiko.create', compact('pasien', 'puskesmas'));
+}
+
 
     /**
      * Simpan data baru
@@ -49,8 +54,13 @@ class FaktorResikoPTMController extends Controller
         ]);
 
         FaktorResikoPTM::create([
-            'pasien_id'              => $request->pasien_id,
-            'puskesmas_id'           => $request->puskesmas_id,
+            'pasien_id' => $request->pasien_id,
+
+            // 🔐 ADMIN BISA PILIH, PETUGAS TERKUNCI
+            'puskesmas_id' => Auth::user()->role_name === 'admin'
+                ? $request->puskesmas_id
+                : Auth::user()->petugas->puskesmas_id,
+
             'tanggal_pemeriksaan'    => $request->tanggal_pemeriksaan,
             'merokok'                => $request->merokok,
             'alkohol'                => $request->alkohol,
@@ -69,6 +79,14 @@ class FaktorResikoPTMController extends Controller
     public function edit($id)
     {
         $faktor = FaktorResikoPTM::findOrFail($id);
+
+        // 🔒 Petugas tidak boleh edit jika sudah approved
+        if (Auth::user()->role_name !== 'admin' && $faktor->verification_status === 'approved') {
+            return redirect()
+                ->route('petugas.faktor_resiko.index')
+                ->with('error', 'Data sudah diverifikasi dan tidak dapat diedit.');
+        }
+
         $pasien = Pasien::orderBy('nama_lengkap')->get();
         $puskesmas = Puskesmas::orderBy('nama_puskesmas')->get();
 
@@ -82,6 +100,13 @@ class FaktorResikoPTMController extends Controller
     {
         $faktor = FaktorResikoPTM::findOrFail($id);
 
+        // 🔒 Petugas tidak boleh update jika sudah approved
+        if (Auth::user()->role_name !== 'admin' && $faktor->verification_status === 'approved') {
+            return redirect()
+                ->route('petugas.faktor_resiko.index')
+                ->with('error', 'Data sudah diverifikasi dan tidak dapat diubah.');
+        }
+
         $request->validate([
             'pasien_id'               => 'required|exists:pasien,id',
             'puskesmas_id'            => 'required|exists:puskesmas,id',
@@ -92,8 +117,13 @@ class FaktorResikoPTMController extends Controller
         ]);
 
         $faktor->update([
-            'pasien_id'              => $request->pasien_id,
-            'puskesmas_id'           => $request->puskesmas_id,
+            'pasien_id' => $request->pasien_id,
+
+            // 🔐 ADMIN OVERRIDE
+            'puskesmas_id' => Auth::user()->role_name === 'admin'
+                ? $request->puskesmas_id
+                : Auth::user()->petugas->puskesmas_id,
+
             'tanggal_pemeriksaan'    => $request->tanggal_pemeriksaan,
             'merokok'                => $request->merokok,
             'alkohol'                => $request->alkohol,
@@ -110,7 +140,16 @@ class FaktorResikoPTMController extends Controller
      */
     public function destroy($id)
     {
-        FaktorResikoPTM::findOrFail($id)->delete();
+        $faktor = FaktorResikoPTM::findOrFail($id);
+
+        // 🔒 Petugas tidak boleh hapus jika sudah approved
+        if (Auth::user()->role_name !== 'admin' && $faktor->verification_status === 'approved') {
+            return redirect()
+                ->route('petugas.faktor_resiko.index')
+                ->with('error', 'Data sudah diverifikasi dan tidak dapat dihapus.');
+        }
+
+        $faktor->delete();
 
         return redirect()
             ->route('petugas.faktor_resiko.index')

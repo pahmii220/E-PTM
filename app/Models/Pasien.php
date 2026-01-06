@@ -27,10 +27,11 @@ class Pasien extends Model
         return $this->belongsTo(Puskesmas::class);
     }
 
-    public function deteksiDini()
+public function deteksiDiniPTM()
 {
-    return $this->hasMany(DeteksiDiniPTM::class, 'pasien_id');
+    return $this->hasOne(\App\Models\DeteksiDiniPTM::class, 'pasien_id');
 }
+
 
 public function verifiedByUser()
 {
@@ -40,6 +41,16 @@ public function verifiedByUser()
 public function createdBy()
 {
     return $this->belongsTo(\App\Models\User::class, 'created_by');
+}
+
+public function tindakLanjutPTM()
+{
+    return $this->hasMany(TindakLanjutPTM::class);
+}
+
+public function faktorResikoPTM()
+{
+    return $this->hasOne(\App\Models\FaktorResikoPTM::class, 'pasien_id');
 }
 
 

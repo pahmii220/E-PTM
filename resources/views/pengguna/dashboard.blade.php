@@ -6,6 +6,25 @@
     @php use Illuminate\Support\Facades\Route; @endphp
 
     <div class="container py-3">
+        {{-- ================= ALERT PROFIL BELUM LENGKAP ================= --}}
+        @if(
+                auth()->check() &&
+                auth()->user()->role_name === 'pengguna' &&
+                !auth()->user()->pegawaiDinkes &&
+                Route::has('pengguna.pegawai_dinkes.create')
+            )
+            <div class="alert alert-warning d-flex justify-content-between align-items-center shadow-sm">
+                <div>
+                    <strong>Profil Belum Lengkap</strong><br>
+                    Silakan lengkapi profil dan identitas anda .
+                </div>
+
+                <a href="{{ route('pengguna.pegawai_dinkes.create') }}" class="btn btn-warning">
+                    Lengkapi Profil
+                </a>
+            </div>
+        @endif
+
             <div class="mb-4">
                 <h1 class="h3 mb-1 fw-bold text-dark">Dashboard Pengguna</h1>
                 <div class="text-muted">Ringkasan cepat data deteksi dini PTM</div>
@@ -152,6 +171,7 @@
             </div>
         </div>
 @endsection
+
 
 @push('styles')
     <style>

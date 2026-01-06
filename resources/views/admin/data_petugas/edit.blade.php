@@ -3,131 +3,163 @@
 @section('title', 'Edit Petugas')
 
 @section('content')
-    <br>
-    <div class="container-fluid py-1 px-4" style="max-width: 1400px; margin: auto; margin-top: -10px;">
-        <div class="card shadow-lg border-0">
-            <div class="card-header bg-success text-white">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">Edit Petugas</h4>
+    <div class="container-fluid py-3" style="max-width:1400px">
+
+        {{-- ================= HEADER ================= --}}
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="fw-bold mb-0">Edit Petugas</h4>
+                    <small class="text-muted">Kelola data petugas dan hak akses akun</small>
                 </div>
+            </div>
+        </div>
+
+        {{-- ================= ERROR ================= --}}
+        @if ($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $err)
+                        <li>{{ $err }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        {{-- ================================================= --}}
+        {{-- CARD 1 : DATA PETUGAS (HIJAU) --}}
+        {{-- ================================================= --}}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-success bg-opacity-10 text-success fw-bold">
+                <i class="bi bi-person-badge-fill me-1"></i> Data Petugas
             </div>
 
             <div class="card-body">
-                {{-- Validasi error --}}
-                @if ($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $err)
-                                <li>{{ $err }}</li>
-                            @endforeach
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                    <br>
-                @endif
-                    <form action="{{ route('admin.data_petugas.update', $petugas) }}" method="POST">
+                <form action="{{ route('admin.data_petugas.update', $petugas) }}" method="POST">
                     @csrf
                     @method('PUT')
 
-                    <div class="row mb-3">
+                    <div class="row g-3">
                         <div class="col-md-6">
-                            <label for="nip" class="form-label">NIP</label>
-                            <input type="text" name="nip" id="nip" class="form-control"
-                                value="{{ old('nip', $petugas->nip) }}">
+                            <label class="form-label">NIP</label>
+                            <input type="text" name="nip" class="form-control" value="{{ old('nip', $petugas->nip) }}">
                         </div>
 
                         <div class="col-md-6">
-                            <label for="nama_pegawai" class="form-label">Nama Pegawai <span
-                                    class="text-danger">*</span></label>
-                            <input type="text" name="nama_pegawai" id="nama_pegawai" class="form-control"
-                                value="{{ old('nama_pegawai', $petugas->nama_pegawai) }}" required>
+                            <label class="form-label">Nama Pegawai <span class="text-danger">*</span></label>
+                            <input type="text" name="nama_pegawai" class="form-control" required
+                                value="{{ old('nama_pegawai', $petugas->nama_pegawai) }}">
                         </div>
-                    </div>
 
-                    <div class="row mb-3">
                         <div class="col-md-6">
-                            <label for="tanggal_lahir" class="form-label">Tanggal Lahir</label>
-                            <input type="date" name="tanggal_lahir" id="tanggal_lahir" class="form-control"
+                            <label class="form-label">Tanggal Lahir</label>
+                            <input type="date" name="tanggal_lahir" class="form-control"
                                 value="{{ old('tanggal_lahir', optional($petugas->tanggal_lahir)->format('Y-m-d')) }}">
                         </div>
 
                         <div class="col-md-6">
-                            <label for="telepon" class="form-label">Telepon</label>
-                            <input type="text" name="telepon" id="telepon" class="form-control"
+                            <label class="form-label">Telepon</label>
+                            <input type="text" name="telepon" class="form-control"
                                 value="{{ old('telepon', $petugas->telepon) }}">
                         </div>
-                    </div>
 
-                    <div class="mb-3">
-                        <label for="alamat" class="form-label">Alamat</label>
-                        <textarea name="alamat" id="alamat" rows="2"
-                            class="form-control">{{ old('alamat', $petugas->alamat) }}</textarea>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="jabatan" class="form-label">Jabatan <span class="text-danger">*</span></label>
-                            <input type="text" name="jabatan" id="jabatan" class="form-control"
-                                value="{{ old('jabatan', $petugas->jabatan) }}" required>
+                        <div class="col-md-12">
+                            <label class="form-label">Alamat</label>
+                            <textarea name="alamat" rows="2"
+                                class="form-control">{{ old('alamat', $petugas->alamat) }}</textarea>
                         </div>
 
                         <div class="col-md-6">
-                            <label for="bidang" class="form-label">Bidang</label>
-                            <input type="text" name="bidang" id="bidang" class="form-control"
+                            <label class="form-label">Jabatan <span class="text-danger">*</span></label>
+                            <input type="text" name="jabatan" class="form-control" required
+                                value="{{ old('jabatan', $petugas->jabatan) }}">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Bidang</label>
+                            <input type="text" name="bidang" class="form-control"
                                 value="{{ old('bidang', $petugas->bidang) }}">
                         </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">Puskesmas</label>
+                            <select name="puskesmas_id" class="form-select">
+                                <option value="">-- Pilih Puskesmas --</option>
+                                @foreach($puskesmas as $p)
+                                    <option value="{{ $p->id }}" {{ old('puskesmas_id', $petugas->puskesmas_id) == $p->id ? 'selected' : '' }}>
+                                        {{ $p->nama_puskesmas }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
 
-                    {{-- Dropdown Puskesmas (hanya nama_puskesmas) --}}
-                    <div class="mb-3">
-                        <label for="puskesmas_id" class="form-label">Puskesmas</label>
-                        <select name="puskesmas_id" id="puskesmas_id" class="form-select">
-                            <option value="">-- Pilih Puskesmas--</option>
-                            @foreach($puskesmas ?? [] as $p)
-                                <option value="{{ $p->id }}" {{ (string) old('puskesmas_id', (string) $petugas->puskesmas_id) === (string) $p->id ? 'selected' : '' }}>
-                                    {{ $p->nama_puskesmas }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('puskesmas_id')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="text-end">
-                        <a href="{{ route('admin.data_petugas.index') }}" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left"></i> Batal
-                        </a>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
                         <button type="submit" class="btn btn-success">
-                            <i class="bi bi-pencil-square"></i> Simpan Perubahan
+                            <i class="bi bi-save"></i> Simpan Perubahan
                         </button>
                     </div>
                 </form>
             </div>
         </div>
+
+        {{-- ================================================= --}}
+        {{-- CARD 2 : AKUN & ROLE (BIRU / KEAMANAN) --}}
+        {{-- ================================================= --}}
+        @if($petugas->user)
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center gap-2">
+                    <i class="bi bi-shield-lock-fill"></i>
+                    Kelola Akun & Role
+                    <span class="badge bg-warning text-dark ms-auto">
+                        Akses & Keamanan
+                    </span>
+                </div>
+
+                <div class="card-body">
+                    <form action="{{ route('admin.data_petugas.update', $petugas->id) }}" method="POST">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" name="update_account_only" value="1">
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Status Akun</label>
+                                <select name="is_active" class="form-select">
+                                    <option value="1" {{ $petugas->user->is_active ? 'selected' : '' }}>Aktif</option>
+                                    <option value="0" {{ !$petugas->user->is_active ? 'selected' : '' }}>Nonaktif</option>
+                                </select>
+                                <small class="text-muted">Nonaktifkan untuk memblokir login</small>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Role Pengguna</label>
+                                <select name="role_name" class="form-select">
+                                    <option value="petugas" {{ $petugas->user->role_name == 'petugas' ? 'selected' : '' }}>
+                                        Petugas
+                                    </option>
+                                    <option value="pengguna" {{ $petugas->user->role_name == 'pengguna' ? 'selected' : '' }}>
+                                        Pengguna
+                                    </option>
+                                </select>
+                                <small class="text-muted">Menentukan hak akses sistem</small>
+                            </div>
+
+                            <div class="col-md-4 d-flex align-items-end gap-2">
+                                <a href="{{ route('admin.data_petugas.index') }}" class="btn btn-outline-secondary w-50">
+                                    <i class="bi bi-arrow-left"></i> Kembali
+                                </a>
+
+                                <button type="submit" class="btn btn-primary w-50">
+                                    <i class="bi bi-shield-check"></i> Simpan Akun
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endif
+
     </div>
-
-    {{-- Styling tambahan agar konsisten --}}
-    <style>
-        body {
-            background-color: #f8fafc;
-        }
-
-        .card {
-            overflow: hidden;
-            margin-top: -25px !important;
-        }
-
-        @media (min-width: 1400px) {
-            .container-fluid {
-                max-width: 1500px !important;
-            }
-        }
-
-        @media (max-width: 991px) {
-            .container-fluid {
-                padding: 10px;
-            }
-        }
-    </style>
 @endsection

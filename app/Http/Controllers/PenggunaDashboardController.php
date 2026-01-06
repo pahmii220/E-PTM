@@ -187,6 +187,21 @@ $pendingTotal = $verifCounts['pending'];
             $avgPerDay = $weeklyTotal ? round($weeklyTotal / max(1, count($chartDeteksi)), 1) : 0;
             $lastUpdatedAt = DeteksiDiniPTM::orderBy('updated_at','desc')->value('updated_at') ?? Carbon::now();
 
+
+            $rekapPuskesmas = DB::table('puskesmas')
+    ->leftJoin('petugas', 'petugas.puskesmas_id', '=', 'puskesmas.id')
+    ->leftJoin('deteksi_dini_ptm', 'deteksi_dini_ptm.petugas_id', '=', 'petugas.id')
+    ->leftJoin('tindak_lanjut_ptm', 'tindak_lanjut_ptm.deteksi_dini_id', '=', 'deteksi_dini_ptm.id')
+    ->select(
+        'puskesmas.nama_puskesmas',
+        DB::raw('COUNT(DISTINCT petugas.id) as total_petugas'),
+        DB::raw('COUNT(DISTINCT deteksi_dini_ptm.id) as total_deteksi'),
+        DB::raw('COUNT(DISTINCT tindak_lanjut_ptm.id) as total_tindak_lanjut')
+    )
+    ->groupBy('puskesmas.nama_puskesmas')
+    ->orderBy('puskesmas.nama_puskesmas')
+    ->get();
+
             // -----------------------
             // Return view (semua variabel dipasok)
             // -----------------------
@@ -195,7 +210,7 @@ $pendingTotal = $verifCounts['pending'];
                 'pendingPasien','pendingDeteksi','pendingFaktor','pendingTotal',
                 'recentDeteksi','topPetugas','allDeteksi',
                 'verifCounts','chartLabels','chartData','chartDeteksi','chartFaktor','avgPerDay','weeklyTotal','lastUpdatedAt',
-                'statusFilter'
+                'statusFilter', 'rekapPuskesmas'
             ));
         } catch (\Exception $e) {
             Log::error('Pengguna dashboard error: ' . $e->getMessage(), [

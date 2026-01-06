@@ -34,6 +34,17 @@ class Petugas extends Model
         return $this->belongsTo(Puskesmas::class, 'puskesmas_id', 'id');
     }
 
+    public function tindakLanjutPTM()
+{
+    return $this->hasMany(TindakLanjutPTM::class);
+}
+
+public function user()
+{
+      return $this->belongsTo(User::class, 'user_id');
+}
+
+
     /**
      * Jika nanti ingin mengaitkan Petugas dengan User (account), 
      * uncomment dan sesuaikan kolom foreign key (misal user_id)

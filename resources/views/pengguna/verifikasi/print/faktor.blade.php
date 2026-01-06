@@ -137,25 +137,26 @@ $items = $items ?? collect();
             </thead>
 
             <tbody>
-                @forelse($items as $i => $row)
+                @if($items->isEmpty())
                     <tr>
-                        <td style="text-align:center;">{{ $i + 1 }}</td>
-                        <td>{{ optional($row->pasien)->nama_lengkap ?? ($row->nama_pasien ?? '-') }}</td>
-                        <td style="text-align:center;">
-                            {{ $row->tanggal_pemeriksaan ? \Carbon\Carbon::parse($row->tanggal_pemeriksaan)->format('d-m-Y') : '-' }}
-                        </td>
-                        <td style="text-align:center;">{{ $row->merokok ?? '-' }}</td>
-                        <td style="text-align:center;">{{ $row->alkohol ?? '-' }}</td>
-                        <td>
-                            {{ optional($row->puskesmas)->nama_puskesmas ?? '-' }}
+                        <td colspan="6" class="text-center">
+                            Tidak ada data faktor risiko.
                         </td>
                     </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" style="padding:8px;">Tidak ada data faktor risiko.</td>
-                    </tr>
-                @endforelse
+                @else
+                    @foreach($items as $item)
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td>{{ $item->pasien->nama_lengkap ?? '-' }}</td>
+                            <td>{{ $item->created_at->format('d-m-Y') }}</td>
+                            <td>{{ $item->merokok ?? '-' }}</td>
+                            <td>{{ $item->alkohol ?? '-' }}</td>
+                            <td>{{ $item->pasien->puskesmas->nama_puskesmas ?? '-' }}</td>
+                        </tr>
+                    @endforeach
+                @endif
             </tbody>
+
         </table>
 
         <div style="width:100%; margin-top:40px; display:flex; justify-content:flex-end;">

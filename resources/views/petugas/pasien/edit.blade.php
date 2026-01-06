@@ -7,9 +7,6 @@
         <div class="card shadow-lg border-0 rounded-3">
             <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                 <h4 class="mb-0">Edit Data Peserta</h4>
-                <a href="{{ route('petugas.pasien.index') }}" class="btn btn-light btn-sm">
-                    <i class="bi bi-arrow-left"></i> Kembali
-                </a>
             </div>
 
             <div class="card-body p-4">
@@ -45,28 +42,37 @@
                         </div>
 
                         {{-- Puskesmas --}}
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">
-                                Puskesmas <span class="text-danger">*</span>
-                            </label>
+                            {{-- PUSKESMAS --}}
+<div class="col-md-6">
+    <label class="form-label fw-semibold">
+        Puskesmas <span class="text-danger">*</span>
+    </label>
 
-                            <select name="puskesmas_id" class="form-select @error('puskesmas_id') is-invalid @enderror" required>
+    @if(auth()->user()->role_name === 'admin')
+        {{-- ADMIN: BOLEH PILIH --}}
+        <select name="puskesmas_id"
+            class="form-select @error('puskesmas_id') is-invalid @enderror" required>
+            <option value="">-- Pilih Puskesmas --</option>
+            @foreach($puskesmas as $pkm)
+                <option value="{{ $pkm->id }}"
+                    {{ old('puskesmas_id', $pasien->puskesmas_id) == $pkm->id ? 'selected' : '' }}>
+                    {{ $pkm->nama_puskesmas }}
+                </option>
+            @endforeach
+        </select>
+    @else
+        {{-- PETUGAS: TERKUNCI --}}
+        <input type="text" class="form-control"
+            value="{{ auth()->user()->petugas->puskesmas->nama_puskesmas }}" readonly>
+        <input type="hidden" name="puskesmas_id"
+            value="{{ auth()->user()->petugas->puskesmas_id }}">
+    @endif
 
-                                <option value="">-- Pilih Puskesmas --</option>
+    @error('puskesmas_id')
+        <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
+</div>
 
-                                @foreach ($puskesmas as $item)
-                                    <option value="{{ $item->id }}" {{ old('puskesmas_id', $pasien->puskesmas_id) == $item->id ? 'selected' : '' }}>
-                                        {{ $item->nama_puskesmas }}
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            @error('puskesmas_id')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
-                                </div>
-                            @enderror
-                        </div>
 
 
                         {{-- Nomor Rekam Medis --}}

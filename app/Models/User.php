@@ -18,6 +18,7 @@ class User extends Authenticatable
         'jenis_kelamin',
         'role_name',
         'password',
+        'is_active',
     ];
 
     protected $hidden = [
@@ -64,4 +65,20 @@ class User extends Authenticatable
     {
         return in_array($this->role_name, $roles);
     }
+
+    public function petugas()
+{
+    return $this->hasOne(Petugas::class);
+}
+
+public function pegawaiDinkes()
+{
+    return $this->hasOne(PegawaiDinkes::class);
+}
+
+protected $casts = [
+    'is_active' => 'integer',
+];
+
+
 }

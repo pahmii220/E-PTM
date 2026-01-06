@@ -45,10 +45,11 @@ class DeteksiDiniPTM extends Model
     // -----------------------
 
     // relasi ke pasien
-    public function pasien()
-    {
-        return $this->belongsTo(Pasien::class, 'pasien_id');
-    }
+public function pasien()
+{
+    return $this->belongsTo(\App\Models\Pasien::class, 'pasien_id');
+}
+
 
     // relasi ke puskesmas
     public function puskesmas()
@@ -67,6 +68,13 @@ class DeteksiDiniPTM extends Model
     {
         return $this->belongsTo(User::class, 'verified_by');
     }
+
+public function tindakLanjut()
+{
+    return $this->hasOne(\App\Models\TindakLanjutPTM::class, 'deteksi_dini_id');
+}
+
+
 
     // -----------------------
     // HELPER / ACCESSOR

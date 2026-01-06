@@ -36,6 +36,7 @@ class RegisterController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role_name' => 'pengguna', // default role
+            'is_active' => 1, // 👈 WAJIB (menunggu verifikasi admin)
         ]);
 
         // Login otomatis
@@ -51,7 +52,7 @@ class RegisterController extends Controller
                 return redirect()->route('dashboard.operator');
             default:
 
-            $request->session()->flash('success', 'Register berhasil! Silakan login.');
+            $request->session()->flash('success', 'Register berhasil! Silahkan Login.');
                 return redirect('/login');
         }
     }

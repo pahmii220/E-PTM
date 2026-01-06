@@ -46,5 +46,6 @@ class Kernel extends HttpKernel
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
         'role' => \App\Http\Middleware\RoleMiddleware::class, // ✅ Middleware role ditambahkan di sini
+        'active' => \App\Http\Middleware\CheckActive::class,
     ];
 }

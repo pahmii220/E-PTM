@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Pasien;
 use App\Models\DeteksiDiniPTM;
 use App\Models\FaktorResikoPTM;
+use App\Models\TindakLanjutPTM;
 
 class VerifikasiController extends Controller
 {
@@ -118,7 +119,8 @@ public function process(Request $request)
     $this->middleware('role:pengguna')->except([
         'printPasien',
         'printDeteksi',
-        'printFaktor'
+        'printFaktor',
+        'printTindakLanjut'
     ]);
 }
 
@@ -158,41 +160,42 @@ public function process(Request $request)
      * List deteksi — mendukung filter status (approved/rejected/pending) atau null untuk semua.
      */
     public function deteksiPending(Request $request)
-    {
-        $allowed = ['approved','rejected','pending'];
-        $status = $request->query('status') && in_array($request->query('status'), $allowed)
-            ? $request->query('status')
-            : null;
+{
+    $status = $request->query('status', 'pending');
 
-        $query = DeteksiDiniPTM::with(['pasien','petugas'])
-            ->orderBy('created_at','desc');
+    $query = DeteksiDiniPTM::with(['pasien','petugas'])
+        ->orderBy('created_at','desc');
 
-        if ($status) $query->where('verification_status', $status);
-
-        $data = $query->paginate(20)->appends($request->query());
-
-        return view('pengguna.verifikasi.deteksi', compact('data','status'));
+    if ($status !== 'all') {
+        $query->where('verification_status', $status);
     }
+
+    $data = $query->paginate(20)->appends($request->query());
+
+    return view('pengguna.verifikasi.deteksi', compact('data','status'));
+}
+
+
 
     /**
      * List faktor — mendukung filter status (approved/rejected/pending) atau null untuk semua.
      */
-    public function faktorPending(Request $request)
-    {
-        $allowed = ['approved','rejected','pending'];
-        $status = $request->query('status') && in_array($request->query('status'), $allowed)
-            ? $request->query('status')
-            : null;
+public function faktorPending(Request $request)
+{
+    $status = $request->query('status', 'pending');
 
-        $query = FaktorResikoPTM::with(['pasien','petugas'])
-            ->orderBy('created_at','desc');
+    $query = FaktorResikoPTM::with(['pasien','petugas'])
+        ->orderBy('created_at','desc');
 
-        if ($status) $query->where('verification_status', $status);
-
-        $data = $query->paginate(20)->appends($request->query());
-
-        return view('pengguna.verifikasi.faktor', compact('data','status'));
+    if ($status !== 'all') {
+        $query->where('verification_status', $status);
     }
+
+    $data = $query->paginate(20)->appends($request->query());
+
+    return view('pengguna.verifikasi.faktor', compact('data','status'));
+}
+
 
     /**
      * Aksi verifikasi pasien (approve/reject) — hanya update status, kembali ke halaman sebelumnya
@@ -275,23 +278,22 @@ public function process(Request $request)
     /**
      * Cetak laporan: deteksi (print-friendly view)
      */
-        public function printDeteksi(Request $request)
+    public function printDeteksi(Request $request)
 {
-    // Ambil SEMUA data (approved, rejected, pending)
-    // Eager-load pasien & petugas saja (jangan petugas.puskesmas karena relasi itu belum ada)
-    $items = DeteksiDiniPTM::with(['pasien', 'petugas'])
-        ->orderBy('tanggal_pemeriksaan', 'desc')
-        ->get();
+    $status = $request->query('status', 'pending');
 
-    // Jika mau support PDF via ?format=pdf (opsional)
-    if ($request->query('format') === 'pdf' && class_exists(\PDF::class)) {
-        $pdf = \PDF::loadView('pengguna.verifikasi.print.deteksi', compact('items'))
-                   ->setPaper('a4', 'portrait'); // atau 'landscape' jika butuh
-        return $pdf->stream('laporan-deteksi-semua-'.now()->format('Ymd').'.pdf');
+    $query = DeteksiDiniPTM::with(['pasien','petugas'])
+        ->orderBy('tanggal_pemeriksaan','desc');
+
+    if ($status !== 'all') {
+        $query->where('verification_status', $status);
     }
 
-    return view('pengguna.verifikasi.print.deteksi', compact('items'));
+    $items = $query->get();
+
+    return view('pengguna.verifikasi.print.deteksi', compact('items','status'));
 }
+
 
 
     /**
@@ -322,21 +324,47 @@ public function process(Request $request)
     /**
      * Cetak laporan: faktor
      */
-       public function printFaktor(Request $request)
+public function printFaktor(Request $request)
 {
-    $items = \App\Models\FaktorResikoPTM::with(['pasien','petugas'])->orderBy('created_at','desc')->get();
+    $role = Auth::user()->role_name;
 
-    // Jika akses ?debug=json maka return json langsung (lebih mudah untuk cek)
-    if ($request->query('debug') === 'json') {
-        return response()->json([
-            'count' => $items->count(),
-            'sample' => $items->take(10)
-        ]);
+    // ✅ BEDAKAN DEFAULT STATUS
+    if ($role === 'admin') {
+        $status = $request->query('status', 'approved');
+    } else {
+        $status = $request->query('status', 'pending');
     }
 
-    // fallback: tetap render view untuk tampilan normal
-    return view('pengguna.verifikasi.print.faktor', compact('items'));
+    $query = FaktorResikoPTM::with(['pasien','petugas'])
+        ->orderBy('created_at','desc');
+
+    if ($status !== 'all') {
+        $query->where('verification_status', $status);
+    }
+
+    $items = $query->get();
+
+    return view('pengguna.verifikasi.print.faktor', compact('items','status'));
 }
+
+
+public function printTindakLanjut()
+{
+    $items = TindakLanjutPTM::with(['pasien','puskesmas'])
+        ->orderBy('tanggal_tindak_lanjut','desc')
+        ->get();
+
+    return view('pengguna.verifikasi.print.tindak_lanjut', compact('items'));
+}
+
+
+public function showPasien($id)
+{
+    $pasien = Pasien::findOrFail($id);
+
+    return view('pengguna.verifikasi.pasien_show', compact('pasien'));
+}
+
 
 
 }

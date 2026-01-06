@@ -17,13 +17,6 @@
                     <button class="btn btn-outline-secondary btn-sm ms-2">Cari</button>
                 </form>
 
-                {{-- Tombol Cetak --}}
-                <a href="{{ route('admin.data_puskesmas.print') }}" target="_blank"
-                    class="btn btn-outline-primary fw-semibold shadow-sm">
-                    <i class="bi bi-printer-fill"></i> Cetak Data
-                </a>
-
-
                 {{-- Tombol Tambah --}}
                 <a href="{{ route('admin.data_puskesmas.create') }}" class="btn btn-success fw-semibold shadow-sm">
                     <i class="bi bi-plus-circle"></i> Tambah Puskesmas

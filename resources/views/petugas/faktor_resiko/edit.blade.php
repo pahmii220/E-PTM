@@ -3,112 +3,123 @@
 @section('title', 'Edit Faktor Risiko PTM')
 
 @section('content')
-    <div class="container mt-4">
-        <div class="card shadow-lg border-0">
-            <div class="card-header bg-success text-white">
-                <h4 class="mb-0">Edit Faktor Risiko PTM</h4>
-            </div>
+<div class="container mt-4">
+    <div class="card shadow-lg border-0">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Edit Faktor Risiko PTM</h4>
+        </div>
 
-            <div class="card-body">
+        <div class="card-body">
 
-                {{-- Error global --}}
-                @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <strong>Periksa kembali input Anda:</strong>
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $err)
-                                <li>{{ $err }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+            {{-- Error global --}}
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <strong>Periksa kembali input Anda:</strong>
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $err)
+                            <li>{{ $err }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
-                <form action="{{ route('petugas.faktor_resiko.update', $faktor->id) }}" method="POST">
-                    @csrf
-                    @method('PUT')
+            <form action="{{ route('petugas.faktor_resiko.update', $faktor->id) }}" method="POST">
+                @csrf
+                @method('PUT')
 
-                    {{-- Pasien + Tanggal --}}
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Nama Peserta</label>
-                            <select name="pasien_id" class="form-select" required>
-                                <option value="">-- Pilih Peserta --</option>
-                                @foreach($pasien as $p)
-                                    <option value="{{ $p->id }}" {{ old('pasien_id', $faktor->pasien_id) == $p->id ? 'selected' : '' }}>
-                                        {{ $p->nama_lengkap }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label">Tanggal Pemeriksaan</label>
-                            <input type="date" name="tanggal_pemeriksaan" class="form-control"
-                                value="{{ old('tanggal_pemeriksaan', optional($faktor->tanggal_pemeriksaan)->format('Y-m-d')) }}"
-                                required>
-                        </div>
-                    </div>
-
-                    {{-- 3 Faktor Risiko --}}
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Merokok</label>
-                            <select name="merokok" class="form-select" required>
-                                <option value="Tidak" {{ $faktor->merokok == 'Tidak' ? 'selected' : '' }}>Tidak</option>
-                                <option value="Ya" {{ $faktor->merokok == 'Ya' ? 'selected' : '' }}>Ya</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Konsumsi Alkohol</label>
-                            <select name="alkohol" class="form-select" required>
-                                <option value="Tidak" {{ $faktor->alkohol == 'Tidak' ? 'selected' : '' }}>Tidak</option>
-                                <option value="Ya" {{ $faktor->alkohol == 'Ya' ? 'selected' : '' }}>Ya</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Kurang Aktivitas Fisik</label>
-                            <select name="kurang_aktivitas_fisik" class="form-select" required>
-                                <option value="Tidak" {{ $faktor->kurang_aktivitas_fisik == 'Tidak' ? 'selected' : '' }}>Tidak
+                {{-- PASIEN + TANGGAL --}}
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Nama Peserta</label>
+                        <select name="pasien_id" class="form-select" required>
+                            <option value="">-- Pilih Peserta --</option>
+                            @foreach($pasien as $p)
+                                <option value="{{ $p->id }}"
+                                    {{ old('pasien_id', $faktor->pasien_id) == $p->id ? 'selected' : '' }}>
+                                    {{ $p->nama_lengkap }}
                                 </option>
-                                <option value="Ya" {{ $faktor->kurang_aktivitas_fisik == 'Ya' ? 'selected' : '' }}>Ya</option>
-                            </select>
-                        </div>
+                            @endforeach
+                        </select>
                     </div>
 
-                    {{-- Puskesmas --}}
-                    <div class="row mb-3">
-                        <div class="col-md-12">
-                            <label class="form-label fw-semibold">Puskesmas</label>
-                            <select name="puskesmas_id" class="form-select @error('puskesmas_id') is-invalid @enderror" required>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Tanggal Pemeriksaan</label>
+                        <input type="date" name="tanggal_pemeriksaan" class="form-control"
+                            value="{{ old('tanggal_pemeriksaan', optional($faktor->tanggal_pemeriksaan)->format('Y-m-d')) }}"
+                            required>
+                    </div>
+                </div>
+
+                {{-- FAKTOR RISIKO --}}
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Merokok</label>
+                        <select name="merokok" class="form-select" required>
+                            <option value="Tidak" {{ $faktor->merokok == 'Tidak' ? 'selected' : '' }}>Tidak</option>
+                            <option value="Ya" {{ $faktor->merokok == 'Ya' ? 'selected' : '' }}>Ya</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Konsumsi Alkohol</label>
+                        <select name="alkohol" class="form-select" required>
+                            <option value="Tidak" {{ $faktor->alkohol == 'Tidak' ? 'selected' : '' }}>Tidak</option>
+                            <option value="Ya" {{ $faktor->alkohol == 'Ya' ? 'selected' : '' }}>Ya</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Kurang Aktivitas Fisik</label>
+                        <select name="kurang_aktivitas_fisik" class="form-select" required>
+                            <option value="Tidak" {{ $faktor->kurang_aktivitas_fisik == 'Tidak' ? 'selected' : '' }}>Tidak</option>
+                            <option value="Ya" {{ $faktor->kurang_aktivitas_fisik == 'Ya' ? 'selected' : '' }}>Ya</option>
+                        </select>
+                    </div>
+                </div>
+
+                {{-- PUSKESMAS --}}
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold">Puskesmas</label>
+
+                        @if(auth()->user()->role_name === 'admin')
+                            {{-- ADMIN: BOLEH PILIH --}}
+                            <select name="puskesmas_id"
+                                class="form-select @error('puskesmas_id') is-invalid @enderror" required>
                                 <option value="">-- Pilih Puskesmas --</option>
                                 @foreach($puskesmas as $pkm)
-                                    <option value="{{ $pkm->id }}" {{ old('puskesmas_id', $faktor->puskesmas_id) == $pkm->id ? 'selected' : '' }}>
+                                    <option value="{{ $pkm->id }}"
+                                        {{ old('puskesmas_id', $faktor->puskesmas_id) == $pkm->id ? 'selected' : '' }}>
                                         {{ $pkm->nama_puskesmas }}
                                     </option>
                                 @endforeach
                             </select>
+                        @else
+                            {{-- PETUGAS: TERKUNCI --}}
+                            <input type="text" class="form-control"
+                                value="{{ auth()->user()->petugas->puskesmas->nama_puskesmas }}" readonly>
+                            <input type="hidden" name="puskesmas_id"
+                                value="{{ auth()->user()->petugas->puskesmas_id }}">
+                        @endif
 
-                            @error('puskesmas_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        @error('puskesmas_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
+                </div>
 
+                {{-- TOMBOL --}}
+                <div class="text-end">
+                    <a href="{{ route('petugas.faktor_resiko.index') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Kembali
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-save"></i> Simpan Perubahan
+                    </button>
+                </div>
 
-                    {{-- Tombol --}}
-                    <div class="text-end">
-                        <a href="{{ route('petugas.faktor_resiko.index') }}" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left"></i> Kembali
-                        </a>
-                        <button type="submit" class="btn btn-success">
-                            <i class="bi bi-save"></i> Simpan Perubahan
-                        </button>
-                    </div>
-
-                </form>
-            </div>
+            </form>
         </div>
     </div>
+</div>
 @endsection

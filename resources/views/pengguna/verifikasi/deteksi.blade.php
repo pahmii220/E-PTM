@@ -8,8 +8,6 @@
         <!-- HEADER -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="mb-0">Verifikasi - Deteksi Dini</h4>
-            <br>
-            <br>
             <div class="d-flex gap-2 align-items-center">
                 {{-- Tombol Cetak --}}
                 <a href="{{ route('pengguna.verifikasi.print.deteksi', ['status' => $status ?? 'pending']) }}"
@@ -29,6 +27,7 @@
                 </form>
             </div>
         </div>
+        <br>
         <div class="card shadow-sm border-0">
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -75,24 +74,27 @@
                                     <td class="text-end pe-3">
                                         @if ($row->verification_status == 'pending')
                                             <div class="d-flex justify-content-end gap-1">
-                                                <button class="btn btn-success btn-sm verify-action-btn" data-bs-toggle="modal"
-                                                    data-bs-target="#verifyModal" data-id="{{ $row->id }}" data-type="deteksi"
-                                                    data-action="approve">
+
+                                                {{-- TERIMA --}}
+                                                <button class="btn btn-sm text-white" title="Terima"
+                                                    style="background: linear-gradient(135deg, #22c55e, #16a34a); border: none;" data-bs-toggle="modal"
+                                                    data-bs-target="#verifyModal" data-id="{{ $row->id }}" data-type="deteksi" data-action="approve">
                                                     <i class="bi bi-check-lg"></i>
-                                                    <span class="d-none d-md-inline"> Diterima</span>
                                                 </button>
 
-                                                <button class="btn btn-danger btn-sm verify-action-btn" data-bs-toggle="modal"
-                                                    data-bs-target="#verifyModal" data-id="{{ $row->id }}" data-type="deteksi"
-                                                    data-action="reject">
+                                                {{-- TOLAK --}}
+                                                <button class="btn btn-sm text-white" title="Tolak"
+                                                    style="background: linear-gradient(135deg, #ef4444, #dc2626); border: none;" data-bs-toggle="modal"
+                                                    data-bs-target="#verifyModal" data-id="{{ $row->id }}" data-type="deteksi" data-action="reject">
                                                     <i class="bi bi-x-lg"></i>
-                                                    <span class="d-none d-md-inline"> Ditolak</span>
                                                 </button>
+
                                             </div>
                                         @else
                                             <span class="text-muted small">-</span>
                                         @endif
                                     </td>
+
                                 </tr>
                             @empty
                                 <tr>

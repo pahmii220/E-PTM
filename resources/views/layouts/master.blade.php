@@ -162,6 +162,28 @@
 
     {{-- Main content --}}
         <main class="app-main flex-1 flex flex-col p-6 min-h-[calc(100vh-64px-60px)]">
+            {{-- ================= ALERT GLOBAL ================= --}}
+            @if(session('success'))
+                <div class="container-fluid px-4 mb-3">
+                    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                        <i class="bi bi-check-circle-fill me-1"></i>
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+            @endif
+            
+            @if(session('error'))
+                <div class="container-fluid px-4 mb-3">
+                    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        {{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+            @endif
+            {{-- =============== END ALERT GLOBAL =============== --}}
+
             @yield('content')
         </main>
 

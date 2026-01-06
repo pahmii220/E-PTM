@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Laporan Data Pasien</title>
+    <title>Laporan Peserta Pemeriksaan</title>
     <style>
         /* Umum - jangan ubah layout utama */
         @page {

@@ -26,15 +26,27 @@ public function login(Request $request)
         'password' => 'required|string',
     ]);
 
-    $credentials = $request->only('Username', 'password');
+    // 🔎 ambil user berdasarkan username
+    $user = \App\Models\User::where('Username', $request->Username)->first();
 
-    if (Auth::attempt($credentials, $request->filled('remember'))) {
+    // ❌ user tidak ditemukan
+    if (!$user) {
+        return back()->with('error', 'Username atau password salah.');
+    }
+
+    // 🔒 BLOKIR JIKA NONAKTIF
+    if ($user->is_active == 0) {
+        return back()->with('error', 'Akun Anda telah dinonaktifkan. Hubungi admin.');
+    }
+
+    // 🔐 proses login
+    if (Auth::attempt(
+        ['Username' => $request->Username, 'password' => $request->password],
+        $request->filled('remember')
+    )) {
+
         $request->session()->regenerate();
-
         $user = Auth::user();
-
-        // 🔥 WAJIB: paksa ganti password jika hasil reset admin
-
 
         // Redirect sesuai role
         switch ($user->role_name) {
@@ -63,6 +75,7 @@ public function login(Request $request)
 
     return back()->with('error', 'Username atau password salah.');
 }
+
 
 
     /**

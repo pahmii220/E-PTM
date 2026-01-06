@@ -40,10 +40,11 @@ class FaktorResikoPTM extends Model
     // -----------------------
 
     // Relasi ke Pasien
-    public function pasien()
-    {
-        return $this->belongsTo(Pasien::class, 'pasien_id');
-    }
+public function pasien()
+{
+    return $this->belongsTo(\App\Models\Pasien::class, 'pasien_id');
+}
+
 
     // Relasi ke Puskesmas
     public function puskesmas()
@@ -71,5 +72,6 @@ class FaktorResikoPTM extends Model
     {
         return ucfirst($this->verification_status ?? 'pending');
     }
+    
 }
 

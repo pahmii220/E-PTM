@@ -8,8 +8,6 @@
         <!-- HEADER: Judul di Kiri, Tools (Cetak & Filter) di Kanan -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="mb-0">Verifikasi - Faktor Risiko</h4>
-            <br>
-            <br>
             <div class="d-flex gap-2 align-items-center">
                 {{-- Tombol Cetak --}}
                 <a href="{{ route('pengguna.verifikasi.print.faktor', ['status' => $status ?? 'pending']) }}"
@@ -29,7 +27,7 @@
                 </form>
             </div>
         </div>
-
+<br>
         <div class="card shadow-sm border-0">
             <div class="card-body p-0">
                 <div class="table-responsive">
