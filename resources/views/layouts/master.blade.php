@@ -115,22 +115,60 @@
             <div class="relative">
                 <!-- Button profil -->
             <button id="profileBtn" class="flex items-center gap-2 focus:outline-none">
-                <img src="https://api.dicebear.com/8.x/bottts/svg?seed={{ Auth::user()->Nama_Lengkap }}&backgroundColor=ebfbee"
-                    alt="Avatar" class="rounded-full border-2 border-green-400 shadow-sm w-10 h-10">
-                <span class="font-medium text-gray-700">{{ ucfirst(Auth::user()->role_name) }}</span>
-                <i class="bi bi-caret-down-fill text-gray-500"></i>
-            </button>
+    <img src="https://api.dicebear.com/8.x/bottts/svg?seed={{ Auth::user()->username ?? Auth::user()->id }}&backgroundColor=ebfbee"
+        alt="Avatar"
+        class="rounded-full border-2 border-green-400 shadow-sm w-10 h-10">
+
+    <span class="font-medium text-gray-700">
+        {{ ucfirst(Auth::user()->role_name) }}
+    </span>
+
+    <i class="bi bi-caret-down-fill text-gray-500"></i>
+</button>
+
 
         
                 <!-- Dropdown -->
                 <div id="profileDropdown"
                     class="hidden absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg overflow-hidden">
-                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
-                        <i class="bi bi-person-circle text-green-500"></i> Profil
-                    </a>
-                    <a href="#" class="block px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
-                        <i class="bi bi-gear text-gray-500"></i> Pengaturan
-                    </a>
+                    {{-- MENU PROFIL --}}
+@if(Auth::user()->role_name === 'petugas')
+    <a href="{{ route('petugas.profil') }}"
+       class="block px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
+        <i class="bi bi-person-circle text-green-500"></i>
+        Profil Petugas
+    </a>
+@endif
+
+@if(Auth::user()->role_name === 'pengguna')
+    <a href="{{ route('pengguna.pegawai_dinkes.edit', Auth::id()) }}"
+       class="block px-4 py-2 hover:bg-gray-100 flex items-center gap-2">
+        <i class="bi bi-person-circle text-green-500"></i>
+        Profil Pegawai Dinkes
+    </a>
+@endif
+
+{{-- ================= PENGATURAN AKUN ================= --}}
+@if(auth()->check() && in_array(auth()->user()->role_name, ['petugas', 'pengguna']))
+    <a href="{{ auth()->user()->role_name === 'petugas'
+            ? route('petugas.pengaturan')
+            : route('pengguna.pengaturan') }}"
+       class="block px-4 py-2 flex items-center gap-2 transition
+       {{
+           auth()->user()->role_name === 'petugas'
+               ? (request()->routeIs('petugas.pengaturan*')
+                    ? 'bg-gray-100 text-green-600 font-semibold'
+                    : 'hover:bg-gray-100 text-gray-700')
+               : (request()->routeIs('pengguna.pengaturan*')
+                    ? 'bg-gray-100 text-green-600 font-semibold'
+                    : 'hover:bg-gray-100 text-gray-700')
+       }}">
+        <i class="bi bi-gear"></i>
+        <span>Pengaturan</span>
+    </a>
+@endif
+
+
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button type="submit"

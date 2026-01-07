@@ -66,10 +66,11 @@ class User extends Authenticatable
         return in_array($this->role_name, $roles);
     }
 
-    public function petugas()
+public function petugas()
 {
-    return $this->hasOne(Petugas::class);
+    return $this->hasOne(\App\Models\Petugas::class);
 }
+
 
 public function pegawaiDinkes()
 {
@@ -79,6 +80,22 @@ public function pegawaiDinkes()
 protected $casts = [
     'is_active' => 'integer',
 ];
+
+
+public function profilDinkesLengkap(): bool
+{
+    if (!$this->pegawaiDinkes) {
+        return false;
+    }
+
+    return
+        !empty($this->pegawaiDinkes->nama_pegawai) &&
+        !empty($this->pegawaiDinkes->nip) &&
+        !empty($this->pegawaiDinkes->jabatan) &&
+        !empty($this->pegawaiDinkes->bidang) &&
+        !empty($this->pegawaiDinkes->telepon);
+}
+
 
 
 }

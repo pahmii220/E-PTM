@@ -74,6 +74,13 @@ public function tindakLanjut()
     return $this->hasOne(\App\Models\TindakLanjutPTM::class, 'deteksi_dini_id');
 }
 
+public function deteksiDini()
+{
+    return $this->belongsTo(
+        \App\Models\DeteksiDiniPTM::class,
+        'deteksi_dini_id'
+    );
+}
 
 
     // -----------------------

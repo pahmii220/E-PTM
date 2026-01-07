@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;   // 🔥 INI WAJIB
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\PasswordResetRequest;
@@ -15,14 +15,31 @@ class ForgotPasswordManualController extends Controller
             'username' => 'required|exists:users,Username'
         ]);
 
-        PasswordResetRequest::firstOrCreate(
-            ['username' => $request->username],
-            ['status' => 'pending']
-        );
+        $reset = PasswordResetRequest::where('username', $request->username)->first();
 
-        session(['reset_username' => $request->username]);
+        // ❌ Masih ada permintaan aktif
+        if ($reset && in_array($reset->status, ['pending', 'approved'])) {
+            return back()
+                ->with('warning', 'Permintaan reset sebelumnya masih diproses.')
+                ->with('reset_username', $request->username);
+        }
 
-        return back()->with('success', 'Permintaan reset dikirim. Tunggu persetujuan admin.');
+        // ✅ RESET ULANG / BUAT BARU
+        if ($reset) {
+            $reset->update([
+                'status' => 'pending',
+                'approved_at' => null,
+                'created_at' => now(),
+            ]);
+        } else {
+            PasswordResetRequest::create([
+                'username' => $request->username,
+                'status'   => 'pending',
+            ]);
+        }
+
+        return back()
+            ->with('success', 'Permintaan reset password berhasil dikirim.')
+            ->with('reset_username', $request->username);
     }
 }
-

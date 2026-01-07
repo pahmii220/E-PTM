@@ -47,5 +47,6 @@ class Kernel extends HttpKernel
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
         'role' => \App\Http\Middleware\RoleMiddleware::class, // ✅ Middleware role ditambahkan di sini
         'active' => \App\Http\Middleware\CheckActive::class,
+        'petugas.profile' => \App\Http\Middleware\CheckPetugasProfile::class,
     ];
 }

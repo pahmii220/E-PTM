@@ -167,49 +167,69 @@
         <hr class="top">
 
         <div style="text-align:center; margin-bottom:10px;">
-            <h3 style="margin:0; font-size:15px; letter-spacing:0.6px;">LAPORAN DETEKSI DINI PTM</h3>
+            <h3 style="margin:0; font-size:15px; letter-spacing:0.6px;">LAPORAN DETEKSI DINI PENYAKIT TIDAK MENULAR</h3>
         </div>
 
         {{-- SELALU CETAK MASSAL --}}
         <table class="grid">
-            <thead>
-                <tr>
-                    <th style="width:40px">No</th>
-                    <th>Peserta</th>
-                    <th style="width:120px">Tanggal Pemeriksaan</th>
-                    <th style="width:90px">Tekanan</th>
-                    <th style="width:80px">Gula</th>
-                    <th>Puskesmas</th>
-                </tr>
-            </thead>
+        <thead>
+            <tr>
+                <th style="width:40px">No</th>
+                <th>Peserta</th>
+                <th style="width:120px">Tanggal Pemeriksaan</th>
+                <th style="width:90px">Tekanan</th>
+                <th style="width:80px">Gula</th>
+                <th style="width:140px">Jenis Tindak Lanjut</th> <!-- BARU -->
+                <th>Puskesmas</th>
+            </tr>
+        </thead>
+
 
             <tbody>
-                @forelse($items as $i => $row)
-                    <tr>
-                        <td style="text-align:center;">
-                            {{ (isset($items) && is_object($items) && method_exists($items, 'firstItem')) ? $items->firstItem() + $i : $i + 1 }}
-                        </td>
+    @forelse($items as $i => $row)
+        <tr>
+            <td style="text-align:center;">
+                {{ (isset($items) && is_object($items) && method_exists($items, 'firstItem'))
+                    ? $items->firstItem() + $i
+                    : $i + 1 }}
+            </td>
 
-                        <td>{{ optional($row->pasien)->nama_lengkap ?? ($row->nama_pasien ?? '-') }}</td>
+            <td>
+                {{ optional($row->pasien)->nama_lengkap ?? ($row->nama_pasien ?? '-') }}
+            </td>
 
-                        <td style="text-align:center;">
-                            {{ $row->tanggal_pemeriksaan ? \Carbon\Carbon::parse($row->tanggal_pemeriksaan)->format('d-m-Y') : '-' }}
-                        </td>
+            <td style="text-align:center;">
+                {{ $row->tanggal_pemeriksaan
+                    ? \Carbon\Carbon::parse($row->tanggal_pemeriksaan)->format('d-m-Y')
+                    : '-' }}
+            </td>
 
-                        <td style="text-align:center;">{{ $row->tekanan_darah ?? '-' }}</td>
+            <td style="text-align:center;">
+                {{ $row->tekanan_darah ?? '-' }}
+            </td>
 
-                        <td style="text-align:center;">{{ $row->gula_darah ?? '-' }}</td>
+            <td style="text-align:center;">
+                {{ $row->gula_darah ?? '-' }}
+            </td>
 
-                        <td>
-                            {{ optional($row->puskesmas)->nama_puskesmas ?? '-' }}
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="6" class="text-center py-3">Tidak ada data deteksi dini.</td>
-                    </tr>
-                @endforelse
-            </tbody>
+            {{-- 🔥 KOLOM BARU: JENIS TINDAK LANJUT --}}
+            <td>
+                {{ optional($row->tindakLanjut)->jenis_tindak_lanjut ?? '-' }}
+            </td>
+
+            <td>
+                {{ optional($row->puskesmas)->nama_puskesmas ?? '-' }}
+            </td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="7" class="text-center py-3">
+                Tidak ada data deteksi dini.
+            </td>
+        </tr>
+    @endforelse
+</tbody>
+
         </table>
 
         <!-- Footer / TTD -->

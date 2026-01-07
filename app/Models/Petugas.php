@@ -12,6 +12,7 @@ class Petugas extends Model
     protected $table = 'petugas';
 
     protected $fillable = [
+        'user_id',
         'nip',
         'nama_pegawai',
         'tanggal_lahir',
@@ -19,7 +20,7 @@ class Petugas extends Model
         'jabatan',
         'bidang',
         'telepon',
-        'puskesmas_id', // ditambahkan untuk relasi ke puskesmas
+        'puskesmas_id',
     ];
 
     protected $casts = [

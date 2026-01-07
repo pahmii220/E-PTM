@@ -282,8 +282,12 @@ public function faktorPending(Request $request)
 {
     $status = $request->query('status', 'pending');
 
-    $query = DeteksiDiniPTM::with(['pasien','petugas'])
-        ->orderBy('tanggal_pemeriksaan','desc');
+    $query = DeteksiDiniPTM::with([
+        'pasien',
+        'petugas',
+        'puskesmas',     // (jika kolom puskesmas dipakai di view)
+        'tindakLanjut'   // 🔥 INI YANG DIBUTUHKAN
+    ])->orderBy('tanggal_pemeriksaan','desc');
 
     if ($status !== 'all') {
         $query->where('verification_status', $status);
@@ -293,6 +297,7 @@ public function faktorPending(Request $request)
 
     return view('pengguna.verifikasi.print.deteksi', compact('items','status'));
 }
+
 
 
 

@@ -35,6 +35,8 @@ use App\Http\Controllers\Petugas\PasienController;
 use App\Http\Controllers\Petugas\DeteksiDiniPTMController;
 use App\Http\Controllers\Petugas\FaktorResikoPTMController;
 use App\Http\Controllers\Petugas\TindakLanjutPTMController;
+use App\Http\Controllers\Petugas\PetugasProfileController;
+use App\Http\Middleware\CheckPetugasProfile;
 
 
 /*
@@ -197,13 +199,14 @@ Route::put('pengguna/{id}', [PenggunaController::class, 'update'])
     Route::delete('pengguna/{id}', [PenggunaController::class, 'destroy'])
     ->name('pengguna.destroy');
 
-
-
     Route::patch(
     'data_petugas/{petugas}/role',
     [PetugasController::class, 'updateRole']
 )->name('data_petugas.updateRole');
-
+        Route::get(
+    '/reset-requests/{username}/profile',
+    [ResetPasswordRequestController::class, 'showProfile']
+)->name('reset.requests.profile');
 
 });
 
@@ -214,7 +217,12 @@ Route::put('pengguna/{id}', [PenggunaController::class, 'update'])
 */
 Route::prefix('petugas')
     ->name('petugas.')
-    ->middleware(['auth','active','role:petugas,admin'])
+    ->middleware([
+        'auth',
+        'active',
+        'role:petugas,admin',
+        CheckPetugasProfile::class, // ✅ LANGSUNG CLASS
+    ])
     ->group(function () {
 
     Route::get('/dashboard', [PetugasDashboardController::class,'index'])
@@ -224,9 +232,6 @@ Route::prefix('petugas')
     Route::resource('deteksi_dini', DeteksiDiniPTMController::class);
     Route::resource('faktor_resiko', FaktorResikoPTMController::class);
 
-    // ===============================
-    // TINDAK LANJUT PTM (FIX)
-    // ===============================
     Route::resource('tindak_lanjut', TindakLanjutPTMController::class)
         ->except(['create','show']);
 
@@ -234,7 +239,28 @@ Route::prefix('petugas')
         'tindak_lanjut/create/{deteksi_dini_id}',
         [TindakLanjutPTMController::class, 'create']
     )->name('tindak_lanjut.create');
+
+Route::get('/profil', [PetugasProfileController::class, 'edit'])
+    ->name('profil');
+
+Route::post('/profil', [PetugasProfileController::class, 'update'])
+    ->name('profil.update');
+
+        Route::get('/pengaturan-akun', 
+        [\App\Http\Controllers\Petugas\PengaturanAkunController::class, 'index']
+    )->name('pengaturan');
+
+    Route::post('/ganti-username', 
+        [\App\Http\Controllers\Petugas\PengaturanAkunController::class, 'updateUsername']
+    )->name('ganti.username');
+
+    Route::post('/ganti-password', 
+        [\App\Http\Controllers\Petugas\PengaturanAkunController::class, 'updatePassword']
+    )->name('ganti.password');
+
 });
+
+
 
 
 /*
@@ -279,11 +305,6 @@ Route::get('/rekap-puskesmas/print',
     [RekapPuskesmasController::class, 'print'])
     ->name('rekap.puskesmas.print');
 
-        Route::get('/pegawai-dinkes/create', [PegawaiDinkesController::class, 'create'])
-    ->name('pegawai_dinkes.create');
-
-Route::post('/pegawai-dinkes', [PegawaiDinkesController::class, 'store'])
-    ->name('pegawai_dinkes.store');
 
 Route::get('/pegawai-dinkes/{id}/edit', [PegawaiDinkesController::class, 'edit'])
     ->name('pegawai_dinkes.edit');
@@ -294,6 +315,18 @@ Route::get(
     'verifikasi/pasien/{id}',
     [VerifikasiController::class, 'showPasien']
 )->name('verifikasi.pasien.show');
+
+ Route::get('/pengaturan-akun',
+            [\App\Http\Controllers\Pengguna\PengaturanAkunController::class, 'index']
+        )->name('pengaturan');
+
+        Route::put('/ganti-username',
+            [\App\Http\Controllers\Pengguna\PengaturanAkunController::class, 'updateUsername']
+        )->name('ganti.username');
+
+        Route::put('/ganti-password',
+            [\App\Http\Controllers\Pengguna\PengaturanAkunController::class, 'updatePassword']
+        )->name('ganti.password');
 
 });
 

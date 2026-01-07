@@ -13,31 +13,38 @@ class DeteksiDiniPTMController extends Controller
     /**
      * Menampilkan daftar data
      */
-    public function index()
-    {
-        // ADMIN: lihat semua data
-        if (Auth::user()->role_name === 'admin') {
-            $deteksi = DeteksiDiniPTM::with(['pasien', 'puskesmas'])
-                ->latest()
-                ->get();
-        } else {
-            // PETUGAS: hanya puskesmas sendiri
-            $puskesmasId = Auth::user()->petugas->puskesmas_id;
+   public function index()
+{
+    $user = Auth::user();
 
-            $deteksi = DeteksiDiniPTM::with(['pasien', 'puskesmas'])
-                ->where('puskesmas_id', $puskesmasId)
-                ->latest()
-                ->get();
-        }
+    if ($user->role_name === 'admin' || $user->role_name === 'pengguna') {
+        // ADMIN & PENGGUNA (DINKES): lihat semua
+        $deteksi = DeteksiDiniPTM::with(['pasien', 'puskesmas'])
+            ->latest()
+            ->get();
+    } else {
+        // PETUGAS: hanya puskesmas sendiri
+        $puskesmasId = $user->petugas->puskesmas_id;
 
-        return view('petugas.deteksi_dini.index', compact('deteksi'));
+        $deteksi = DeteksiDiniPTM::with(['pasien', 'puskesmas'])
+            ->where('puskesmas_id', $puskesmasId)
+            ->latest()
+            ->get();
     }
+
+    return view('petugas.deteksi_dini.index', compact('deteksi'));
+}
+
 
     /**
      * Form tambah data
      */
 public function create()
 {
+    if (Auth::user()->role_name === 'pengguna') {
+        abort(403);
+    }
+
     if (Auth::user()->role_name === 'admin') {
         // ADMIN: semua pasien yang BELUM punya deteksi dini
         $pasien = Pasien::whereDoesntHave('deteksiDiniPTM')
@@ -62,6 +69,9 @@ public function create()
      */
     public function store(Request $request)
     {
+        if (Auth::user()->role_name === 'pengguna') {
+        abort(403);
+    }
         $request->validate([
             'pasien_id'           => 'required|exists:pasien,id',
             'tanggal_pemeriksaan' => 'required|date',
@@ -223,4 +233,5 @@ public function create()
             ->route('petugas.deteksi_dini.index')
             ->with('success', 'Data berhasil dihapus.');
     }
+
 }

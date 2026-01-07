@@ -7,23 +7,26 @@
 
     <div class="container py-3">
         {{-- ================= ALERT PROFIL BELUM LENGKAP ================= --}}
-        @if(
-                auth()->check() &&
-                auth()->user()->role_name === 'pengguna' &&
-                !auth()->user()->pegawaiDinkes &&
-                Route::has('pengguna.pegawai_dinkes.create')
-            )
-            <div class="alert alert-warning d-flex justify-content-between align-items-center shadow-sm">
-                <div>
-                    <strong>Profil Belum Lengkap</strong><br>
-                    Silakan lengkapi profil dan identitas anda .
-                </div>
+@if(
+    auth()->check() &&
+    auth()->user()->role_name === 'pengguna' &&
+    !auth()->user()->profilDinkesLengkap()
+)
+    <div id="alert-profil"
+         class="alert alert-warning d-flex justify-content-between align-items-center shadow-sm">
+        <div>
+            <strong>Profil Belum Lengkap</strong><br>
+            Silakan lengkapi profil dan identitas Anda untuk melanjutkan.
+        </div>
 
-                <a href="{{ route('pengguna.pegawai_dinkes.create') }}" class="btn btn-warning">
-                    Lengkapi Profil
-                </a>
-            </div>
-        @endif
+        <a href="{{ route('pengguna.pegawai_dinkes.edit', auth()->id()) }}"
+           class="btn btn-warning btn-sm">
+            Lengkapi Profil
+        </a>
+    </div>
+@endif
+
+
 
             <div class="mb-4">
                 <h1 class="h3 mb-1 fw-bold text-dark">Dashboard Pengguna</h1>
@@ -247,9 +250,32 @@
 @endpush
 
 @push('scripts')
+    {{-- Chart.js --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+
+            /* =========================
+             * ALERT PROFIL BELUM LENGKAP
+             * ========================= */
+            const alertBox = document.getElementById('alert-profil');
+            if (alertBox) {
+                // tampil selama 10 detik
+                setTimeout(() => {
+                    alertBox.style.transition = 'opacity 1s ease';
+                    alertBox.style.opacity = '0';
+
+                    // hapus setelah animasi
+                    setTimeout(() => {
+                        alertBox.remove();
+                    }, 1000);
+                }, 10000); // 10 detik
+            }
+
+            /* =========================
+             * CHART DASHBOARD
+             * ========================= */
             const ctx = document.getElementById('monitorChart');
             if (!ctx) return;
 
@@ -263,7 +289,7 @@
             new Chart(ctx.getContext('2d'), {
                 type: 'bar',
                 data: {
-                    labels: ['Deteksi', 'Faktor', 'Pending', 'Peserta'],
+                    labels: ['Deteksi Dini', 'Faktor Resiko', 'Pending', 'Peserta'],
                     datasets: [{
                         label: 'Jumlah',
                         data: dataValues,
@@ -280,13 +306,21 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: {
+                        legend: { display: false }
+                    },
                     scales: {
-                        y: { beginAtZero: true, grid: { borderDash: [4, 4] } },
-                        x: { grid: { display: false } }
+                        y: {
+                            beginAtZero: true,
+                            grid: { borderDash: [4, 4] }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
                     }
                 }
             });
+
         });
     </script>
 @endpush
