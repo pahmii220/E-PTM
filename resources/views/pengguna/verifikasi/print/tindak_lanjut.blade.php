@@ -113,7 +113,7 @@
     <hr class="top">
 
     <div style="text-align:center; margin-bottom:10px;">
-        <h3 style="margin:0; font-size:15px;">LAPORAN TINDAK LANJUT PTM</h3>
+        <h3 style="margin:0; font-size:15px;">LAPORAN TINDAK LANJUT PENYAKIT TIDAK MENULAR</h3>
     </div>
 
     <!-- TABEL -->

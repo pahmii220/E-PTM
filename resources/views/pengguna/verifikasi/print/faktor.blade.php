@@ -107,7 +107,7 @@
 
         <hr class="top">
 
-        <h3 style="text-align:center; margin:0 0 10px 0;">LAPORAN FAKTOR RISIKO PTM</h3>
+        <h3 style="text-align:center; margin:0 0 10px 0;">LAPORAN FAKTOR RISIKO PENYAKIT TIDAK MENULAR</h3>
 
         {{-- Guard: pastikan $items adalah collection --}}
         @php

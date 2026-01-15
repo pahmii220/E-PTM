@@ -304,26 +304,45 @@ public function faktorPending(Request $request)
     /**
      * Cetak laporan: pasien
      */
-        public function printPasien(Request $request)
+    public function printPasien(Request $request)
 {
-    $allowed = ['approved','rejected','pending','all'];
-    $status = $request->query('status');
+    $user = auth()->user();
 
-    // Jika status tidak valid, jadikan "all"
-    if (!in_array($status, $allowed)) {
+    // status yang diizinkan
+    $allowedStatus = ['approved', 'rejected', 'pending', 'all'];
+    $status = $request->query('status', 'all');
+
+    if (!in_array($status, $allowedStatus)) {
         $status = 'all';
     }
 
-    $query = Pasien::orderBy('created_at', 'desc');
+    // base query
+    $query = Pasien::with('puskesmas')
+        ->orderBy('created_at', 'desc');
 
+    // 🔐 ROLE-BASED FILTER
+    if ($user->role_name === 'petugas') {
+        // petugas hanya puskesmas sendiri
+        $query->where('puskesmas_id', $user->petugas->puskesmas_id);
+    } elseif (in_array($user->role_name, ['admin', 'pengguna'])) {
+        // admin & pengguna boleh pilih puskesmas
+        if ($request->filled('puskesmas')) {
+            $query->whereHas('puskesmas', function ($q) use ($request) {
+                $q->where('nama_puskesmas', $request->puskesmas);
+            });
+        }
+    }
+
+    // 🎯 FILTER STATUS
     if ($status !== 'all') {
         $query->where('verification_status', $status);
     }
 
     $items = $query->get();
 
-    return view('pengguna.verifikasi.cetak_pasien', compact('items','status'));
+    return view('pengguna.verifikasi.cetak_pasien', compact('items', 'status'));
 }
+
 
     
     /**

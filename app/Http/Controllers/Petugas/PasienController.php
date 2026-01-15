@@ -80,27 +80,33 @@ class PasienController extends Controller
     /**
      * Form edit pasien
      */
-    public function edit($id)
-    {
-        $user = Auth::user();
+public function edit($id)
+{
+    $user = Auth::user();
 
-        if ($user->role_name === 'pengguna') {
-            abort(403);
-        }
-
-        $pasien = $user->role_name === 'admin'
-            ? Pasien::findOrFail($id)
-            : Pasien::where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
-
-        // 🔒 hanya approved yang terkunci
-        if ($user->role_name !== 'admin' && $pasien->verification_status === 'approved') {
-            return redirect()
-                ->route('petugas.pasien.index')
-                ->with('error', 'Data sudah disetujui dan tidak dapat diedit.');
-        }
-
-        return view('petugas.pasien.edit', compact('pasien'));
+    if ($user->role_name === 'pengguna') {
+        abort(403);
     }
+
+    $pasien = $user->role_name === 'admin'
+        ? Pasien::findOrFail($id)
+        : Pasien::where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
+
+    // 🔒 hanya approved yang terkunci
+    if ($user->role_name !== 'admin' && $pasien->verification_status === 'approved') {
+        return redirect()
+            ->route('petugas.pasien.index')
+            ->with('error', 'Data sudah disetujui dan tidak dapat diedit.');
+    }
+
+    // ✅ TAMBAHAN PENTING
+    $puskesmas = [];
+    if ($user->role_name === 'admin') {
+        $puskesmas = \App\Models\Puskesmas::orderBy('nama_puskesmas')->get();
+    }
+
+    return view('petugas.pasien.edit', compact('pasien', 'puskesmas'));
+}
 
     /**
      * Update data pasien

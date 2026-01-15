@@ -142,7 +142,7 @@
                 {{-- TOMBOL --}}
                 <div class="mt-4 text-end">
                     <a href="{{ route('petugas.deteksi_dini.index') }}" class="btn btn-secondary">
-                        <i class="bi bi-x-circle"></i> Batal
+                        <i></i> Kembali
                     </a>
                     <button type="submit" class="btn btn-success px-4">
                         <i class="bi bi-save"></i> Simpan Perubahan

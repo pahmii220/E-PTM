@@ -49,6 +49,7 @@ use App\Http\Controllers\Pengguna\VerifikasiController;
 use App\Http\Controllers\Pengguna\RekapPuskesmasController;
 use App\Http\Controllers\Pengguna\PegawaiDinkesController;
 
+
 /*
 |--------------------------------------------------------------------------
 | MODELS
@@ -327,6 +328,11 @@ Route::get(
         Route::put('/ganti-password',
             [\App\Http\Controllers\Pengguna\PengaturanAkunController::class, 'updatePassword']
         )->name('ganti.password');
+
+                Route::post('/pasien/mass', 
+            [VerifikasiPasienController::class, 'massVerify']
+        )->name('pasien.mass');
+
 
 });
 

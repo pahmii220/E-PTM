@@ -105,7 +105,7 @@ public function create()
     /**
      * Form edit
      */
-    public function edit($id)
+public function edit($id)
 {
     $user = Auth::user();
 
@@ -113,21 +113,39 @@ public function create()
         abort(403);
     }
 
-    if ($user->role_name === 'admin') {
-        $faktor = FaktorResikoPTM::findOrFail($id);
-    } else {
-        $faktor = FaktorResikoPTM::where('puskesmas_id', $user->petugas->puskesmas_id)
+    // 🔍 Ambil data faktor sesuai role
+    $faktor = $user->role_name === 'admin'
+        ? FaktorResikoPTM::findOrFail($id)
+        : FaktorResikoPTM::where('puskesmas_id', $user->petugas->puskesmas_id)
             ->findOrFail($id);
-    }
 
+    // 🔒 Jika sudah approved → petugas terkunci
     if ($user->role_name !== 'admin' && $faktor->verification_status === 'approved') {
         return redirect()
             ->route('petugas.faktor_resiko.index')
             ->with('error', 'Data sudah diverifikasi dan tidak dapat diedit.');
     }
 
-    return view('petugas.faktor_resiko.edit', compact('faktor'));
+    // ✅ PASIEN
+    if ($user->role_name === 'admin') {
+        $pasien = Pasien::orderBy('nama_lengkap')->get();
+        $puskesmas = Puskesmas::orderBy('nama_puskesmas')->get();
+    } else {
+        $pasien = Pasien::where('puskesmas_id', $user->petugas->puskesmas_id)
+            ->orderBy('nama_lengkap')
+            ->get();
+
+        // supaya blade aman
+        $puskesmas = [];
+    }
+
+    return view('petugas.faktor_resiko.edit', compact(
+        'faktor',
+        'pasien',
+        'puskesmas'
+    ));
 }
+
 
 
     /**
