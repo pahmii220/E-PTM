@@ -3,190 +3,173 @@
 @section('title', 'Verifikasi - Deteksi Dini')
 
 @section('content')
-    <div class="container py-3">
+    <div class="container-fluid py-4" style="max-width:1400px">
 
-        <!-- HEADER -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="mb-0">Verifikasi - Deteksi Dini</h4>
-            <div class="d-flex gap-2 align-items-center">
-                {{-- Tombol Cetak --}}
-                <a href="{{ route('pengguna.verifikasi.print.deteksi', ['status' => $status ?? 'pending']) }}"
-                    class="btn btn-outline-primary btn-sm" target="_blank">
-                    <i class="bi bi-printer"></i> Cetak Data
-                </a>
+        {{-- ================= HEADER ================= --}}
+        <div class="card border-0 shadow-sm mb-4 rounded-4" style="background:linear-gradient(135deg,#eef2ff,#f8fafc)">
+            <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
 
-                {{-- Filter --}}
-                <form method="GET" class="d-flex ms-2">
-                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()"
-                        style="min-width: 120px;">
-                        <option value="pending" {{ ($status ?? 'pending') == 'pending' ? 'selected' : '' }}>Tertunda</option>
-                        <option value="approved" {{ ($status ?? '') == 'approved' ? 'selected' : '' }}>Diterima</option>
-                        <option value="rejected" {{ ($status ?? '') == 'rejected' ? 'selected' : '' }}>Ditolak</option>
-                        <option value="all" {{ ($status ?? '') == 'all' ? 'selected' : '' }}>Semua</option>
-                    </select>
-                </form>
-            </div>
-        </div>
-        <br>
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="ps-3">No</th>
-                                <th>Peserta</th>
-                                <th>Tanggal</th>
-                                <th>Tekanan</th>
-                                <th>Gula</th>
-                                <th>Puskesmas</th>
-                                <th>Status</th>
-                                <th>Created</th>
-                                <th class="text-end pe-3">Aksi</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            @forelse($data as $row)
-                                <tr>
-                                    <td class="ps-3">{{ $loop->iteration + (($data->currentPage() - 1) * $data->perPage()) }}
-                                    </td>
-                                    <td class="fw-semibold">{{ optional($row->pasien)->nama_lengkap ?? '-' }}</td>
-                                    <td>{{ $row->tanggal_pemeriksaan?->format('d-m-Y') ?? '-' }}</td>
-                                    <td>{{ $row->tekanan_darah ?? '-' }}</td>
-                                    <td>{{ $row->gula_darah ?? '-' }}</td>
-                                    <td>
-                                        {{ optional($row->puskesmas)->nama_puskesmas ?? '-' }}
-                                    </td>
-
-                                    <td>
-                                        @if ($row->verification_status == 'approved')
-                                            <span class="badge bg-success">Diterima</span>
-                                        @elseif($row->verification_status == 'rejected')
-                                            <span class="badge bg-danger">Ditolak</span>
-                                        @else
-                                            <span class="badge bg-secondary">Tertunda</span>
-                                        @endif
-                                    </td>
-
-                                    <td class="small text-muted">{{ $row->created_at->format('d-m-Y H:i') }}</td>
-
-                                    <td class="text-end pe-3">
-                                        @if ($row->verification_status == 'pending')
-                                            <div class="d-flex justify-content-end gap-1">
-
-                                                {{-- TERIMA --}}
-                                                <button class="btn btn-sm text-white" title="Terima"
-                                                    style="background: linear-gradient(135deg, #22c55e, #16a34a); border: none;" data-bs-toggle="modal"
-                                                    data-bs-target="#verifyModal" data-id="{{ $row->id }}" data-type="deteksi" data-action="approve">
-                                                    <i class="bi bi-check-lg"></i>
-                                                </button>
-
-                                                {{-- TOLAK --}}
-                                                <button class="btn btn-sm text-white" title="Tolak"
-                                                    style="background: linear-gradient(135deg, #ef4444, #dc2626); border: none;" data-bs-toggle="modal"
-                                                    data-bs-target="#verifyModal" data-id="{{ $row->id }}" data-type="deteksi" data-action="reject">
-                                                    <i class="bi bi-x-lg"></i>
-                                                </button>
-
-                                            </div>
-                                        @else
-                                            <span class="text-muted small">-</span>
-                                        @endif
-                                    </td>
-
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="9" class="text-center py-4 text-muted">
-                                        Tidak ada data deteksi dini ditemukan.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                <div>
+                    <h4 class="fw-bold mb-0">Verifikasi Deteksi Dini</h4>
+                    <small class="text-muted">
+                        Kelola persetujuan data deteksi dini dari petugas
+                    </small>
                 </div>
+
+                <div class="d-flex gap-2 align-items-center">
+                    {{-- CETAK --}}
+                    <a href="{{ route('pengguna.verifikasi.print.deteksi', ['status' => $status ?? 'pending']) }}"
+                        class="btn btn-outline-primary btn-sm rounded-pill shadow-sm" target="_blank">
+                        <i class="bi bi-printer"></i> Cetak
+                    </a>
+
+                    {{-- FILTER --}}
+                    <form method="GET">
+                        <select name="status" class="form-select form-select-sm rounded-pill shadow-sm"
+                            onchange="this.form.submit()">
+                            <option value="pending" {{ ($status ?? 'pending') == 'pending' ? 'selected' : '' }}>Tertunda
+                            </option>
+                            <option value="approved" {{ ($status ?? '') == 'approved' ? 'selected' : '' }}>Diterima</option>
+                            <option value="rejected" {{ ($status ?? '') == 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                            <option value="all" {{ ($status ?? '') == 'all' ? 'selected' : '' }}>Semua</option>
+                        </select>
+                    </form>
+                </div>
+
             </div>
         </div>
 
+        {{-- ================= TABLE ================= --}}
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">No</th>
+                            <th>Peserta</th>
+                            <th>Tanggal</th>
+                            <th>Tekanan</th>
+                            <th>Gula</th>
+                            <th>Puskesmas</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th class="text-end pe-4">Aksi</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @forelse($data as $row)
+                            <tr>
+                                <td class="ps-4">
+                                    {{ $loop->iteration + (($data->currentPage() - 1) * $data->perPage()) }}
+                                </td>
+
+                                <td class="fw-semibold">
+                                    {{ optional($row->pasien)->nama_lengkap ?? '-' }}
+                                </td>
+
+                                <td>{{ $row->tanggal_pemeriksaan?->format('d-m-Y') ?? '-' }}</td>
+                                <td>{{ $row->tekanan_darah ?? '-' }}</td>
+                                <td>{{ $row->gula_darah ?? '-' }}</td>
+                                <td>{{ optional($row->puskesmas)->nama_puskesmas ?? '-' }}</td>
+
+                                {{-- STATUS (SAMA DENGAN PASIEN) --}}
+                                <td>
+                                    @if ($row->verification_status === 'approved')
+                                        <span class="status-badge status-approved">
+                                            <i class="bi bi-check-circle"></i> Diterima
+                                        </span>
+                                    @elseif ($row->verification_status === 'rejected')
+                                        <span class="status-badge status-rejected">
+                                            <i class="bi bi-x-circle"></i> Ditolak
+                                        </span>
+                                    @else
+                                        <span class="status-badge status-pending">
+                                            <i class="bi bi-clock-history"></i> Tertunda
+                                        </span>
+                                    @endif
+                                </td>
+
+                                <td class="text-muted small">
+                                    {{ $row->created_at->format('d-m-Y H:i') }}
+                                </td>
+
+                                {{-- AKSI (SAMA DENGAN PASIEN) --}}
+                                <td class="text-end pe-4">
+                                    @if ($row->verification_status === 'pending')
+
+                                        <button class="btn btn-success btn-sm rounded-circle me-1" title="Terima"
+                                            data-bs-toggle="modal" data-bs-target="#verifyModal" data-id="{{ $row->id }}"
+                                            data-type="deteksi" data-action="approve">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+
+                                        <button class="btn btn-danger btn-sm rounded-circle" title="Tolak" data-bs-toggle="modal"
+                                            data-bs-target="#verifyModal" data-id="{{ $row->id }}" data-type="deteksi"
+                                            data-action="reject">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="9" class="text-center py-5 text-muted">
+                                    <i class="bi bi-folder-x fs-4 d-block mb-2"></i>
+                                    Tidak ada data deteksi dini ditemukan
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+
+        {{-- PAGINATION --}}
         <div class="mt-3">
             {{ $data->links() }}
         </div>
 
     </div>
 
-    <!-- Modal Verifikasi -->
-    <div class="modal fade" id="verifyModal" tabindex="-1" aria-labelledby="verifyModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <form id="verifyForm" method="POST" action="{{ route('pengguna.verifikasi.process') }}">
-                @csrf
-                <input type="hidden" name="id">
-                <input type="hidden" name="type">
-                <input type="hidden" name="action">
+    @include('pengguna.verifikasi._modal_verify')
 
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Konfirmasi</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
+    {{-- ================= STYLE ================= --}}
+    <style>
+        body {
+            background-color: #f8fafc;
+        }
 
-                    <div class="modal-body">
-                        <p id="verifyMessage">Apakah Anda yakin?</p>
+        .table th {
+            font-weight: 600
+        }
 
-                        <div id="verifyNoteContainer" class="mt-3 d-none">
-                            <label class="form-label small">Catatan (opsional)</label>
-                            <textarea name="note" class="form-control form-control-sm" rows="2"
-                                placeholder="Alasan penolakan atau catatan..."></textarea>
-                        </div>
-                    </div>
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: .85rem;
+            font-weight: 600;
+        }
 
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" id="verifySubmitBtn" class="btn btn-primary btn-sm">
-                            Ya, Lanjutkan
-                        </button>
-                    </div>
-                </div>
+        .status-pending {
+            background: #eef2f7;
+            color: #475569;
+        }
 
-            </form>
-        </div>
-    </div>
+        .status-approved {
+            background: #e6f6ef;
+            color: #047857;
+        }
+
+        .status-rejected {
+            background: #fdecec;
+            color: #b91c1c;
+        }
+    </style>
 @endsection
-
-@push('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-
-            const verifyModalEl = document.getElementById('verifyModal');
-            const verifyModal = new bootstrap.Modal(verifyModalEl);
-            const verifyForm = document.getElementById('verifyForm');
-            const verifyNoteContainer = document.getElementById('verifyNoteContainer');
-            const verifyMessage = document.getElementById('verifyMessage');
-            const verifySubmitBtn = document.getElementById('verifySubmitBtn');
-
-            verifyModalEl.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
-                const id = button.getAttribute('data-id');
-                const type = button.getAttribute('data-type') || 'deteksi';
-                const action = button.getAttribute('data-action');
-
-                verifyForm.querySelector('input[name="id"]').value = id;
-                verifyForm.querySelector('input[name="type"]').value = type;
-                verifyForm.querySelector('input[name="action"]').value = action;
-
-                if (action === 'reject') {
-                    verifyNoteContainer.classList.remove('d-none');
-                    verifyMessage.textContent = 'Anda akan menolak laporan ini. Apakah Anda yakin?';
-                    verifySubmitBtn.classList.remove('btn-primary');
-                    verifySubmitBtn.classList.add('btn-danger');
-                } else {
-                    verifyNoteContainer.classList.add('d-none');
-                    verifyMessage.textContent = 'Anda akan menerima laporan ini. Apakah Anda yakin?';
-                    verifySubmitBtn.classList.remove('btn-danger');
-                    verifySubmitBtn.classList.add('btn-primary');
-                }
-            });
-
-        });
-    </script>
-@endpush

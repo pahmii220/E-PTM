@@ -146,7 +146,7 @@
 
         {{-- TOTAL PESERTA (TAMBAHAN SAJA) --}}
         <div style="margin-top:6px; font-size:12px; font-weight:700; text-align:left;">
-    Jumlah keseluruhan peserta pada laporan ini sebanyak {{ $items->count() }} orang
+    Jumlah keseluruhan peserta sebanyak = {{ $items->count() }} orang
 </div>
 
 

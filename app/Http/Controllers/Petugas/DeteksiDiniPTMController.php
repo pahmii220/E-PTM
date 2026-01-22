@@ -157,6 +157,7 @@ public function create()
      */
     public function update(Request $request, $id)
     {
+
         if (Auth::user()->role_name === 'admin') {
             $data = DeteksiDiniPTM::findOrFail($id);
         } else {
@@ -198,16 +199,33 @@ public function create()
             $hasil = 'Normal';
         }
 
-        $data->update([
-            'tanggal_pemeriksaan' => $request->tanggal_pemeriksaan,
-            'tekanan_darah'       => $request->tekanan_darah,
-            'gula_darah'          => $request->gula_darah,
-            'kolesterol'          => $request->kolesterol,
-            'berat_badan'         => $berat,
-            'tinggi_badan'        => $tinggi_cm,
-            'imt'                 => $imt,
-            'hasil_skrining'      => $hasil,
-        ]);
+       // SIMPAN STATUS SEBELUM UPDATE
+$wasRejected = $data->verification_status === 'rejected';
+
+// DATA UPDATE UTAMA
+$updateData = [
+    'tanggal_pemeriksaan' => $request->tanggal_pemeriksaan,
+    'tekanan_darah'       => $request->tekanan_darah,
+    'gula_darah'          => $request->gula_darah,
+    'kolesterol'          => $request->kolesterol,
+    'berat_badan'         => $berat,
+    'tinggi_badan'        => $tinggi_cm,
+    'imt'                 => $imt,
+    'hasil_skrining'      => $hasil,
+];
+
+// 🔁 RESET STATUS JIKA SEBELUMNYA REJECTED
+if ($wasRejected) {
+    $updateData['verification_status'] = 'pending';
+    $updateData['verification_note'] = null;
+    $updateData['verified_by'] = null;
+    $updateData['verified_at'] = null;
+}
+
+// EXECUTE UPDATE SEKALI
+$data->update($updateData);
+
+
 
         return redirect()
             ->route('petugas.deteksi_dini.index')

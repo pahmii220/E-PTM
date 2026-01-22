@@ -3,83 +3,104 @@
 @section('title', 'Tambah Petugas')
 
 @section('content')
-    <br>
-    <div class="container-fluid py-1 px-4" style="max-width: 1400px; margin: auto; margin-top: -10px;">
-        <div class="card shadow-lg border-0">
-            <div class="card-header bg-success text-white">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">Tambah Petugas</h4>
-                </div>
-            </div>
+    <div class="container-fluid py-4" style="max-width:1400px">
 
-            <div class="card-body">
-                {{-- Validasi error --}}
+        {{-- ================= HEADER ================= --}}
+        <div class="card border-0 shadow-sm mb-4 rounded-4"
+            style="background:linear-gradient(135deg,#ecfdf5,#f8fafc); backdrop-filter: blur(6px)">
+            <div class="card-body d-flex justify-content-between align-items-center">
+
+                <div>
+                    <h4 class="fw-bold mb-0">Tambah Petugas</h4>
+                    <small class="text-muted">Input data petugas puskesmas</small>
+                </div>
+
+            </div>
+        </div>
+
+        {{-- ================= FORM CARD ================= --}}
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+            <div class="card-body p-4">
+
+                {{-- ALERT ERROR --}}
                 @if ($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-                        <ul class="mb-0">
+                    <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm mb-4">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        <strong>Terjadi kesalahan:</strong>
+                        <ul class="mb-0 mt-1">
                             @foreach ($errors->all() as $err)
                                 <li>{{ $err }}</li>
                             @endforeach
                         </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
-                    <br>
                 @endif
 
                 <form action="{{ route('admin.data_petugas.store') }}" method="POST">
                     @csrf
 
-                    <div class="row mb-3">
+                    {{-- IDENTITAS --}}
+                    <div class="row g-4 mb-3">
                         <div class="col-md-6">
-                            <label for="nip" class="form-label">NIP</label>
-                            <input type="text" name="nip" id="nip" class="form-control" value="{{ old('nip') }}">
+                            <label class="form-label fw-medium">NIP</label>
+                            <input type="text" name="nip" class="form-control rounded-3" value="{{ old('nip') }}"
+                                placeholder="Nomor Induk Pegawai">
                         </div>
 
                         <div class="col-md-6">
-                            <label for="nama_pegawai" class="form-label">Nama Pegawai <span
-                                    class="text-danger">*</span></label>
-                            <input type="text" name="nama_pegawai" id="nama_pegawai" class="form-control"
-                                value="{{ old('nama_pegawai') }}" required>
+                            <label class="form-label fw-medium">
+                                Nama Pegawai <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="nama_pegawai" class="form-control rounded-3"
+                                value="{{ old('nama_pegawai') }}" placeholder="Nama lengkap" required>
                         </div>
                     </div>
 
-                    <div class="row mb-3">
+                    {{-- KONTAK --}}
+                    <div class="row g-4 mb-3">
                         <div class="col-md-6">
-                            <label for="tanggal_lahir" class="form-label">Tanggal Lahir</label>
-                            <input type="date" name="tanggal_lahir" id="tanggal_lahir" class="form-control"
+                            <label class="form-label fw-medium">Tanggal Lahir</label>
+                            <input type="date" name="tanggal_lahir" class="form-control rounded-3"
                                 value="{{ old('tanggal_lahir') }}">
                         </div>
 
                         <div class="col-md-6">
-                            <label for="telepon" class="form-label">Telepon</label>
-                            <input type="text" name="telepon" id="telepon" class="form-control"
-                                value="{{ old('telepon') }}">
+                            <label class="form-label fw-medium">Telepon</label>
+                            <input type="text" name="telepon" class="form-control rounded-3" value="{{ old('telepon') }}"
+                                placeholder="08xxxxxxxxxx">
                         </div>
                     </div>
 
+                    {{-- ALAMAT --}}
                     <div class="mb-3">
-                        <label for="alamat" class="form-label">Alamat</label>
-                        <textarea name="alamat" id="alamat" rows="2" class="form-control">{{ old('alamat') }}</textarea>
+                        <label class="form-label fw-medium">Alamat</label>
+                        <textarea name="alamat" rows="2" class="form-control rounded-3"
+                            placeholder="Alamat lengkap">{{ old('alamat') }}</textarea>
                     </div>
 
-                    <div class="row mb-3">
+                    {{-- JABATAN --}}
+                    <div class="row g-4 mb-3">
                         <div class="col-md-6">
-                            <label for="jabatan" class="form-label">Jabatan <span class="text-danger">*</span></label>
-                            <input type="text" name="jabatan" id="jabatan" class="form-control" value="{{ old('jabatan') }}"
-                                required>
+                            <label class="form-label fw-medium">
+                                Jabatan <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="jabatan" class="form-control rounded-3" value="{{ old('jabatan') }}"
+                                placeholder="Contoh: Perawat" required>
                         </div>
 
                         <div class="col-md-6">
-                            <label for="bidang" class="form-label">Bidang</label>
-                            <input type="text" name="bidang" id="bidang" class="form-control" value="{{ old('bidang') }}">
+                            <label class="form-label fw-medium">Bidang</label>
+                            <input type="text" name="bidang" class="form-control rounded-3" value="{{ old('bidang') }}"
+                                placeholder="Contoh: Kesehatan Masyarakat">
                         </div>
                     </div>
 
-                    {{-- Dropdown Puskesmas --}}
-                    <div class="mb-3">
-                        <label for="puskesmas_id" class="form-label">Puskesmas</label>
-                        <select name="puskesmas_id" id="puskesmas_id" class="form-select">
-                            <option value="">-- Pilih Puskesmas--</option>
+                    {{-- PUSKESMAS --}}
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Puskesmas</label>
+                        <select name="puskesmas_id" class="form-select rounded-3">
+                            <option value="">— Pilih Puskesmas —</option>
                             @foreach($puskesmas ?? [] as $p)
                                 <option value="{{ $p->id }}" {{ old('puskesmas_id') == $p->id ? 'selected' : '' }}>
                                     {{ $p->nama_puskesmas }}
@@ -91,41 +112,27 @@
                         @enderror
                     </div>
 
-
-                    <div class="text-end">
-                        <a href="{{ route('admin.data_petugas.index') }}" class="btn btn-secondary">
-                            <i class="bi bi-arrow-left"></i> Kembali
+                    {{-- ACTION --}}
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{{ route('admin.data_petugas.index') }}" class="btn btn-light rounded-pill px-4 shadow-sm">
+                            <i class="bi bi-x-circle"></i> Batal
                         </a>
-                        <button type="submit" class="btn btn-success">
+                        <button type="submit" class="btn btn-success rounded-pill px-4 shadow-sm">
                             <i class="bi bi-save"></i> Simpan
                         </button>
                     </div>
+
                 </form>
+
             </div>
         </div>
+
     </div>
 
-    {{-- Styling tambahan agar konsisten dengan halaman pasien --}}
+    {{-- ================= STYLE ================= --}}
     <style>
         body {
             background-color: #f8fafc;
-        }
-
-        .card {
-            overflow: hidden;
-            margin-top: -25px !important;
-        }
-
-        @media (min-width: 1400px) {
-            .container-fluid {
-                max-width: 1500px !important;
-            }
-        }
-
-        @media (max-width: 991px) {
-            .container-fluid {
-                padding: 10px;
-            }
         }
     </style>
 @endsection

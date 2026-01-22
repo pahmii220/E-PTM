@@ -90,9 +90,9 @@ public function create()
         'merokok'                => $request->merokok,
         'alkohol'                => $request->alkohol,
         'kurang_aktivitas_fisik' => $request->kurang_aktivitas_fisik,
-        'petugas_id'             => Auth::user()->role_name === 'petugas'
-                                    ? Auth::user()->petugas->id
-                                    : null,
+        'petugas_id' => Auth::user()->role_name === 'petugas'
+                ? Auth::id()
+                : null,
         'created_by'             => Auth::id(),
     ]);
 
@@ -151,7 +151,7 @@ public function edit($id)
     /**
      * Update data
      */
-    public function update(Request $request, $id)
+   public function update(Request $request, $id)
 {
     $user = Auth::user();
 
@@ -159,12 +159,10 @@ public function edit($id)
         abort(403);
     }
 
-    if ($user->role_name === 'admin') {
-        $faktor = FaktorResikoPTM::findOrFail($id);
-    } else {
-        $faktor = FaktorResikoPTM::where('puskesmas_id', $user->petugas->puskesmas_id)
+    $faktor = $user->role_name === 'admin'
+        ? FaktorResikoPTM::findOrFail($id)
+        : FaktorResikoPTM::where('puskesmas_id', $user->petugas->puskesmas_id)
             ->findOrFail($id);
-    }
 
     if ($user->role_name !== 'admin' && $faktor->verification_status === 'approved') {
         return redirect()
@@ -179,17 +177,28 @@ public function edit($id)
         'kurang_aktivitas_fisik'  => 'required|in:Ya,Tidak',
     ]);
 
-    $faktor->update($request->only([
-        'tanggal_pemeriksaan',
-        'merokok',
-        'alkohol',
-        'kurang_aktivitas_fisik',
-    ]));
+    // 🔁 RESET STATUS JIKA SEBELUMNYA DITOLAK
+    if ($faktor->verification_status === 'rejected') {
+        $faktor->verification_status = 'pending';
+        $faktor->verification_note = null;
+        $faktor->verified_by = null;
+        $faktor->verified_at = null;
+    }
+
+    // UPDATE DATA UTAMA
+    $faktor->tanggal_pemeriksaan = $request->tanggal_pemeriksaan;
+    $faktor->merokok = $request->merokok;
+    $faktor->alkohol = $request->alkohol;
+    $faktor->kurang_aktivitas_fisik = $request->kurang_aktivitas_fisik;
+
+    // ✅ INI YANG SEBELUMNYA HILANG
+    $faktor->save();
 
     return redirect()
         ->route('petugas.faktor_resiko.index')
         ->with('success', 'Data faktor risiko berhasil diperbarui.');
 }
+
 
     /**
      * Hapus data

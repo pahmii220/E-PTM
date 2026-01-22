@@ -134,7 +134,7 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">Role Pengguna</label>
+                                <label class="form-label fw-semibold">Role </label>
                                 <select name="role_name" class="form-select">
                                     <option value="petugas" {{ $petugas->user->role_name == 'petugas' ? 'selected' : '' }}>
                                         Petugas

@@ -19,7 +19,16 @@ class Pasien extends Model
         'jenis_kelamin',
         'alamat',
         'kontak',
+
+            // 🔥 WAJIB DITAMBAHKAN
+    'verification_status',
+    'verification_note',
+    'verified_by',
+    'verified_at',
     ];
+    protected $casts = [
+    'tanggal_lahir' => 'date:Y-m-d',
+];
 
     // ✅ RELASI WAJIB
     public function puskesmas()
@@ -52,6 +61,7 @@ public function faktorResikoPTM()
 {
     return $this->hasOne(\App\Models\FaktorResikoPTM::class, 'pasien_id');
 }
+
 
 
 }

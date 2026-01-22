@@ -30,7 +30,7 @@
 
             <div class="mb-4">
                 <h1 class="h3 mb-1 fw-bold text-dark">Dashboard Pengguna</h1>
-                <div class="text-muted">Ringkasan cepat data deteksi dini PTM</div>
+                <div class="text-muted">Ringkasan cepat data PTM</div>
             </div>
 
             <div class="row g-3 mb-5">

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\PegawaiDinkes;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class PenggunaController extends Controller
 {
@@ -13,6 +14,11 @@ class PenggunaController extends Controller
     {
         $this->middleware(['auth', 'active', 'role:admin']);
     }
+
+    public function create()
+{
+    return view('admin.pengguna.create');
+}
 
     /**
      * =========================
@@ -28,6 +34,52 @@ class PenggunaController extends Controller
 
         return view('admin.pengguna.index', compact('users'));
     }
+
+
+
+public function store(Request $request)
+{
+    // =========================
+    // VALIDASI
+    // =========================
+    $request->validate([
+        'Username'     => 'required|string|max:50|unique:users,Username',
+        'email'        => 'nullable|email|unique:users,email',
+        'Nama_Lengkap' => 'required|string|max:191',
+        'nip'          => 'nullable|string|max:50',
+        'jabatan'      => 'nullable|string|max:100',
+        'bidang'       => 'nullable|string|max:100',
+        'alamat'       => 'nullable|string',
+    ]);
+
+    // =========================
+    // SIMPAN USER
+    // =========================
+    $user = User::create([
+        'Username'     => $request->Username,
+        'email'        => $request->email,
+        'Nama_Lengkap' => $request->Nama_Lengkap,
+        'password'     => Hash::make('password123'), // password default
+        'role_name'    => 'pengguna',
+        'is_active'    => 1,
+    ]);
+
+    // =========================
+    // SIMPAN PEGAWAI DINKES
+    // =========================
+    PegawaiDinkes::create([
+        'user_id'      => $user->id,
+        'nama_pegawai' => $request->Nama_Lengkap,
+        'nip'          => $request->nip,
+        'jabatan'      => $request->jabatan,
+        'bidang'       => $request->bidang,
+        'alamat'       => $request->alamat,
+    ]);
+
+    return redirect()
+        ->route('admin.pengguna.index')
+        ->with('success', 'Pengguna berhasil ditambahkan.');
+}
 
     /**
      * =========================

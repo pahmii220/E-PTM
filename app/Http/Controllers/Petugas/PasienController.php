@@ -132,7 +132,7 @@ public function edit($id)
         $request->validate([
             'nama_lengkap'   => 'required|string|max:100',
             'no_rekam_medis' => 'required|string|max:50|unique:pasien,no_rekam_medis,' . $id,
-            'tanggal_lahir'  => 'required|date',
+            'tanggal_lahir' => 'nullable|date',
             'jenis_kelamin'  => 'required|in:Laki-laki,Perempuan',
             'alamat'         => 'required|string',
             'kontak'         => 'required|string|max:20',
@@ -147,11 +147,21 @@ public function edit($id)
             'kontak',
         ]);
 
+
+    // 🔒 Bandingkan dengan data lama
+if ($request->tanggal_lahir !== optional($pasien->tanggal_lahir)->format('Y-m-d')) {
+    $updateData['tanggal_lahir'] = $request->tanggal_lahir;
+}
+
         // 🔁 jika sebelumnya rejected → reset ke pending
         if ($pasien->verification_status === 'rejected') {
-            $updateData['verification_status'] = 'pending';
-            $updateData['verification_note'] = null;
-        }
+    $updateData['verification_status'] = 'pending';
+    $updateData['verification_note'] = null;
+    $updateData['verified_by'] = null;
+    $updateData['verified_at'] = null;
+}
+
+
 
         $pasien->update($updateData);
 

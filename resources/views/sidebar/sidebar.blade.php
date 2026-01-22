@@ -66,48 +66,58 @@
                 <!-- MENU ADMIN: MASTER PEGAWAI -->
                 <!-- =========================== -->
                 @if(Auth::user()->role_name === 'admin')
-                    <li
-                        x-data="{ pegawaiOpen: {{ request()->is('admin/data_petugas*') || request()->is('admin/data_puskesmas*') ? 'true' : 'false' }} }">
-                        <button @click="pegawaiOpen = !pegawaiOpen"
-                            class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
-                            <span class="flex items-center gap-3">
-                                <i class="bi bi-folder2-open text-lg"></i> Master Pegawai
-                            </span>
-                            <i :class="pegawaiOpen ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
-                        </button>
+                                    <li
+                                        <li
+                    x-data="{ 
+                        pegawaiOpen: {{ 
+                            request()->routeIs('admin.data_petugas.*') ||
+                        request()->routeIs('admin.pengguna.*') ||
+                        request()->routeIs('admin.data_puskesmas.*') ||
+                        request()->routeIs('admin.reset.*')
+                        ? 'true' : 'false' 
+                        }} 
+                    }">
 
-                        <ul x-show="pegawaiOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden">
-                            <li>
-                                <a href="{{ route('admin.data_petugas.index') }}" class="block px-4 py-2 rounded-md hover:bg-green-500
-                                        {{ request()->routeIs('admin.data_petugas.*') ? 'bg-green-500 text-white' : '' }}">
-                                    <i class="bi bi-people me-2"></i> Data Petugas
-                                </a>
-                            </li>
+                                        <button @click="pegawaiOpen = !pegawaiOpen"
+                                            class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
+                                            <span class="flex items-center gap-3">
+                                                <i class="bi bi-folder2-open text-lg"></i> Master Pegawai
+                                            </span>
+                                            <i :class="pegawaiOpen ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
+                                        </button>
 
-                            <li>
-                                <a href="{{ route('admin.pengguna.index') }}" class="block px-4 py-2 rounded-md hover:bg-green-500
-                                   {{ request()->routeIs('admin.pengguna.*') ? 'bg-green-500 text-white' : '' }}">
-                                    <i class="bi bi-person-vcard me-2"></i> Data Pengguna (Dinkes)
-                                </a>
-                            </li>
+                                        <ul x-show="pegawaiOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden">
+                                            <li>
+                                                <a href="{{ route('admin.data_petugas.index') }}" class="block px-4 py-2 rounded-md hover:bg-green-500
+                                                        {{ request()->routeIs('admin.data_petugas.*') ? 'bg-green-500 text-white' : '' }}">
+                                                    <i class="bi bi-people me-2"></i> Data Petugas
+                                                </a>
+                                            </li>
 
-                        <li>
-                            <a href="{{ route('admin.data_puskesmas.index') }}" class="block px-4 py-2 rounded-md hover:bg-green-500
-                                      {{ request()->routeIs('admin.data_puskesmas.*') ? 'bg-green-500 text-white' : '' }}">
-                                <i class="bi bi-building me-2"></i> Data Puskesmas
-                            </a>
+                                            <li>
+                                                <a href="{{ route('admin.pengguna.index') }}" class="block px-4 py-2 rounded-md hover:bg-green-500
+                                                   {{ request()->routeIs('admin.pengguna.*') ? 'bg-green-500 text-white' : '' }}">
+                                                    <i class="bi bi-person-vcard me-2"></i> Data Pengguna (Dinkes)
+                                                </a>
+                                            </li>
 
-                        </li>
+                                        <li>
+                                            <a href="{{ route('admin.data_puskesmas.index') }}" class="block px-4 py-2 rounded-md hover:bg-green-500
+                                                      {{ request()->routeIs('admin.data_puskesmas.*') ? 'bg-green-500 text-white' : '' }}">
+                                                <i class="bi bi-building me-2"></i> Data Puskesmas
+                                            </a>
 
-                        <li>
-                            <a href="{{ route('admin.reset.requests') }}"
-                                class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-green-600">
-                                <i class="bi bi-key-fill"></i>
-                                <span>Reset Password</span>
-                            </a>
-                        </li>
-                        </ul>
-                    </li>
+                                        </li>
+
+                                        <li>
+                                            <a href="{{ route('admin.reset.requests') }}"
+                                                class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-green-600">
+                                                <i class="bi bi-key-fill"></i>
+                                                <span>Reset Password</span>
+                                            </a>
+                                        </li>
+                                        </ul>
+                                    </li>
                 @endif
 
                     <!-- ======================================= -->

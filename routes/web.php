@@ -50,6 +50,7 @@ use App\Http\Controllers\Pengguna\RekapPuskesmasController;
 use App\Http\Controllers\Pengguna\PegawaiDinkesController;
 
 
+
 /*
 |--------------------------------------------------------------------------
 | MODELS
@@ -194,6 +195,13 @@ Route::put('pengguna/{id}/akses', [PenggunaController::class, 'updateAccess'])
         Route::get('pengguna/{id}/edit', [PenggunaController::class, 'edit'])
     ->name('pengguna.edit');
 
+    Route::get('pengguna/create', [PenggunaController::class, 'create'])
+    ->name('pengguna.create');
+
+Route::post('pengguna', [PenggunaController::class, 'store'])
+    ->name('pengguna.store');
+
+
 Route::put('pengguna/{id}', [PenggunaController::class, 'update'])
     ->name('pengguna.update');
 
@@ -208,6 +216,11 @@ Route::put('pengguna/{id}', [PenggunaController::class, 'update'])
     '/reset-requests/{username}/profile',
     [ResetPasswordRequestController::class, 'showProfile']
 )->name('reset.requests.profile');
+
+Route::post(
+    'reset-requests/{id}/reject',
+    [ResetPasswordRequestController::class, 'reject']
+)->name('reset.requests.reject');
 
 });
 
@@ -330,7 +343,7 @@ Route::get(
         )->name('ganti.password');
 
                 Route::post('/pasien/mass', 
-            [VerifikasiPasienController::class, 'massVerify']
+            [VerifikasiController::class, 'massVerify']
         )->name('pasien.mass');
 
 
