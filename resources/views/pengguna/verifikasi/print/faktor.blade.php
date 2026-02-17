@@ -132,9 +132,11 @@ $items = $items ?? collect();
                     <th style="width:110px">Tanggal</th>
                     <th style="width:80px">Merokok</th>
                     <th style="width:80px">Alkohol</th>
+                    <th style="width:110px">Kurang Aktivitas</th>
                     <th>Puskesmas</th>
                 </tr>
             </thead>
+
 
             <tbody>
                 @if($items->isEmpty())
@@ -146,13 +148,15 @@ $items = $items ?? collect();
                 @else
                     @foreach($items as $item)
                         <tr>
-                            <td>{{ $loop->iteration }}</td>
+                            <td style="text-align:center">{{ $loop->iteration }}</td>
                             <td>{{ $item->pasien->nama_lengkap ?? '-' }}</td>
-                            <td>{{ $item->created_at->format('d-m-Y') }}</td>
-                            <td>{{ $item->merokok ?? '-' }}</td>
-                            <td>{{ $item->alkohol ?? '-' }}</td>
+                            <td style="text-align:center">{{ $item->created_at->format('d-m-Y') }}</td>
+                            <td style="text-align:center">{{ $item->merokok ?? '-' }}</td>
+                            <td style="text-align:center">{{ $item->alkohol ?? '-' }}</td>
+                            <td style="text-align:center">{{ $item->kurang_aktivitas_fisik ?? '-' }}</td>
                             <td>{{ $item->pasien->puskesmas->nama_puskesmas ?? '-' }}</td>
                         </tr>
+
                     @endforeach
                 @endif
             </tbody>

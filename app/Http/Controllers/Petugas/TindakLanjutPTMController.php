@@ -143,26 +143,29 @@ class TindakLanjutPTMController extends Controller
     /* =====================
      | UPDATE
      ===================== */
-    public function update(Request $request, $id)
-    {
-        $tindakLanjut = TindakLanjutPTM::with('pasien')->findOrFail($id);
+   public function update(Request $request, $id)
+{
+    $request->validate([
+        'jenis_tindak_lanjut' => 'required',
+        'tanggal_tindak_lanjut' => 'nullable|date',
+        'status_tindak_lanjut' => 'required',
+        'catatan_petugas' => 'nullable|string',
+    ]);
 
-        // update data pasien
-        $tindakLanjut->pasien->update([
-            'nama_lengkap' => $request->nama_lengkap,
-        ]);
+    $tindakLanjut = TindakLanjutPTM::findOrFail($id);
 
-        $tindakLanjut->update([
-            'jenis_tindak_lanjut' => $request->jenis_tindak_lanjut,
-            'tanggal_tindak_lanjut' => $request->tanggal_tindak_lanjut,
-            'status_tindak_lanjut' => $request->status_tindak_lanjut,
-            'catatan_petugas' => $request->catatan_petugas,
-        ]);
+    $tindakLanjut->update([
+        'jenis_tindak_lanjut' => $request->jenis_tindak_lanjut,
+        'tanggal_tindak_lanjut' => $request->tanggal_tindak_lanjut,
+        'status_tindak_lanjut' => $request->status_tindak_lanjut,
+        'catatan_petugas' => $request->catatan_petugas,
+    ]);
 
-        return redirect()
-            ->route('petugas.tindak_lanjut.index')
-            ->with('success', 'Data tindak lanjut berhasil diperbarui.');
-    }
+    return redirect()
+        ->route('petugas.tindak_lanjut.index')
+        ->with('success', 'Data tindak lanjut berhasil diperbarui.');
+}
+
 
     /* =====================
      | DELETE

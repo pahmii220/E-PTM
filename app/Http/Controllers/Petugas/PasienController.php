@@ -34,48 +34,64 @@ class PasienController extends Controller
      * Form tambah pasien
      */
     public function create()
-    {
-        if (Auth::user()->role_name === 'pengguna') {
-            abort(403);
-        }
+{
+    $user = Auth::user();
 
-        return view('petugas.pasien.create');
+    if ($user->role_name === 'pengguna') {
+        abort(403);
     }
+
+    $puskesmas = [];
+
+    if ($user->role_name === 'admin') {
+        $puskesmas = \App\Models\Puskesmas::orderBy('nama_puskesmas')->get();
+    }
+
+    return view('petugas.pasien.create', compact('puskesmas'));
+}
+
 
     /**
      * Simpan data pasien baru
      */
-    public function store(Request $request)
-    {
-        if (Auth::user()->role_name === 'pengguna') {
-            abort(403);
-        }
+public function store(Request $request)
+{
+    $user = Auth::user();
 
-        $request->validate([
-            'nama_lengkap'   => 'required|string|max:100',
-            'no_rekam_medis' => 'required|string|max:50|unique:pasien',
-            'tanggal_lahir'  => 'required|date',
-            'jenis_kelamin'  => 'required|in:Laki-laki,Perempuan',
-            'alamat'         => 'required|string',
-            'kontak'         => 'required|string|max:20',
-        ]);
-
-        Pasien::create([
-            'puskesmas_id'   => Auth::user()->petugas->puskesmas_id,
-            'nama_lengkap'   => $request->nama_lengkap,
-            'no_rekam_medis' => $request->no_rekam_medis,
-            'tanggal_lahir'  => $request->tanggal_lahir,
-            'jenis_kelamin'  => $request->jenis_kelamin,
-            'alamat'         => $request->alamat,
-            'kontak'         => $request->kontak,
-            'created_by'     => Auth::id(),
-            'verification_status' => 'pending',
-        ]);
-
-        return redirect()
-            ->route('petugas.pasien.index')
-            ->with('success', 'Data pasien berhasil ditambahkan.');
+    if ($user->role_name === 'pengguna') {
+        abort(403);
     }
+
+    $request->validate([
+        'nama_lengkap'   => 'required|string|max:100',
+        'no_rekam_medis' => 'required|string|max:50|unique:pasien',
+        'tanggal_lahir'  => 'required|date',
+        'jenis_kelamin'  => 'required|in:Laki-laki,Perempuan',
+        'alamat'         => 'required|string',
+        'kontak'         => 'required|string|max:20',
+        'puskesmas_id'   => $user->role_name === 'admin' ? 'required|exists:puskesmas,id' : '',
+    ]);
+
+    Pasien::create([
+        'puskesmas_id' => $user->role_name === 'admin'
+            ? $request->puskesmas_id
+            : $user->petugas->puskesmas_id,
+
+        'nama_lengkap'   => $request->nama_lengkap,
+        'no_rekam_medis' => $request->no_rekam_medis,
+        'tanggal_lahir'  => $request->tanggal_lahir,
+        'jenis_kelamin'  => $request->jenis_kelamin,
+        'alamat'         => $request->alamat,
+        'kontak'         => $request->kontak,
+        'created_by'     => $user->id,
+        'verification_status' => 'pending',
+    ]);
+
+    return redirect()
+        ->route('petugas.pasien.index')
+        ->with('success', 'Data pasien berhasil ditambahkan.');
+}
+
 
     /**
      * Form edit pasien

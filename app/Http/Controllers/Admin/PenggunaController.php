@@ -45,6 +45,7 @@ public function store(Request $request)
     $request->validate([
         'Username'     => 'required|string|max:50|unique:users,Username',
         'email'        => 'nullable|email|unique:users,email',
+        'password'     => 'required|min:8',
         'Nama_Lengkap' => 'required|string|max:191',
         'nip'          => 'nullable|string|max:50',
         'jabatan'      => 'nullable|string|max:100',
@@ -57,9 +58,9 @@ public function store(Request $request)
     // =========================
     $user = User::create([
         'Username'     => $request->Username,
-        'email'        => $request->email,
         'Nama_Lengkap' => $request->Nama_Lengkap,
-        'password'     => Hash::make('password123'), // password default
+        'email'        => $request->email ?? $request->Username.'@ptm.local',
+        'password'     => Hash::make($request->password), // ✅ dari form
         'role_name'    => 'pengguna',
         'is_active'    => 1,
     ]);
@@ -80,6 +81,7 @@ public function store(Request $request)
         ->route('admin.pengguna.index')
         ->with('success', 'Pengguna berhasil ditambahkan.');
 }
+
 
     /**
      * =========================

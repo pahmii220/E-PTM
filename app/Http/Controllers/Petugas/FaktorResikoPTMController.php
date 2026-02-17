@@ -42,24 +42,32 @@ class FaktorResikoPTMController extends Controller
      */
 public function create()
 {
-    if (Auth::user()->role_name === 'pengguna') {
+    $user = Auth::user();
+
+    if ($user->role_name === 'pengguna') {
         abort(403);
     }
 
-    if (Auth::user()->role_name === 'admin') {
-        // admin boleh lintas puskesmas
+    // ================= PASIEN =================
+    if ($user->role_name === 'admin') {
         $pasien = Pasien::whereDoesntHave('faktorResikoPTM')
             ->orderBy('nama_lengkap')
             ->get();
+
+        $puskesmas = Puskesmas::orderBy('nama_puskesmas')->get();
     } else {
-        // petugas hanya pasien puskesmas sendiri
-        $pasien = Pasien::where('puskesmas_id', Auth::user()->petugas->puskesmas_id)
+        $pasien = Pasien::where('puskesmas_id', $user->petugas->puskesmas_id)
             ->whereDoesntHave('faktorResikoPTM')
             ->orderBy('nama_lengkap')
             ->get();
+
+        $puskesmas = []; // supaya blade tidak error
     }
 
-    return view('petugas.faktor_resiko.create', compact('pasien'));
+    return view('petugas.faktor_resiko.create', compact(
+        'pasien',
+        'puskesmas'
+    ));
 }
 
 
@@ -90,9 +98,8 @@ public function create()
         'merokok'                => $request->merokok,
         'alkohol'                => $request->alkohol,
         'kurang_aktivitas_fisik' => $request->kurang_aktivitas_fisik,
-        'petugas_id' => Auth::user()->role_name === 'petugas'
-                ? Auth::id()
-                : null,
+        'petugas_id' => Auth::id(),
+
         'created_by'             => Auth::id(),
     ]);
 
