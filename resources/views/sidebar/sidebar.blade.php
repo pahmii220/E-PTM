@@ -57,7 +57,7 @@
                         <a href="{{ route('pengguna.dashboard') }}" class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200
                                 {{ request()->routeIs('pengguna.dashboard') ? 'bg-green-600' : '' }}">
                             <i class="bi bi-speedometer2 text-lg"></i>
-                            <span>Dashboard Pengguna</span>
+                            <span>Dashboard Pegawai</span>
                         </a>
                     </li>
                 @endif
@@ -71,10 +71,10 @@
                     x-data="{ 
                         pegawaiOpen: {{ 
                             request()->routeIs('admin.data_petugas.*') ||
-                        request()->routeIs('admin.pengguna.*') ||
-                        request()->routeIs('admin.data_puskesmas.*') ||
-                        request()->routeIs('admin.reset.*')
-                        ? 'true' : 'false' 
+        request()->routeIs('admin.pengguna.*') ||
+        request()->routeIs('admin.data_puskesmas.*') ||
+        request()->routeIs('admin.reset.*')
+        ? 'true' : 'false' 
                         }} 
                     }">
 
@@ -97,7 +97,7 @@
                                             <li>
                                                 <a href="{{ route('admin.pengguna.index') }}" class="block px-4 py-2 rounded-md hover:bg-green-500
                                                    {{ request()->routeIs('admin.pengguna.*') ? 'bg-green-500 text-white' : '' }}">
-                                                    <i class="bi bi-person-vcard me-2"></i> Data Pengguna (Dinkes)
+                                                    <i class="bi bi-person-vcard me-2"></i> Data Pegawai (Dinkes)
                                                 </a>
                                             </li>
 
@@ -155,52 +155,76 @@
                     <!-- MENU PETUGAS: PEMERIKSAAN PTM -->
                     <!-- ======================================= -->
                     @if(in_array(Auth::user()->role_name, ['admin', 'petugas']))
-                                                                    <li x-data="{ 
-                                                                                pemeriksaanOpen: {{ 
-                                                                request()->routeIs('petugas.deteksi_dini.*') ||
-        request()->is('petugas/faktor_resiko*')
+                                                                                            <li x-data="{ 
+                                                                                                pemeriksaanOpen: {{ 
+                                            request()->routeIs('petugas.faktor_resiko.*') ||
+        request()->routeIs('petugas.deteksi_dini.*') ||
+        request()->routeIs('petugas.tindak_lanjut.*')
         ? 'true' : 'false' 
-                                                            }} 
-                                                                            }">
+                                        }} 
+                                                                                            }">
+                                                                                                <button @click="pemeriksaanOpen = !pemeriksaanOpen"
+                                                                                                    class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
+                                                                                                    <span class="flex items-center gap-3">
+                                                                                                        <i class="bi bi-clipboard-pulse text-lg"></i> Pemeriksaan PTM
+                                                                                                    </span>
+                                                                                                    <i :class="pemeriksaanOpen ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
+                                                                                                </button>
 
-                                                                        <button @click="pemeriksaanOpen = !pemeriksaanOpen"
-                                                                            class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
-                                                                            <span class="flex items-center gap-3">
-                                                                                <i class="bi bi-clipboard-pulse text-lg"></i> Pemeriksaan PTM
-                                                                            </span>
-                                                                            <i :class="pemeriksaanOpen ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
-                                                                        </button>
+                                                                                                <ul x-show="pemeriksaanOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden">
 
-                                                                        <ul x-show="pemeriksaanOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden">
+                                                                                                    <li>
+                                                                                                        <a href="{{ route('petugas.faktor_resiko.index') }}" class="block px-4 py-2 rounded-md hover:bg-green-500
+                                                                                                            {{ request()->is('petugas/faktor_resiko*') ? 'bg-green-500 text-white' : '' }}">
+                                                                                                            <i class="bi bi-activity me-2"></i> Faktor Risiko
+                                                                                                        </a>
+                                                                                                    </li>
 
-                                                                            <li>
-                                                                                <a href="{{ url('/petugas/faktor_resiko') }}"
-                                                                                    class="block px-4 py-2 rounded-md hover:bg-green-500
-                                                                                                                                                    {{ request()->is('petugas/faktor_resiko*') ? 'bg-green-500 text-white' : '' }}">
-                                                                                    <i class="bi bi-activity me-2"></i> Faktor Risiko
-                                                                                </a>
-                                                                            </li>
+                                                                                                    <li>
+                                                                                                        <a href="{{ route('petugas.deteksi_dini.index') }}" class="block px-4 py-2 rounded-md hover:bg-green-500
+                                                                                                            {{ request()->routeIs('petugas.deteksi_dini.*') ? 'bg-green-500 text-white' : '' }}">
+                                                                                                            <i class="bi bi-clipboard-check me-2"></i> Deteksi Dini PTM
+                                                                                                        </a>
+                                                                                                    </li>
 
-                                                                            <li>
-                                                                                <a href="{{ route('petugas.deteksi_dini.index') }}" class="block px-4 py-2 rounded-md hover:bg-green-500
-                                                                                        {{ request()->routeIs('petugas.deteksi_dini.*') ? 'bg-green-500 text-white' : '' }}">
-                                                                                    <i class="bi bi-clipboard-check me-2"></i> Deteksi Dini PTM
-                                                                                </a>
-                                                                            </li>
-
-
-                                                                            <li>
-    <a href="{{ route('petugas.tindak_lanjut.index') }}"
-        class="block px-4 py-2 rounded-md hover:bg-green-500
-        {{ request()->routeIs('petugas.tindak_lanjut.*') ? 'bg-green-500 text-white' : '' }}">
-        <i class="bi bi-clipboard-check me-2"></i> Tindak Lanjut PTM
-    </a>
-</li>
-
-                                                                        </ul>
-                                                                    </li>
+                                                                                                    <li>
+                                                                                                        <a href="{{ route('petugas.tindak_lanjut.index') }}" class="block px-4 py-2 rounded-md hover:bg-green-500
+                                                                                                            {{ request()->routeIs('petugas.tindak_lanjut.*') ? 'bg-green-500 text-white' : '' }}">
+                                                                                                            <i class="bi bi-clipboard-check me-2"></i> Tindak Lanjut PTM
+                                                                                                        </a>
+                                                                                                    </li>
+                                                                                                </ul>
+                                                                                            </li>
                     @endif
 
+                    <!-- ======================================= -->
+                    <!-- MENU PETUGAS: KEGIATAN PTM -->
+                    <!-- ======================================= -->
+                    @if(in_array(Auth::user()->role_name, ['admin', 'petugas']))
+                        <li x-data="{ 
+                                kegiatanOpen: {{ request()->routeIs('petugas.kegiatan.*') ? 'true' : 'false' }} 
+                            }">
+
+                            <button @click="kegiatanOpen = !kegiatanOpen"
+                                class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
+                                <span class="flex items-center gap-3">
+                                    <i class="bi bi-calendar-event text-lg"></i> Kegiatan PTM
+                                </span>
+                                <i :class="kegiatanOpen ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
+                            </button>
+
+                            <ul x-show="kegiatanOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden">
+
+                                <li>
+                                    <a href="{{ route('petugas.kegiatan.index') }}" class="block px-4 py-2 rounded-md hover:bg-green-500
+                                        {{ request()->routeIs('petugas.kegiatan.*') ? 'bg-green-500 text-white' : '' }}">
+                                        <i class="bi bi-calendar-event me-2"></i> Data Kegiatan PTM
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </li>
+                    @endif
 
                 <!-- ============================ -->
                 <!-- MENU PENGGUNA: VERIFIKASI -->
@@ -256,35 +280,81 @@
                 <!-- MENU PENGGUNA: REKAP LAPORAN -->
                 <!-- ============================ -->
                 @if(Auth::user()->role_name === 'pengguna')
-                            <li x-data="{
-                                        rekapOpen: {{ request()->routeIs('pengguna.rekap.*') ? 'true' : 'false' }}
-                                    }">
+                                                        <li x-data="{
+                                                            rekapOpen: {{ 
+                                                request()->routeIs('pengguna.rekap.*') ||
+                    request()->routeIs('pengguna.laporan.status_ptm')
+                    ? 'true' : 'false' 
+                                            }}
+                                                        }">
 
-                                <!-- BUTTON REKAP -->
-                                <button @click="rekapOpen = !rekapOpen" class="w-full flex items-center justify-between px-4 py-2 rounded-lg
-                                               hover:bg-green-600 transition-colors duration-200">
-                                    <span class="flex items-center gap-3">
-                                        <i class="bi bi-bar-chart-fill text-lg"></i>
-                                        <span>Rekap Laporan</span>
-                                    </span>
-                                    <i :class="rekapOpen ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
-                                </button>
+                                                            <!-- BUTTON REKAP -->
+                                                            <button @click="rekapOpen = !rekapOpen" class="w-full flex items-center justify-between px-4 py-2 rounded-lg
+                                                                hover:bg-green-600 transition-colors duration-200">
 
-                                <!-- SUB MENU -->
-                                <ul x-show="rekapOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden">
+                                                                <span class="flex items-center gap-3">
+                                                                    <i class="bi bi-bar-chart-fill text-lg"></i>
+                                                                    <span>Rekap Laporan</span>
+                                                                </span>
 
-                                    <li>
-                                        <a href="{{ route('pengguna.rekap.puskesmas') }}" class="block px-4 py-2 rounded-md hover:bg-green-500
-                                               {{ request()->routeIs('pengguna.rekap.puskesmas*')
-        ? 'bg-green-500 text-white'
-        : '' }}">
-                                            <i class="bi bi-building me-2"></i>
-                                            Rekap Puskesmas
-                                        </a>
-                                    </li>
+                                                                <i :class="rekapOpen ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
 
-                                </ul>
-                            </li>
+                                                            </button>
+
+                                                            <!-- SUB MENU -->
+                                                            <ul x-show="rekapOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden">
+
+                                                                {{-- REKAP PUSKESMAS --}}
+                                                                <li>
+                                                                    <a href="{{ route('pengguna.rekap.puskesmas') }}" class="block px-4 py-2 rounded-md hover:bg-green-500
+                                                                        {{ request()->routeIs('pengguna.rekap.puskesmas*')
+                    ? 'bg-green-500 text-white'
+                    : '' }}">
+
+                                                                        <i class="bi bi-building me-2"></i>
+                                                                        Rekap Puskesmas
+
+                                                                    </a>
+                                                                </li>
+
+                                                                {{-- STATUS KESEHATAN PESERTA --}}
+                                                                <li>
+                                                                    <a href="{{ route('pengguna.laporan.status_ptm') }}" class="block px-4 py-2 rounded-md hover:bg-green-500
+                                                                        {{ request()->routeIs('pengguna.laporan.status_ptm')
+                    ? 'bg-green-500 text-white'
+                    : '' }}">
+
+                                                                        <i class="bi bi-heart-pulse me-2"></i>
+                                                                        Rekap Skirining PTM
+
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <a href="{{ route('pengguna.laporan.kelompok_usia') }}" class="block px-4 py-2 rounded-md hover:bg-green-500
+                                                                        {{ request()->routeIs('pengguna.laporan.kelompok_usia')
+                    ? 'bg-green-500 text-white'
+                    : '' }}">
+
+                                                                        <i class="bi bi-person-lines-fill me-2"></i>
+                                                                        PTM Berdasarkan Kelompok Usia
+
+                                                                    </a>
+                                                                </li>
+
+                                                                <!-- Laporan Kegiatan PTM -->
+                                                                <li>
+                                                                    <a href="{{ route('pengguna.laporan.kegiatan') }}" class="block px-4 py-2 rounded-md hover:bg-green-500
+                                                                                {{ request()->routeIs('pengguna.laporan.kegiatan') ? 'bg-green-500 text-white' : '' }}">
+
+                                                                        <i class="bi bi-calendar-event me-2"></i>
+                                                                        Laporan Kegiatan PTM
+                                                                    </a>
+                                                                </li>
+                                                                
+
+                                                            </ul>
+
+                                                        </li>
                 @endif
 
 

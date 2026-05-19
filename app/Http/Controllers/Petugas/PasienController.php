@@ -84,6 +84,7 @@ public function store(Request $request)
         'alamat'         => $request->alamat,
         'kontak'         => $request->kontak,
         'created_by'     => $user->id,
+        'status_ptm' => $request->status_ptm,
         'verification_status' => 'pending',
     ]);
 
@@ -213,4 +214,6 @@ if ($request->tanggal_lahir !== optional($pasien->tanggal_lahir)->format('Y-m-d'
             ->route('petugas.pasien.index')
             ->with('success', 'Data pasien berhasil dihapus.');
     }
+
+    
 }

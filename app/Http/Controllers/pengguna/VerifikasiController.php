@@ -110,17 +110,17 @@ public function process(Request $request)
     }
 }
 
-        public function __construct()
+    public function __construct()
 {
-    // Semua method butuh login
     $this->middleware(['auth']);
 
-    // HANYA method print yang boleh diakses admin
     $this->middleware('role:pengguna')->except([
         'printPasien',
         'printDeteksi',
         'printFaktor',
-        'printTindakLanjut'
+        'printTindakLanjut',
+        'printKelompokUsia',
+        'printKegiatan'
     ]);
 }
 
@@ -278,15 +278,23 @@ public function faktorPending(Request $request)
     /**
      * Cetak laporan: deteksi (print-friendly view)
      */
-    public function printDeteksi(Request $request)
+public function printDeteksi(Request $request)
 {
-    $status = $request->query('status', 'pending');
+    $user = Auth::user();
+
+    // 🔥 ADMIN default cetak semua
+    if ($user->role_name === 'admin') {
+        $status = $request->query('status', 'all');
+    } else {
+        // pengguna biasa default pending
+        $status = $request->query('status', 'pending');
+    }
 
     $query = DeteksiDiniPTM::with([
         'pasien',
         'petugas',
-        'puskesmas',     // (jika kolom puskesmas dipakai di view)
-        'tindakLanjut'   // 🔥 INI YANG DIBUTUHKAN
+        'puskesmas',
+        'tindakLanjut'
     ])->orderBy('tanggal_pemeriksaan','desc');
 
     if ($status !== 'all') {
@@ -297,6 +305,7 @@ public function faktorPending(Request $request)
 
     return view('pengguna.verifikasi.print.deteksi', compact('items','status'));
 }
+
 
 
 
@@ -350,12 +359,13 @@ public function faktorPending(Request $request)
      */
 public function printFaktor(Request $request)
 {
-    $role = Auth::user()->role_name;
+    $user = Auth::user();
 
-    // ✅ BEDAKAN DEFAULT STATUS
-    if ($role === 'admin') {
-        $status = $request->query('status', 'approved');
+    // 🔥 ADMIN default cetak semua
+    if ($user->role_name === 'admin') {
+        $status = $request->query('status', 'all');
     } else {
+        // pengguna default pending
         $status = $request->query('status', 'pending');
     }
 
@@ -391,4 +401,75 @@ public function showPasien($id)
 
 
 
+public function KelompokUsia()
+{
+
+    $pasien = Pasien::all();
+
+    $data = [
+        'remaja' => 0,
+        'dewasa' => 0,
+        'pra_lansia' => 0,
+        'lansia' => 0
+    ];
+
+    foreach ($pasien as $p) {
+
+        if (!$p->tanggal_lahir) continue;
+
+        $umur = Carbon::parse($p->tanggal_lahir)->age;
+
+        if ($umur < 18) {
+            $data['remaja']++;
+        } elseif ($umur <= 44) {
+            $data['dewasa']++;
+        } elseif ($umur <= 59) {
+            $data['pra_lansia']++;
+        } else {
+            $data['lansia']++;
+        }
+
+    }
+
+    return view('pengguna.laporan.kelompok_usia', compact('data'));
+}
+
+public function printKegiatan()
+{
+    $items = \App\Models\Kegiatan::orderBy('tanggal','desc')->get();
+
+    return view('pengguna.laporan.print_kegiatan', compact('items'));
+}
+
+public function printKelompokUsia()
+{
+    $pasien = Pasien::all();
+
+    $data = [
+        'remaja' => 0,
+        'dewasa' => 0,
+        'pra_lansia' => 0,
+        'lansia' => 0
+    ];
+
+    foreach ($pasien as $p) {
+
+        if (!$p->tanggal_lahir) continue;
+
+        $umur = Carbon::parse($p->tanggal_lahir)->age;
+
+        if ($umur < 18) {
+            $data['remaja']++;
+        } elseif ($umur <= 44) {
+            $data['dewasa']++;
+        } elseif ($umur <= 59) {
+            $data['pra_lansia']++;
+        } else {
+            $data['lansia']++;
+        }
+
+    }
+
+    return view('pengguna.laporan.print_kelompok_usia', compact('data'));
+}
 }

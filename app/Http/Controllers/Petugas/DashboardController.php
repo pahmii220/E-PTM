@@ -24,24 +24,45 @@ class DashboardController extends Controller
         }
 
         /* =====================
-           DEFAULT VALUE (AMAN)
+           DEFAULT VALUE
         ====================== */
         $totalPasien   = 0;
         $totalDeteksi  = 0;
         $totalFaktor   = 0;
         $highRiskCount = 0;
 
-        // 🔥 DATA GRAFIK BULANAN
+        // Statistik
         $totalPeserta = 0;
+
+        // Grafik
         $monthLabels  = collect();
         $monthTotals  = collect();
 
+        $weeklyLabels = collect();
+        $weeklyTotals = collect();
+
+        $dailyLabels  = collect();
+        $dailyTotals  = collect();
+
+        // Analitik
+        $puskesmasLabels = collect();
+        $puskesmasTotals = collect();
+
+        $faktorLabels = collect();
+        $faktorTotals = collect();
+
+        // Insight
+        $topPuskesmas = '-';
+        $topFaktor    = '-';
+
         try {
+
             /* =====================
                PASIEN
             ====================== */
             if (class_exists(Pasien::class)) {
-                $totalPasien   = Pasien::count();
+
+                $totalPasien  = Pasien::count();
                 $totalPeserta = $totalPasien;
             }
 
@@ -49,9 +70,11 @@ class DashboardController extends Controller
                DETEKSI DINI
             ====================== */
             if (class_exists(DeteksiDiniPTM::class)) {
+
                 $totalDeteksi = DeteksiDiniPTM::count();
 
                 if (Schema::hasColumn('deteksi_dini_ptm', 'hasil_skrining')) {
+
                     $highRiskCount = DeteksiDiniPTM::where(
                         'hasil_skrining',
                         'Risiko Tinggi'
@@ -63,17 +86,21 @@ class DashboardController extends Controller
                FAKTOR RISIKO
             ====================== */
             if (class_exists(FaktorResikoPtM::class)) {
+
                 $totalFaktor = FaktorResikoPtM::count();
+
             } elseif (Schema::hasTable('faktor_resiko_ptm')) {
+
                 $totalFaktor = DB::table('faktor_resiko_ptm')->count();
             }
 
             /* =====================
-               🔥 TREN BULANAN PESERTA (DATA ASLI)
+               TREN BULANAN
             ====================== */
             $year = now()->year;
 
             if (class_exists(Pasien::class)) {
+
                 $monthlyData = Pasien::select(
                         DB::raw('MONTH(created_at) as bulan'),
                         DB::raw('COUNT(*) as total')
@@ -83,70 +110,157 @@ class DashboardController extends Controller
                     ->orderBy('bulan')
                     ->get();
 
-                // Label bulan Jan–Des
+                // Label bulan
                 $monthLabels = collect(range(1, 12))->map(function ($m) {
                     return Carbon::create()->month($m)->translatedFormat('F');
                 });
 
-                // Total peserta per bulan (default 0)
+                // Total per bulan
                 $monthTotals = collect(range(1, 12))->map(function ($m) use ($monthlyData) {
                     return $monthlyData->firstWhere('bulan', $m)->total ?? 0;
                 });
             }
 
+            /* =====================
+               DATA MINGGUAN
+            ====================== */
+            if (class_exists(Pasien::class)) {
+
+                for ($i = 6; $i >= 0; $i--) {
+
+                    $date = Carbon::today()->subDays($i);
+
+                    $weeklyLabels->push(
+                        $date->translatedFormat('D')
+                    );
+
+                    $weeklyTotals->push(
+                        Pasien::whereDate('created_at', $date)->count()
+                    );
+                }
+            }
+
+            /* =====================
+               DATA HARIAN
+            ====================== */
+            for ($i = 0; $i < 24; $i++) {
+
+                $dailyLabels->push(sprintf('%02d:00', $i));
+
+                $dailyTotals->push(
+                    Pasien::whereDate('created_at', today())
+                        ->whereRaw('HOUR(created_at) = ?', [$i])
+                        ->count()
+                );
+            }
+
+            /* =====================
+               ANALITIK PUSKESMAS
+            ====================== */
+            if (
+                Schema::hasTable('deteksi_dini_ptm') &&
+                Schema::hasTable('puskesmas')
+            ) {
+
+                $puskesmasData = DB::table('deteksi_dini_ptm')
+
+                    ->join(
+                        'puskesmas',
+                        'deteksi_dini_ptm.puskesmas_id',
+                        '=',
+                        'puskesmas.id'
+                    )
+
+                    ->select(
+                        'puskesmas.nama_puskesmas',
+                        DB::raw('COUNT(*) as total')
+                    )
+
+                    ->groupBy('puskesmas.nama_puskesmas')
+
+                    ->get();
+
+                $puskesmasLabels = $puskesmasData->pluck('nama_puskesmas');
+
+                $puskesmasTotals = $puskesmasData->pluck('total');
+
+                // Insight
+                $topPuskesmas = optional(
+                    $puskesmasData->sortByDesc('total')->first()
+                )->nama_puskesmas ?? '-';
+            }
+
+            /* =====================
+               ANALITIK FAKTOR RISIKO
+            ====================== */
+            if (Schema::hasTable('faktor_resiko_ptm')) {
+
+                $faktorLabels = collect([
+                    'Merokok',
+                    'Alkohol',
+                    'Kurang Aktivitas Fisik'
+                ]);
+
+                $faktorTotals = collect([
+
+                    DB::table('faktor_resiko_ptm')
+                        ->where('merokok', 'Ya')
+                        ->count(),
+
+                    DB::table('faktor_resiko_ptm')
+                        ->where('alkohol', 'Ya')
+                        ->count(),
+
+                    DB::table('faktor_resiko_ptm')
+                        ->where('kurang_aktivitas_fisik', 'Ya')
+                        ->count()
+
+                ]);
+
+                // Insight faktor terbesar
+                $topIndex = $faktorTotals->search(
+                    $faktorTotals->max()
+                );
+
+                $topFaktor = $faktorLabels[$topIndex] ?? '-';
+            }
+
         } catch (\Throwable $e) {
-            Log::warning('Dashboard Petugas Error: ' . $e->getMessage());
+
+            Log::warning(
+                'Dashboard Petugas Error: ' . $e->getMessage()
+            );
         }
 
-        /* =====================
-   🔥 DATA MINGGUAN (7 HARI TERAKHIR)
-===================== */
-$weeklyLabels = collect();
-$weeklyTotals = collect();
+        return view('petugas.dashboard', compact(
 
-if (class_exists(Pasien::class)) {
-    for ($i = 6; $i >= 0; $i--) {
-        $date = Carbon::today()->subDays($i);
+            // Statistik
+            'totalPasien',
+            'totalDeteksi',
+            'totalFaktor',
+            'highRiskCount',
+            'totalPeserta',
 
-        $weeklyLabels->push(
-            $date->translatedFormat('D') // Sen, Sel, Rab
-        );
+            // Grafik
+            'monthLabels',
+            'monthTotals',
 
-        $weeklyTotals->push(
-            Pasien::whereDate('created_at', $date)->count()
-        );
-    }
-}
+            'weeklyLabels',
+            'weeklyTotals',
 
-    /* =====================
-   🔥 DATA HARIAN (PER JAM HARI INI)
-===================== */
-$dailyLabels = collect();
-$dailyTotals = collect();
+            'dailyLabels',
+            'dailyTotals',
 
-for ($i = 0; $i < 24; $i++) {
-    $dailyLabels->push(sprintf('%02d:00', $i));
+            // Analitik
+            'puskesmasLabels',
+            'puskesmasTotals',
 
-    $dailyTotals->push(
-        Pasien::whereDate('created_at', today())
-            ->whereRaw('HOUR(created_at) = ?', [$i])
-            ->count()
-    );
-}
+            'faktorLabels',
+            'faktorTotals',
 
-       return view('petugas.dashboard', compact(
-    'totalPasien',
-    'totalDeteksi',
-    'totalFaktor',
-    'highRiskCount',
-    'totalPeserta',
-    'monthLabels',
-    'monthTotals',
-    'weeklyLabels',
-    'weeklyTotals',
-    'dailyLabels',
-    'dailyTotals'
-));
-
+            // Insight
+            'topPuskesmas',
+            'topFaktor'
+        ));
     }
 }

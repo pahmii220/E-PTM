@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\DeteksiDiniPTM;
 use App\Models\Pasien;
+use App\Models\User;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\DataPtmBaruNotification;
 
 class DeteksiDiniPTMController extends Controller
 {
@@ -112,29 +115,40 @@ public function create()
             ? Pasien::findOrFail($request->pasien_id)->puskesmas_id
             : Auth::user()->petugas->puskesmas_id;
 
-       DeteksiDiniPTM::create([
-    'pasien_id'           => $request->pasien_id,
-    'petugas_id'          => Auth::user()->role_name === 'petugas'
-                                ? Auth::user()->petugas->id
-                                : null, // admin boleh null
-    'puskesmas_id'        => $puskesmasId,
-    'tanggal_pemeriksaan' => $request->tanggal_pemeriksaan,
-    'tekanan_darah'       => $request->tekanan_darah,
-    'gula_darah'          => $request->gula_darah,
-    'kolesterol'          => $request->kolesterol,
-    'berat_badan'         => $berat,
-    'tinggi_badan'        => $tinggi_cm,
-    'imt'                 => $imt,
-    'hasil_skrining'      => $hasil,
-    'created_by'          => Auth::id(),
-]);
+      // Ubah sedikit bagian create agar datanya ditampung dalam variabel $deteksiBaru
+        $deteksiBaru = DeteksiDiniPTM::create([
+            'pasien_id'           => $request->pasien_id,
+            'petugas_id'          => Auth::user()->role_name === 'petugas'
+                                        ? Auth::user()->petugas->id
+                                        : null,
+            'puskesmas_id'        => $puskesmasId,
+            'tanggal_pemeriksaan' => $request->tanggal_pemeriksaan,
+            'tekanan_darah'       => $request->tekanan_darah,
+            'gula_darah'          => $request->gula_darah,
+            'kolesterol'          => $request->kolesterol,
+            'berat_badan'         => $berat,
+            'tinggi_badan'        => $tinggi_cm,
+            'imt'                 => $imt,
+            'hasil_skrining'      => $hasil,
+            'created_by'          => Auth::id(),
+        ]);
 
+        // =======================================================
+        // KODE NOTIFIKASI EMAIL KE DINKES (DATA BARU)
+        // =======================================================
+        // Cari pegawai Dinkes (yang rolenya admin atau pengguna)
+        $usersDinkes = User::whereIn('role_name', ['admin', 'pengguna'])->get();
+        
+        // Kirim email jika user ditemukan
+        if ($usersDinkes->count() > 0) {
+            Notification::send($usersDinkes, new DataPtmBaruNotification($deteksiBaru));
+        }
+        // =======================================================
 
         return redirect()
             ->route('petugas.deteksi_dini.index')
             ->with('success', 'Data berhasil disimpan. Hasil Skrining: ' . $hasil);
     }
-
     /**
      * Form edit
      */
@@ -215,23 +229,34 @@ $updateData = [
 ];
 
 // 🔁 RESET STATUS JIKA SEBELUMNYA REJECTED
-if ($wasRejected) {
-    $updateData['verification_status'] = 'pending';
-    $updateData['verification_note'] = null;
-    $updateData['verified_by'] = null;
-    $updateData['verified_at'] = null;
-}
+// 🔁 RESET STATUS JIKA SEBELUMNYA REJECTED
+        if ($wasRejected) {
+            $updateData['verification_status'] = 'pending';
+            $updateData['verification_note'] = null;
+            $updateData['verified_by'] = null;
+            $updateData['verified_at'] = null;
+        }
 
-// EXECUTE UPDATE SEKALI
-$data->update($updateData);
+        // EXECUTE UPDATE SEKALI
+        $data->update($updateData);
 
-
+        // =======================================================
+        // KODE NOTIFIKASI EMAIL KE DINKES (DATA REVISI)
+        // =======================================================
+        // Jika data sebelumnya di-reject (berarti petugas baru saja merevisi)
+        if ($wasRejected) {
+            $usersDinkes = User::whereIn('role_name', ['admin', 'pengguna'])->get();
+            if ($usersDinkes->count() > 0) {
+                // Kita pakai notifikasi yang sama karena intinya Dinkes harus cek data lagi
+                Notification::send($usersDinkes, new DataPtmBaruNotification($data));
+            }
+        }
+        // =======================================================
 
         return redirect()
             ->route('petugas.deteksi_dini.index')
             ->with('success', 'Data berhasil diperbarui. Hasil Skrining: ' . $hasil);
     }
-
     /**
      * Hapus data
      */

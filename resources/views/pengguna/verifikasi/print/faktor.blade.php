@@ -129,7 +129,7 @@ $items = $items ?? collect();
                 <tr>
                     <th style="width:40px">No</th>
                     <th>Peserta</th>
-                    <th style="width:110px">Tanggal</th>
+                    <th style="width:110px">Tanggal Pemeriksaan</th>
                     <th style="width:80px">Merokok</th>
                     <th style="width:80px">Alkohol</th>
                     <th style="width:110px">Kurang Aktivitas</th>

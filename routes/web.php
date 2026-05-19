@@ -36,6 +36,7 @@ use App\Http\Controllers\Petugas\DeteksiDiniPTMController;
 use App\Http\Controllers\Petugas\FaktorResikoPTMController;
 use App\Http\Controllers\Petugas\TindakLanjutPTMController;
 use App\Http\Controllers\Petugas\PetugasProfileController;
+use App\Http\Controllers\Petugas\KegiatanPTMController;
 use App\Http\Middleware\CheckPetugasProfile;
 
 
@@ -48,7 +49,7 @@ use App\Http\Controllers\PenggunaDashboardController;
 use App\Http\Controllers\Pengguna\VerifikasiController;
 use App\Http\Controllers\Pengguna\RekapPuskesmasController;
 use App\Http\Controllers\Pengguna\PegawaiDinkesController;
-
+use App\Http\Controllers\Pengguna\LaporanStatusPTMController;
 
 
 /*
@@ -245,9 +246,10 @@ Route::prefix('petugas')
     Route::resource('pasien', PasienController::class);
     Route::resource('deteksi_dini', DeteksiDiniPTMController::class);
     Route::resource('faktor_resiko', FaktorResikoPTMController::class);
-
+    Route::resource('kegiatan', KegiatanPTMController::class);
     Route::resource('tindak_lanjut', TindakLanjutPTMController::class)
         ->except(['create','show']);
+        
 
     Route::get(
         'tindak_lanjut/create/{deteksi_dini_id}',
@@ -318,6 +320,23 @@ Route::get('/rekap-puskesmas',
 Route::get('/rekap-puskesmas/print',
     [RekapPuskesmasController::class, 'print'])
     ->name('rekap.puskesmas.print');
+
+    Route::get('/laporan/status-ptm',
+    [LaporanStatusPTMController::class, 'index'])
+    ->name('laporan.status_ptm');
+
+Route::get('/laporan/kelompok-usia/print',
+    [VerifikasiController::class,'printKelompokUsia'])
+    ->name('laporan.kelompok_usia.print');
+
+Route::get('/laporan/kegiatan-ptm',
+    [VerifikasiController::class,'printKegiatan']
+)->name('laporan.kegiatan');
+
+Route::get('/laporan/kelompok-usia',
+    [VerifikasiController::class,'kelompokUsia'])
+    ->name('laporan.kelompok_usia');
+
 
 
 Route::get('/pegawai-dinkes/{id}/edit', [PegawaiDinkesController::class, 'edit'])

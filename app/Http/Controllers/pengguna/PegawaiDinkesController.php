@@ -13,6 +13,53 @@ class PegawaiDinkesController extends Controller
         $this->middleware(['auth', 'active']);
     }
 
+    
+    public function index(Request $request)
+    {
+        // 1. Hitung total data untuk KPI Card biasa
+        $totalPasien  = \App\Models\Pasien::count();
+        $totalDeteksi = \App\Models\DeteksiDiniPTM::count();
+        $totalFaktor  = \App\Models\FaktorResikoPTM::count();
+
+        // 2. Hitung status verifikasi
+        $pendingTotal  = \App\Models\Pasien::where('verification_status', 'pending')->count();
+        $approvedTotal = \App\Models\Pasien::where('verification_status', 'approved')->count();
+        $rejectedTotal = \App\Models\Pasien::where('verification_status', 'rejected')->count();
+
+        $verifCounts = [
+            'approved' => $approvedTotal,
+            'rejected' => $rejectedTotal,
+            'pending'  => $pendingTotal,
+        ];
+
+        // ========================================================
+        // 3. AMBIL DATA STATISTIK PTM (ANTI-ERROR DENGAN 'LIKE')
+        // ========================================================
+        // Menggunakan LIKE agar kebal terhadap huruf besar/kecil & spasi berlebih
+        $skriningNormal    = \App\Models\DeteksiDiniPTM::where('hasil_skrining', 'like', '%normal%')->count();
+        $skriningDicurigai = \App\Models\DeteksiDiniPTM::where('hasil_skrining', 'like', '%curigai%')->count();
+        
+        // Mengantisipasi jika di database tertulis "Resiko" atau "Risiko"
+        $skriningRisiko    = \App\Models\DeteksiDiniPTM::where(function($q) {
+            $q->where('hasil_skrining', 'like', '%resiko%')
+              ->orWhere('hasil_skrining', 'like', '%risiko%');
+        })->count();
+
+        $lastUpdatedAt = now();
+
+        return view('pengguna.dashboard', compact(
+            'totalPasien', 
+            'totalDeteksi', 
+            'totalFaktor', 
+            'pendingTotal', 
+            'verifCounts', 
+            'skriningNormal',      // Dikirim ke view
+            'skriningDicurigai',   // Dikirim ke view
+            'skriningRisiko',      // Dikirim ke view
+            'lastUpdatedAt'
+        ));
+    }
+
     /**
      * ===============================
      * FORM PROFIL (CREATE + EDIT)
@@ -76,4 +123,5 @@ class PegawaiDinkesController extends Controller
                     : 'Profil pegawai Dinkes berhasil diperbarui.'
             );
     }
+    
 }
