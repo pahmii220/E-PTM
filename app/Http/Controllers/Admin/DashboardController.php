@@ -23,11 +23,11 @@ class DashboardController extends Controller
         // ===============================
         $trenPTM = DB::table('pasien')
             ->select(
-                DB::raw('MONTH(created_at) as bulan'),
+                DB::raw('MONTH(dibuat_pada) as bulan'),
                 DB::raw('COUNT(*) as total')
             )
-            ->whereYear('created_at', date('Y'))
-            ->groupBy(DB::raw('MONTH(created_at)'))
+            ->whereYear('dibuat_pada', date('Y'))
+            ->groupBy(DB::raw('MONTH(dibuat_pada)'))
             ->orderBy('bulan')
             ->get();
 

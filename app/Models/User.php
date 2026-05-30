@@ -10,6 +10,11 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    // Memberitahu Laravel untuk menggunakan nama kolom baru
+    const CREATED_AT = 'dibuat_pada';
+    const UPDATED_AT = 'diubah_pada';
+
+    protected $table = 'pengguna';
     protected $fillable = [
         'Nama_Lengkap',
         'Username',
@@ -18,7 +23,7 @@ class User extends Authenticatable
         'jenis_kelamin',
         'role_name',
         'password',
-        'is_active',
+        'status_aktif',
     ];
 
     protected $hidden = [
@@ -51,7 +56,7 @@ class User extends Authenticatable
     // Pengguna (Staff Dinas Kesehatan)
     public function isPengguna()
     {
-        return $this->role_name === 'pengguna';
+        return $this->role_name === 'pegawai';
     }
 
     // Helper umum → cek role apapun
@@ -78,7 +83,7 @@ public function pegawaiDinkes()
 }
 
 protected $casts = [
-    'is_active' => 'integer',
+    'status_aktif' => 'integer',
 ];
 
 
@@ -96,6 +101,11 @@ public function profilDinkesLengkap(): bool
         !empty($this->pegawaiDinkes->telepon);
 }
 
+// Di dalam file app/Models/Pengguna.php
 
+public function kepalaP2ptm()
+{
+    return $this->hasOne(KepalaP2ptm::class, 'pengguna_id');
+}
 
 }

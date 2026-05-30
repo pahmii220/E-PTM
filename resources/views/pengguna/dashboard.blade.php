@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title', 'Dashboard Pengguna — PTM Monitor')
+@section('title', 'Dashboard Pegawai — PTM Monitor')
 
 @section('content')
     @php 
@@ -29,14 +29,14 @@
         // =======================================================================
         // 2. JALAN PINTAS MENGAMBIL DATA LANGSUNG DARI DATABASE (BYPASS CONTROLLER)
         // =======================================================================
-        
+
         // Ambil Total KPI
         $realTotalPasien  = \App\Models\Pasien::count();
         $realTotalDeteksi = \App\Models\DeteksiDiniPTM::count();
         $realTotalFaktor  = \App\Models\FaktorResikoPTM::count();
-        $realPending      = \App\Models\Pasien::where('verification_status', 'pending')->count();
-        $realApproved     = \App\Models\Pasien::where('verification_status', 'approved')->count();
-        $realRejected     = \App\Models\Pasien::where('verification_status', 'rejected')->count();
+        $realPending      = \App\Models\Pasien::where('status_verifikasi', 'pending')->count();
+        $realApproved     = \App\Models\Pasien::where('status_verifikasi', 'approved')->count();
+        $realRejected     = \App\Models\Pasien::where('status_verifikasi', 'rejected')->count();
         $realTotalVerif   = $realApproved + $realRejected + $realPending;
 
         // Ambil Data Skrining PTM untuk Grafik Donat
@@ -51,15 +51,15 @@
     <div class="container py-2">
 
         {{-- ================= PERINGATAN PROFIL BELUM LENGKAP ================= --}}
-        @if(auth()->check() && auth()->user()->role_name === 'pengguna' && !auth()->user()->profilDinkesLengkap())
+        @if(auth()->check() && auth()->user()->role_name === 'pegawai' && !auth()->user()->profilDinkesLengkap())
             <div id="alert-profil" class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-xl shadow-sm mb-4 flex justify-between items-center transition-all duration-500">
                 <div class="flex items-center gap-3">
                     <div class="flex-shrink-0 text-yellow-500 fs-3">
                         <i class="bi bi-exclamation-triangle-fill"></i>
                     </div>
                     <div>
-                        <h3 class="text-yellow-800 text-sm font-bold mb-0">Profil Pegawai Belum Lengkap!</h3>
-                        <p class="text-yellow-700 text-xs mt-1 mb-0">Silakan lengkapi profil dan identitas pegawai Anda untuk memaksimalkan penggunaan sistem.</p>
+                        <h3 class="text-yellow-800 text-sm font-bold mb-0">Profil Anda Belum Lengkap!</h3>
+                        <p class="text-yellow-700 text-xs mt-1 mb-0">Silakan lengkapi profil dan identitas Anda untuk memaksimalkan penggunaan sistem.</p>
                     </div>
                 </div>
                 <a href="{{ route('pengguna.pegawai_dinkes.edit', auth()->id()) }}" class="btn btn-warning btn-sm fw-bold shadow-sm rounded-lg px-3">
@@ -155,7 +155,7 @@
 
         {{-- ================= PUSAT STATISTIK & ANALISIS DATA PTM ================= --}}
         <div class="row g-4">
-            
+
             <div class="col-lg-6">
                 <div class="card shadow-sm h-100 border-0 rounded-2xl">
                     <div class="card-body p-4">
@@ -182,7 +182,7 @@
                             </div>
                         </div>
                         <div style="height: 280px; width: 100%;" class="d-flex align-items-center justify-content-center position-relative">
-                            
+
                             @if($totalSkrining == 0)
                                 <div class="text-center py-5">
                                     <i class="bi bi-pie-chart text-gray-300 d-block mb-2" style="font-size: 3rem;"></i>
@@ -243,7 +243,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-3 text-end">
                                 @if (Route::has('pengguna.verifikasi.index'))
                                     <a href="{{ route('pengguna.verifikasi.index') }}" class="btn btn-primary w-100 rounded-xl fw-semibold shadow-sm hover:bg-blue-600 transition duration-300 py-2 d-flex align-items-center justify-content-center gap-2">

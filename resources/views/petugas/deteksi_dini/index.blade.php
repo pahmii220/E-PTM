@@ -42,7 +42,7 @@
                     </div>
 
                     {{-- PUSKESMAS (ADMIN & PENGGUNA) --}}
-                    @if(in_array(auth()->user()->role_name, ['admin', 'pengguna']))
+                    @if(in_array(auth()->user()->role_name, ['admin', 'pegawai']))
                         <div class="col-md-3">
                             <select id="filterPuskesmas" class="form-select">
                                 <option value="">Semua Puskesmas</option>
@@ -115,23 +115,23 @@
 
                                 {{-- BAGIAN STATUS VERIFIKASI DENGAN MODAL POP-UP --}}
                                 <td>
-                                    @if($d->verification_status === 'approved')
+                                    @if($d->status_verifikasi === 'approved')
                                         <span class="badge bg-success px-3 py-2 rounded-pill shadow-sm">
                                             <i class="bi bi-check-circle me-1"></i> Diterima
                                         </span>
-                                        @if($d->verified_at)
+                                        @if($d->diverifikasi_pada)
                                             <div class="text-muted mt-1" style="font-size: 11px;">
                                                 Proses:
-                                                {{ \Carbon\Carbon::parse($d->created_at)->diffForHumans(\Carbon\Carbon::parse($d->verified_at), true) }}
+                                                {{ \Carbon\Carbon::parse($d->dibuat_pada)->diffForHumans(\Carbon\Carbon::parse($d->diverifikasi_pada), true) }}
                                             </div>
                                         @endif
 
-                                    @elseif($d->verification_status === 'rejected')
+                                    @elseif($d->status_verifikasi === 'rejected')
                                         <span class="badge bg-danger px-3 py-2 rounded-pill shadow-sm">
                                             <i class="bi bi-x-circle me-1"></i> Revisi
                                         </span>
 
-                                        @if($d->verification_note)
+                                        @if($d->catatan_verifikasi)
                                             <div class="mt-2">
                                                 <button type="button" class="btn btn-outline-danger rounded-pill"
                                                     style="font-size: 10px; padding: 2px 10px;" data-bs-toggle="modal"
@@ -160,7 +160,7 @@
                                                                 <strong>{{ $d->pasien->nama_lengkap ?? '-' }}</strong>
                                                             </div>
                                                             <div class="p-3 bg-light border-start border-danger border-4 rounded">
-                                                                {{ $d->verification_note }}
+                                                                {{ $d->catatan_verifikasi }}
                                                             </div>
                                                         </div>
                                                         <div class="modal-footer border-0 bg-light">
@@ -180,7 +180,7 @@
                                         <span class="badge bg-warning text-dark px-3 py-2 rounded-pill shadow-sm">
                                             <i class="bi bi-hourglass-split me-1"></i> Tertunda
                                         </span>
-                                        
+
                                     @endif
                                 </td>
 
@@ -200,7 +200,7 @@
                                             </button>
                                         </form>
                                     @else
-                                        @if($d->verification_status !== 'approved')
+                                        @if($d->status_verifikasi !== 'approved')
                                             {{-- pending & rejected → BOLEH EDIT --}}
                                             <a href="{{ route('petugas.deteksi_dini.edit', $d->id) }}"
                                                 class="btn btn-sm btn-warning me-1">

@@ -9,6 +9,9 @@ class TindakLanjutPTM extends Model
 {
     use HasFactory;
 
+    // Memberitahu Laravel untuk menggunakan nama kolom baru
+    const CREATED_AT = 'dibuat_pada';
+    const UPDATED_AT = 'diubah_pada';
     protected $table = 'tindak_lanjut_ptm';
 
     protected $fillable = [
@@ -51,5 +54,6 @@ class TindakLanjutPTM extends Model
         'puskesmas_id'         // FK di petugas
     );
 }
+
 
 }

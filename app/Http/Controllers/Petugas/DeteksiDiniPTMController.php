@@ -10,6 +10,7 @@ use App\Models\Pasien;
 use App\Models\User;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\DataPtmBaruNotification;
+use Illuminate\Support\Facades\Log;
 
 class DeteksiDiniPTMController extends Controller
 {
@@ -20,7 +21,7 @@ class DeteksiDiniPTMController extends Controller
 {
     $user = Auth::user();
 
-    if ($user->role_name === 'admin' || $user->role_name === 'pengguna') {
+    if ($user->role_name === 'admin' || $user->role_name === 'pegawai') {
         // ADMIN & PENGGUNA (DINKES): lihat semua
         $deteksi = DeteksiDiniPTM::with(['pasien', 'puskesmas'])
             ->latest()
@@ -44,7 +45,7 @@ class DeteksiDiniPTMController extends Controller
      */
 public function create()
 {
-    if (Auth::user()->role_name === 'pengguna') {
+    if (Auth::user()->role_name === 'pegawai') {
         abort(403);
     }
 
@@ -72,7 +73,7 @@ public function create()
      */
     public function store(Request $request)
     {
-        if (Auth::user()->role_name === 'pengguna') {
+        if (Auth::user()->role_name === 'pegawai') {
         abort(403);
     }
         $request->validate([
@@ -137,11 +138,16 @@ public function create()
         // KODE NOTIFIKASI EMAIL KE DINKES (DATA BARU)
         // =======================================================
         // Cari pegawai Dinkes (yang rolenya admin atau pengguna)
-        $usersDinkes = User::whereIn('role_name', ['admin', 'pengguna'])->get();
+        $usersDinkes = User::whereIn('role_name', ['admin', 'pegawai'])->get();
         
+        ;
         // Kirim email jika user ditemukan
         if ($usersDinkes->count() > 0) {
-            Notification::send($usersDinkes, new DataPtmBaruNotification($deteksiBaru));
+            // KODE BARU: Kirim satu per satu dengan jeda 1 detik
+            foreach ($usersDinkes as $user) {
+                Notification::send($user, new DataPtmBaruNotification($deteksiBaru));
+                sleep(1); // Ini kuncinya! Memberi jeda 1 detik sebelum mengirim email berikutnya
+            }
         }
         // =======================================================
 
@@ -170,93 +176,91 @@ public function create()
      * Update data
      */
     public function update(Request $request, $id)
-    {
+{
+    $data = (Auth::user()->role_name === 'admin') 
+        ? DeteksiDiniPTM::findOrFail($id) 
+        : DeteksiDiniPTM::where('puskesmas_id', Auth::user()->petugas->puskesmas_id)->findOrFail($id);
 
-        if (Auth::user()->role_name === 'admin') {
-            $data = DeteksiDiniPTM::findOrFail($id);
-        } else {
-            $puskesmasId = Auth::user()->petugas->puskesmas_id;
+    $oldStatus = $data->status_verifikasi;
+    
+    // 1. Siapkan data update
+    $updateData = [
+        'tanggal_pemeriksaan' => $request->tanggal_pemeriksaan,
+        'tekanan_darah'       => $request->tekanan_darah,
+        'gula_darah'          => $request->gula_darah,
+        'kolesterol'          => $request->kolesterol,
+        'berat_badan'         => (float)$request->berat_badan,
+        'tinggi_badan'        => (float)$request->tinggi_badan,
+        'puskesmas_id'        => $request->puskesmas_id,
+    ];
 
-            $data = DeteksiDiniPTM::where('puskesmas_id', $puskesmasId)
-                ->findOrFail($id);
-        }
-
-        $request->validate([
-            'tanggal_pemeriksaan' => 'required|date',
-            'tekanan_darah'       => 'nullable|string',
-            'gula_darah'          => 'nullable|numeric',
-            'kolesterol'          => 'nullable|numeric',
-            'berat_badan'         => 'required|numeric',
-            'tinggi_badan'        => 'required|numeric',
-        ]);
-
-        $berat = (float) $request->berat_badan;
-        $tinggi_cm = (float) $request->tinggi_badan;
-        $imt = $tinggi_cm > 0
-            ? round($berat / pow($tinggi_cm / 100, 2), 2)
-            : null;
-
-        $sbp = $dbp = null;
-        if ($request->tekanan_darah && str_contains($request->tekanan_darah, '/')) {
-            [$a, $b] = explode('/', $request->tekanan_darah);
-            $sbp = is_numeric($a) ? (int) trim($a) : null;
-            $dbp = is_numeric($b) ? (int) trim($b) : null;
-        }
-
-        $hipertensi = ($sbp !== null && $sbp >= 140) || ($dbp !== null && $dbp >= 90);
-
-        if ($hipertensi || ($imt !== null && $imt >= 30)) {
-            $hasil = 'Risiko Tinggi';
-        } elseif ($imt !== null && $imt >= 25) {
-            $hasil = 'Dicurigai PTM';
-        } else {
-            $hasil = 'Normal';
-        }
-
-       // SIMPAN STATUS SEBELUM UPDATE
-$wasRejected = $data->verification_status === 'rejected';
-
-// DATA UPDATE UTAMA
-$updateData = [
-    'tanggal_pemeriksaan' => $request->tanggal_pemeriksaan,
-    'tekanan_darah'       => $request->tekanan_darah,
-    'gula_darah'          => $request->gula_darah,
-    'kolesterol'          => $request->kolesterol,
-    'berat_badan'         => $berat,
-    'tinggi_badan'        => $tinggi_cm,
-    'imt'                 => $imt,
-    'hasil_skrining'      => $hasil,
-];
-
-// 🔁 RESET STATUS JIKA SEBELUMNYA REJECTED
-// 🔁 RESET STATUS JIKA SEBELUMNYA REJECTED
-        if ($wasRejected) {
-            $updateData['verification_status'] = 'pending';
-            $updateData['verification_note'] = null;
-            $updateData['verified_by'] = null;
-            $updateData['verified_at'] = null;
-        }
-
-        // EXECUTE UPDATE SEKALI
-        $data->update($updateData);
-
-        // =======================================================
-        // KODE NOTIFIKASI EMAIL KE DINKES (DATA REVISI)
-        // =======================================================
-        // Jika data sebelumnya di-reject (berarti petugas baru saja merevisi)
-        if ($wasRejected) {
-            $usersDinkes = User::whereIn('role_name', ['admin', 'pengguna'])->get();
-            if ($usersDinkes->count() > 0) {
-                // Kita pakai notifikasi yang sama karena intinya Dinkes harus cek data lagi
-                Notification::send($usersDinkes, new DataPtmBaruNotification($data));
-            }
-        }
-        // =======================================================
-
-        return redirect()
-            ->route('petugas.deteksi_dini.index')
-            ->with('success', 'Data berhasil diperbarui. Hasil Skrining: ' . $hasil);
+    // Jika Dinkes melakukan verifikasi (menolak/menyetujui)
+    if ($request->has('status_verifikasi')) {
+        $updateData['status_verifikasi'] = $request->status_verifikasi;
+        $updateData['catatan_verifikasi'] = $request->catatan_verifikasi;
     }
+
+    // 1. Tentukan apakah yang login adalah PETUGAS atau DINKES
+    $isPetugas = (Auth::user()->role_name === 'petugas');
+
+    // 2. Logika Reset Status (HANYA jika petugas yang update data)
+    if ($oldStatus === 'rejected' && $isPetugas) {
+        $updateData['status_verifikasi'] = 'pending';
+        $updateData['catatan_verifikasi'] = null;
+    } 
+    // JIKA BUKAN PETUGAS (Dinkes), maka jangan pernah paksa ke 'pending'.
+    // Biarkan status mengikuti apa yang dikirim dari form (rejected/verified)
+
+    $data->update($updateData);
+    $newStatus = $data->status_verifikasi;
+
+    // 3. LOGIKA NOTIFIKASI
+    // Pastikan notifikasi hanya jalan jika status benar-benar berubah
+    // Jika Petugas mengirim revisi ke Dinkes
+if ($oldStatus === 'rejected' && $newStatus === 'pending') {
+    // INI MENGIRIM KE DINKES
+    $this->notifyDinkes(new \App\Notifications\DataPtmRevisiNotification($data));
+}
+    elseif ($newStatus === 'rejected' && $oldStatus !== 'rejected') {
+        // Ini akan jalan jika Dinkes yang update status menjadi 'rejected'
+        $this->notifyPetugas($data, new \App\Notifications\DataPtmDitolakNotification($data));
+    } 
+    elseif ($newStatus === 'verified' && $oldStatus !== 'verified') {
+        $this->notifyPetugas($data, new \App\Notifications\DataPtmDisetujuiNotification($data));
+    }
+
+        return redirect()->route('petugas.deteksi_dini.index')->with('success', 'Data berhasil diperbarui.');
+    }
+private function notifyDinkes($notification) {
+    // Cari SEMUA user yang rolenya admin atau pengguna (Dinkes)
+    $usersDinkes = User::whereIn('role_name', ['admin', 'pegawai'])->get();
+    foreach ($usersDinkes as $user) {
+        if ($user->email) {
+            \Illuminate\Support\Facades\Notification::send($user, $notification);
+        }
+    }
+}
+private function notifyPetugas($data, $notification) 
+{
+    try {
+        $petugas = \App\Models\Petugas::find($data->petugas_id);
+        
+        if ($petugas && $petugas->user_id) {
+            $petugasUser = \App\Models\User::find($petugas->user_id);
+            
+            if ($petugasUser && !empty($petugasUser->email)) {
+                \Illuminate\Support\Facades\Notification::send($petugasUser, $notification);
+                \Log::info("Notifikasi berhasil diproses untuk email: " . $petugasUser->email);
+            } else {
+                \Log::warning("Notifikasi gagal: Email user kosong");
+            }
+        } else {
+            \Log::warning("Notifikasi gagal: Data petugas atau user_id tidak ditemukan");
+        }
+    } catch (\Exception $e) {
+        \Log::error("Error saat kirim notifikasi: " . $e->getMessage());
+    }
+}
     /**
      * Hapus data
      */

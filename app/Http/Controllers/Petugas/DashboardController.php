@@ -102,10 +102,10 @@ class DashboardController extends Controller
             if (class_exists(Pasien::class)) {
 
                 $monthlyData = Pasien::select(
-                        DB::raw('MONTH(created_at) as bulan'),
+                        DB::raw('MONTH(dibuat_pada) as bulan'),
                         DB::raw('COUNT(*) as total')
                     )
-                    ->whereYear('created_at', $year)
+                    ->whereYear('dibuat_pada', $year)
                     ->groupBy('bulan')
                     ->orderBy('bulan')
                     ->get();
@@ -135,7 +135,7 @@ class DashboardController extends Controller
                     );
 
                     $weeklyTotals->push(
-                        Pasien::whereDate('created_at', $date)->count()
+                        Pasien::whereDate('dibuat_pada', $date)->count()
                     );
                 }
             }
@@ -148,8 +148,8 @@ class DashboardController extends Controller
                 $dailyLabels->push(sprintf('%02d:00', $i));
 
                 $dailyTotals->push(
-                    Pasien::whereDate('created_at', today())
-                        ->whereRaw('HOUR(created_at) = ?', [$i])
+                    Pasien::whereDate('dibuat_pada', today())
+                        ->whereRaw('HOUR(dibuat_pada) = ?', [$i])
                         ->count()
                 );
             }

@@ -9,6 +9,11 @@ class Petugas extends Model
 {
     use HasFactory;
 
+    // Ini kuncinya! Anda memberitahu Laravel: 
+    // "Hei Laravel, kolom created_at sekarang namanya dibuat_pada"
+    const CREATED_AT = 'dibuat_pada';
+    const UPDATED_AT = 'diubah_pada';
+
     protected $table = 'petugas';
 
     protected $fillable = [

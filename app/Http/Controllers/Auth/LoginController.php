@@ -35,7 +35,7 @@ public function login(Request $request)
     }
 
     // 🔒 BLOKIR JIKA NONAKTIF
-    if ($user->is_active == 0) {
+    if ($user->status_aktif == 0) {
         return back()->with('error', 'Akun Anda telah dinonaktifkan. Hubungi admin.');
     }
 
@@ -49,6 +49,7 @@ public function login(Request $request)
         $user = Auth::user();
 
         // Redirect sesuai role
+       // Redirect sesuai role
         switch ($user->role_name) {
             case 'admin':
                 return redirect()->route('admin.dashboard')
@@ -62,9 +63,15 @@ public function login(Request $request)
                 return redirect()->route('dashboard.operator')
                     ->with('success', 'Login berhasil!');
 
-            case 'pengguna':
+            case 'pegawai':
                 return redirect()->route('pengguna.dashboard')
                     ->with('success', 'Login berhasil!');
+
+            // --- TAMBAHAN UNTUK KEPALA P2PTM ---
+            case 'kepala_p2ptm':
+                return redirect()->route('kepala.dashboard')
+                    ->with('success', 'Selamat datang, Bapak/Ibu Kepala!');
+            // -----------------------------------
 
             default:
                 Auth::logout();

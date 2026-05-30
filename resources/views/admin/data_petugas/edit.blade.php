@@ -126,9 +126,9 @@
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Status Akun</label>
-                                <select name="is_active" class="form-select">
-                                    <option value="1" {{ $petugas->user->is_active ? 'selected' : '' }}>Aktif</option>
-                                    <option value="0" {{ !$petugas->user->is_active ? 'selected' : '' }}>Nonaktif</option>
+                                <select name="status_aktif" class="form-select">
+                                    <option value="1" {{ $petugas->user->status_aktif ? 'selected' : '' }}>Aktif</option>
+                                    <option value="0" {{ !$petugas->user->status_aktif ? 'selected' : '' }}>Nonaktif</option>
                                 </select>
                                 <small class="text-muted">Nonaktifkan untuk memblokir login</small>
                             </div>
@@ -139,8 +139,8 @@
                                     <option value="petugas" {{ $petugas->user->role_name == 'petugas' ? 'selected' : '' }}>
                                         Petugas
                                     </option>
-                                    <option value="pengguna" {{ $petugas->user->role_name == 'pengguna' ? 'selected' : '' }}>
-                                        Pengguna
+                                    <option value="pegawai" {{ $petugas->user->role_name == 'pegawai' ? 'selected' : '' }}>
+                                        Pegawai
                                     </option>
                                 </select>
                                 <small class="text-muted">Menentukan hak akses sistem</small>

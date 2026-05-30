@@ -56,7 +56,7 @@ class PetugasController extends Controller
             'puskesmas_id' => 'nullable|exists:puskesmas,id',
 
             // AKUN USER
-            'username' => 'required|string|max:100|unique:users,username',
+            'username' => 'required|string|max:100|unique:pengguna,username',
             'password' => 'required|string|min:8',
         ]);
 
@@ -71,7 +71,7 @@ $user = User::create([
     'email'         => $request->username . '@ptm.local', // 🔥 solusi aman
     'password'      => Hash::make($request->password),
     'role_name'     => 'petugas',
-    'is_active'     => 1,
+    'status_aktif'     => 1,
 ]);
 
 
@@ -126,12 +126,12 @@ $user = User::create([
             }
 
             $request->validate([
-                'is_active' => 'required|boolean',
-                'role_name' => 'required|in:admin,petugas,pengguna',
+                'status_aktif' => 'required|boolean',
+                'role_name' => 'required|in:admin,petugas,pegawai',
             ]);
 
             $petugas->user->update([
-                'is_active' => $request->is_active,
+                'status_aktif' => $request->status_aktif,
                 'role_name' => $request->role_name,
             ]);
 

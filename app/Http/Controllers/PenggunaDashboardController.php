@@ -16,7 +16,7 @@ use App\Models\Petugas;
 class PenggunaDashboardController extends Controller
 {
     /**
-     * Normalisasi nilai verification_status mentah -> one of:
+     * Normalisasi nilai status_verifikasi mentah -> one of:
      *   'approved', 'rejected', 'pending'
      */
     protected function normalizeVerificationStatus($raw): string
@@ -49,21 +49,21 @@ class PenggunaDashboardController extends Controller
             $totalFaktor  = class_exists(FaktorResikoPTM::class) ? FaktorResikoPTM::count() : 0;
 
             // --- Pending counts (safe: sum dari tabel yang ada) ---
-            $pendingPasien = (Schema::hasTable('pasien') && Schema::hasColumn('pasien','verification_status'))
-                ? Pasien::whereNotNull('verification_status')->get()->filter(function($p){
-                    return $this->normalizeVerificationStatus($p->verification_status) === 'pending';
+            $pendingPasien = (Schema::hasTable('pasien') && Schema::hasColumn('pasien','status_verifikasi'))
+                ? Pasien::whereNotNull('status_verifikasi')->get()->filter(function($p){
+                    return $this->normalizeVerificationStatus($p->status_verifikasi) === 'pending';
                 })->count()
                 : 0;
 
-            $pendingDeteksi = (Schema::hasTable('deteksi_dini_ptm') && Schema::hasColumn('deteksi_dini_ptm','verification_status'))
-                ? DeteksiDiniPTM::whereNotNull('verification_status')->get()->filter(function($d){
-                    return $this->normalizeVerificationStatus($d->verification_status) === 'pending';
+            $pendingDeteksi = (Schema::hasTable('deteksi_dini_ptm') && Schema::hasColumn('deteksi_dini_ptm','status_verifikasi'))
+                ? DeteksiDiniPTM::whereNotNull('status_verifikasi')->get()->filter(function($d){
+                    return $this->normalizeVerificationStatus($d->status_verifikasi) === 'pending';
                 })->count()
                 : 0;
 
-            $pendingFaktor = (Schema::hasTable('faktor_resiko_ptm') && Schema::hasColumn('faktor_resiko_ptm','verification_status'))
-                ? FaktorResikoPTM::whereNotNull('verification_status')->get()->filter(function($f){
-                    return $this->normalizeVerificationStatus($f->verification_status) === 'pending';
+            $pendingFaktor = (Schema::hasTable('faktor_resiko_ptm') && Schema::hasColumn('faktor_resiko_ptm','status_verifikasi'))
+                ? FaktorResikoPTM::whereNotNull('status_verifikasi')->get()->filter(function($f){
+                    return $this->normalizeVerificationStatus($f->status_verifikasi) === 'pending';
                 })->count()
                 : 0;
 
@@ -84,19 +84,19 @@ class PenggunaDashboardController extends Controller
             // -----------------------
             // Recent Deteksi (ambil lebih banyak jika filter, lalu filter di PHP untuk toleransi)
             // -----------------------
-            $recentQuery = DeteksiDiniPTM::with(['pasien','petugas'])->orderBy('created_at','desc');
+            $recentQuery = DeteksiDiniPTM::with(['pasien','petugas'])->orderBy('dibuat_pada','desc');
             if ($statusFilter) {
                 // ambil lebih banyak lalu filter supaya variasi string tidak mengganggu
                 $recentDeteksi = $recentQuery->limit(50)->get()->filter(function($d) use ($statusFilter) {
-                    return $this->normalizeVerificationStatus($d->verification_status) === $statusFilter;
+                    return $this->normalizeVerificationStatus($d->status_verifikasi) === $statusFilter;
                 })->take(8);
             } else {
                 $recentDeteksi = $recentQuery->limit(8)->get();
             }
 
-            // Normalisasi property verification_status pada setiap item supaya view konsisten
+            // Normalisasi property status_verifikasi pada setiap item supaya view konsisten
             $recentDeteksi = $recentDeteksi->map(function($item) {
-                $item->verification_status = $this->normalizeVerificationStatus($item->verification_status);
+                $item->status_verifikasi = $this->normalizeVerificationStatus($item->status_verifikasi);
                 return $item;
             });
 
@@ -126,7 +126,7 @@ class PenggunaDashboardController extends Controller
             $with = ['pasien','petugas'];
             if (method_exists($deteksiModel,'faktor_resiko')) $with[] = 'faktor_resiko';
             if (method_exists($deteksiModel,'faktorResiko')) $with[] = 'faktorResiko'; // alternative naming
-            $allDeteksi = DeteksiDiniPTM::with(array_unique($with))->orderBy('created_at','desc')->paginate(25);
+            $allDeteksi = DeteksiDiniPTM::with(array_unique($with))->orderBy('dibuat_pada','desc')->paginate(25);
 
             // -----------------------
             // verifCounts: ambil grouped raw values dari DB dan normalisasi ke 3 bucket
@@ -140,14 +140,14 @@ $tables = [
 ];
 
 foreach ($tables as $tbl) {
-    if (Schema::hasTable($tbl) && Schema::hasColumn($tbl, 'verification_status')) {
+    if (Schema::hasTable($tbl) && Schema::hasColumn($tbl, 'status_verifikasi')) {
         $rows = DB::table($tbl)
-            ->select('verification_status', DB::raw('COUNT(*) as cnt'))
-            ->groupBy('verification_status')
+            ->select('status_verifikasi', DB::raw('COUNT(*) as cnt'))
+            ->groupBy('status_verifikasi')
             ->get();
 
         foreach ($rows as $r) {
-            $raw = strtolower(trim((string)$r->verification_status));
+            $raw = strtolower(trim((string)$r->status_verifikasi));
             if (in_array($raw, ['approved','approve','ya','ok','sudah','verified','1'], true)) {
                 $verifCounts['approved'] += (int)$r->cnt;
             } elseif (in_array($raw, ['rejected','reject','tolak','no','0'], true)) {
@@ -171,12 +171,12 @@ $pendingTotal = $verifCounts['pending'];
                 $d = $today->copy()->subDays($i);
                 $chartLabels[] = $d->format('d M');
                 try {
-                    $chartDeteksi[] = DeteksiDiniPTM::whereDate('created_at', $d->toDateString())->count();
+                    $chartDeteksi[] = DeteksiDiniPTM::whereDate('dibuat_pada', $d->toDateString())->count();
                 } catch (\Throwable $e) {
                     $chartDeteksi[] = 0;
                 }
                 try {
-                    $chartFaktor[] = (Schema::hasTable('faktor_resiko_ptm')) ? FaktorResikoPTM::whereDate('created_at', $d->toDateString())->count() : 0;
+                    $chartFaktor[] = (Schema::hasTable('faktor_resiko_ptm')) ? FaktorResikoPTM::whereDate('dibuat_pada', $d->toDateString())->count() : 0;
                 } catch (\Throwable $e) {
                     $chartFaktor[] = 0;
                 }
@@ -185,7 +185,7 @@ $pendingTotal = $verifCounts['pending'];
             $chartData = $chartDeteksi;
             $weeklyTotal = array_sum($chartDeteksi) + array_sum($chartFaktor);
             $avgPerDay = $weeklyTotal ? round($weeklyTotal / max(1, count($chartDeteksi)), 1) : 0;
-            $lastUpdatedAt = DeteksiDiniPTM::orderBy('updated_at','desc')->value('updated_at') ?? Carbon::now();
+            $lastUpdatedAt = DeteksiDiniPTM::orderBy('diubah_pada','desc')->value('diubah_pada') ?? Carbon::now();
 
 
             $rekapPuskesmas = DB::table('puskesmas')

@@ -9,6 +9,10 @@ class Pasien extends Model
 {
     use HasFactory;
 
+
+    // Memberitahu Laravel untuk menggunakan nama kolom baru
+    const CREATED_AT = 'dibuat_pada';
+    const UPDATED_AT = 'diubah_pada';
     protected $table = 'pasien';
 
     protected $fillable = [
@@ -21,20 +25,19 @@ class Pasien extends Model
         'kontak',
 
             // 🔥 WAJIB DITAMBAHKAN
-    'verification_status',
-    'verification_note',
-    'verified_by',
-    'verified_at',
+    'status_verifikasi',
+    'catatan_verifikasi',
+    'diverifikasi_oleh', 
+    'diverifikasi_pada',
     ];
     protected $casts = [
     'tanggal_lahir' => 'date:Y-m-d',
 ];
 
     // ✅ RELASI WAJIB
-    public function puskesmas()
-    {
-        return $this->belongsTo(Puskesmas::class);
-    }
+public function puskesmas() {
+    return $this->belongsTo(Puskesmas::class, 'puskesmas_id', 'id');
+}
 
 public function deteksiDiniPTM()
 {
@@ -44,7 +47,7 @@ public function deteksiDiniPTM()
 
 public function verifiedByUser()
 {
-    return $this->belongsTo(\App\Models\User::class, 'verified_by');
+    return $this->belongsTo(\App\Models\User::class, 'diverifikasi_oleh');
 }
 
 public function createdBy()

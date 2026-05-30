@@ -22,9 +22,9 @@ class PegawaiDinkesController extends Controller
         $totalFaktor  = \App\Models\FaktorResikoPTM::count();
 
         // 2. Hitung status verifikasi
-        $pendingTotal  = \App\Models\Pasien::where('verification_status', 'pending')->count();
-        $approvedTotal = \App\Models\Pasien::where('verification_status', 'approved')->count();
-        $rejectedTotal = \App\Models\Pasien::where('verification_status', 'rejected')->count();
+        $pendingTotal  = \App\Models\Pasien::where('status_verifikasi', 'pending')->count();
+        $approvedTotal = \App\Models\Pasien::where('status_verifikasi', 'approved')->count();
+        $rejectedTotal = \App\Models\Pasien::where('status_verifikasi', 'rejected')->count();
 
         $verifCounts = [
             'approved' => $approvedTotal,

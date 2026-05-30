@@ -119,9 +119,18 @@
         }
 
         .ttd .block .name {
-            margin-top: 70px;
+            /* Margin 70px dihapus agar QR Code pas */
+            margin-top: 5px;
             font-weight: 700;
             text-decoration: underline;
+        }
+
+        .qr-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 85px;
+            margin: 10px 0;
         }
 
         /* Print fallback lines */
@@ -166,82 +175,109 @@
 
         <hr class="top">
 
-        <div style="text-align:center; margin-bottom:10px;">
-            <h3 style="margin:0; font-size:15px; letter-spacing:0.6px;">LAPORAN DETEKSI DINI PENYAKIT TIDAK MENULAR</h3>
+        <div style="text-align:center; margin-bottom:15px;">
+            <h3 style="margin:0; font-size:15px; letter-spacing:0.6px;">LAPORAN DETEKSI DINI PENYAKIT TIDAK MENULAR(PTM)</h3>
         </div>
+        
+        {{-- Menampilkan bulan di sebelah kiri --}}
+        @if(isset($bulan) && isset($tahun))
+            <div style="text-align: left; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+                Bulan: {{ \Carbon\Carbon::create()->month((int) $bulan)->locale('id')->translatedFormat('F') }} {{ $tahun }}
+            </div>
+        @endif
+        
+        {{-- SELALU CETAK MASSAL --}}
+        <table class="grid">
 
         {{-- SELALU CETAK MASSAL --}}
         <table class="grid">
-        <thead>
-            <tr>
-                <th style="width:40px">No</th>
-                <th>Peserta</th>
-                <th style="width:120px">Tanggal Pemeriksaan</th>
-                <th style="width:90px">Tekanan</th>
-                <th style="width:80px">Gula</th>
-                <th style="width:140px">Jenis Tindak Lanjut</th> <!-- BARU -->
-                <th>Puskesmas</th>
-            </tr>
-        </thead>
+            <thead>
+                <tr>
+                    <th style="width:40px">No</th>
+                    <th>Peserta</th>
+                    <th style="width:120px">Tanggal Pemeriksaan</th>
+                    <th style="width:90px">Tekanan</th>
+                    <th style="width:80px">Gula</th>
+                    <th style="width:140px">Jenis Tindak Lanjut</th>
+                    <th>Puskesmas</th>
+                </tr>
+            </thead>
 
 
             <tbody>
-    @forelse($items as $i => $row)
-        <tr>
-            <td style="text-align:center;">
-                {{ (isset($items) && is_object($items) && method_exists($items, 'firstItem'))
-                    ? $items->firstItem() + $i
-                    : $i + 1 }}
-            </td>
+                @forelse($items as $i => $row)
+                            <tr>
+                                <td style="text-align:center;">
+                                    {{ (isset($items) && is_object($items) && method_exists($items, 'firstItem'))
+        ? $items->firstItem() + $i
+        : $i + 1 }}
+                                </td>
 
-            <td>
-                {{ optional($row->pasien)->nama_lengkap ?? ($row->nama_pasien ?? '-') }}
-            </td>
+                                <td>
+                                    {{ optional($row->pasien)->nama_lengkap ?? ($row->nama_pasien ?? '-') }}
+                                </td>
 
-            <td style="text-align:center;">
-                {{ $row->tanggal_pemeriksaan
-                    ? \Carbon\Carbon::parse($row->tanggal_pemeriksaan)->format('d-m-Y')
-                    : '-' }}
-            </td>
+                                <td style="text-align:center;">
+                                    {{ $row->tanggal_pemeriksaan
+        ? \Carbon\Carbon::parse($row->tanggal_pemeriksaan)->format('d-m-Y')
+        : '-' }}
+                                </td>
 
-            <td style="text-align:center;">
-                {{ $row->tekanan_darah ?? '-' }}
-            </td>
+                                <td style="text-align:center;">
+                                    {{ $row->tekanan_darah ?? '-' }}
+                                </td>
 
-            <td style="text-align:center;">
-                {{ $row->gula_darah ?? '-' }}
-            </td>
+                                <td style="text-align:center;">
+                                    {{ $row->gula_darah ?? '-' }}
+                                </td>
 
-            {{-- 🔥 KOLOM BARU: JENIS TINDAK LANJUT --}}
-            <td>
-                {{ optional($row->tindakLanjut)->jenis_tindak_lanjut ?? '-' }}
-            </td>
+                                {{-- 🔥 KOLOM BARU: JENIS TINDAK LANJUT --}}
+                                <td>
+                                    {{ optional($row->tindakLanjut)->jenis_tindak_lanjut ?? '-' }}
+                                </td>
 
-            <td>
-                {{ optional($row->puskesmas)->nama_puskesmas ?? '-' }}
-            </td>
-        </tr>
-    @empty
-        <tr>
-            <td colspan="7" class="text-center py-3">
-                Tidak ada data deteksi dini.
-            </td>
-        </tr>
-    @endforelse
-</tbody>
+                                <td>
+                                    {{ optional($row->puskesmas)->nama_puskesmas ?? '-' }}
+                                </td>
+                            </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="text-center py-3" style="text-align: center;">
+                            Tidak ada data deteksi dini.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
 
         </table>
 
-        <!-- Footer / TTD -->
         <div class="ttd">
             <div class="block">
                 <br>
                 <div>DIKELUARKAN DI BANJARMASIN</div>
                 <div>TANGGAL: {{ now()->format('d-m-Y') }}</div>
 
-                <div style="margin-top:10px">KEPALA DINAS</div>
-                <div class="name">{{ config('app.kepala_nama', 'dr. H. DIAUDDIN, M.Kes') }}</div>
-                <div style="margin-top:4px;">NIP. {{ config('app.kepala_nip', '197709232006041015') }}</div>
+                {{-- Jabatan Dinamis --}}
+                <div style="margin-top:10px; font-weight: bold;">
+                    {{ isset($kepalaAktif) ? 'KEPALA BIDANG P2P' : 'KEPALA DINAS' }}
+                </div>
+
+                {{-- Kotak QR Code --}}
+                <div class="qr-container">
+                    @if(isset($qrToken) && isset($statusDokumen) && $statusDokumen == 'Disahkan')
+                        {!! QrCode::size(85)->generate($qrToken) !!}
+                    @else
+                        <div style="height: 85px;"></div>
+                    @endif
+                </div>
+
+                {{-- Nama Dinamis --}}
+                <div class="name">
+                    {{ $kepalaAktif->nama_kepala ?? config('app.kepala_nama', 'dr. H. DIAUDDIN, M.Kes') }}
+                </div>
+                <div style="margin-top:4px;">
+                    NIP. {{ $kepalaAktif->nip ?? config('app.kepala_nip', '197709232006041015') }}
+                </div>
             </div>
         </div>
 

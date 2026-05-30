@@ -45,14 +45,14 @@
                     <tr>
                         <th>Status Akun</th>
                         <td>
-                            <span class="badge {{ $user->is_active ? 'bg-success' : 'bg-danger' }}">
-                                {{ $user->is_active ? 'Aktif' : 'Nonaktif' }}
+                            <span class="badge {{ $user->status_aktif ? 'bg-success' : 'bg-danger' }}">
+                                {{ $user->status_aktif ? 'Aktif' : 'Nonaktif' }}
                             </span>
                         </td>
                     </tr>
                     <tr>
                         <th>Akun Dibuat</th>
-                        <td>{{ $user->created_at->format('d M Y') }}</td>
+                        <td>{{ $user->dibuat_pada->format('d M Y') }}</td>
                     </tr>
                 </table>
             </div>
@@ -152,7 +152,7 @@
                     </tr>
                     <tr>
                         <th>Tanggal Permintaan</th>
-                        <td>{{ $reset->created_at->format('d M Y H:i') }}</td>
+                        <td>{{ $reset->dibuat_pada->format('d M Y H:i') }}</td>
                     </tr>
                     <tr>
                         <th>Reset Terakhir</th>

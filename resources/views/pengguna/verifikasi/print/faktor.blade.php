@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Laporan Faktor Risiko PTM</title>
+    <title>Cetak Laporan Faktor Risiko PTM</title>
     <style>
         @page {
             margin: 15mm 12mm;
@@ -76,9 +76,50 @@
             margin-bottom: 10px;
         }
 
+        /* Footer TTD */
+        .ttd {
+            width: 100%;
+            margin-top: 24px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .ttd .block {
+            width: 40%;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .ttd .block .name {
+            margin-top: 5px;
+            font-weight: 700;
+            text-decoration: underline;
+        }
+
+        .qr-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 85px;
+            /* Ruang untuk QR Code */
+            margin: 10px 0;
+        }
+
         @media print {
             .no-print {
                 display: none;
+            }
+
+            table.grid {
+                -webkit-print-color-adjust: exact;
+                box-shadow: inset -1px 0 0 #111;
+                font-size: 11.5px;
+            }
+
+            table.grid tr>td:last-child,
+            table.grid tr>th:last-child {
+                border-right: 1px solid #111;
+                box-shadow: inset -1px 0 0 #111;
             }
         }
     </style>
@@ -107,20 +148,15 @@
 
         <hr class="top">
 
-        <h3 style="text-align:center; margin:0 0 10px 0;">LAPORAN FAKTOR RISIKO PENYAKIT TIDAK MENULAR</h3>
+        <div style="text-align:center; margin-bottom:15px;">
+            <h3 style="margin:0; font-size:15px; letter-spacing:0.6px;">LAPORAN FAKTOR RESIKO PENYAKIT TIDAK MENULAR(PTM)
+            </h3>
+        </div>
 
-        {{-- Guard: pastikan $items adalah collection --}}
-        @php
-$items = $items ?? collect();
-        @endphp
-
-        {{-- Debug block (akan tampil jika kosong atau jika ada variabel debug) --}}
-        @if(($items->count() === 0) && (isset($debug) || true))
-            <div style="margin-bottom:8px; color:#333; font-size:12px;">
-                <strong>DEBUG (lihat ini sementara):</strong>
-                <div>Jumlah item yang diterima view: {{ $items->count() }}</div>
-                <div>Jika JSON debug sebelumnya menunjukkan data, berarti controller benar — sekarang periksa variabel yang
-                    dikirim ke view.</div>
+        {{-- Menampilkan bulan di sebelah kiri --}}
+        @if(isset($bulan) && isset($tahun))
+            <div style="text-align: left; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+                Bulan: {{ \Carbon\Carbon::create()->month((int) $bulan)->locale('id')->translatedFormat('F') }} {{ $tahun }}
             </div>
         @endif
 
@@ -137,40 +173,55 @@ $items = $items ?? collect();
                 </tr>
             </thead>
 
-
             <tbody>
-                @if($items->isEmpty())
+                @forelse($items ?? [] as $item)
                     <tr>
-                        <td colspan="6" class="text-center">
-                            Tidak ada data faktor risiko.
+                        <td style="text-align:center">{{ $loop->iteration }}</td>
+                        <td>{{ optional($item->pasien)->nama_lengkap ?? '-' }}</td>
+                        <td style="text-align:center">
+                            {{ $item->tanggal_pemeriksaan ? \Carbon\Carbon::parse($item->tanggal_pemeriksaan)->format('d-m-Y') : ($item->dibuat_pada ? $item->dibuat_pada->format('d-m-Y') : '-') }}
+                        </td>
+                        <td style="text-align:center">{{ $item->merokok ?? '-' }}</td>
+                        <td style="text-align:center">{{ $item->alkohol ?? '-' }}</td>
+                        <td style="text-align:center">{{ $item->kurang_aktivitas_fisik ?? '-' }}</td>
+                        <td>{{ optional($item->puskesmas)->nama_puskesmas ?? '-' }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="text-center py-3" style="text-align: center;">
+                            Tidak ada data faktor risiko untuk periode ini.
                         </td>
                     </tr>
-                @else
-                    @foreach($items as $item)
-                        <tr>
-                            <td style="text-align:center">{{ $loop->iteration }}</td>
-                            <td>{{ $item->pasien->nama_lengkap ?? '-' }}</td>
-                            <td style="text-align:center">{{ $item->created_at->format('d-m-Y') }}</td>
-                            <td style="text-align:center">{{ $item->merokok ?? '-' }}</td>
-                            <td style="text-align:center">{{ $item->alkohol ?? '-' }}</td>
-                            <td style="text-align:center">{{ $item->kurang_aktivitas_fisik ?? '-' }}</td>
-                            <td>{{ $item->pasien->puskesmas->nama_puskesmas ?? '-' }}</td>
-                        </tr>
-
-                    @endforeach
-                @endif
+                @endforelse
             </tbody>
-
         </table>
 
-        <div style="width:100%; margin-top:40px; display:flex; justify-content:flex-end;">
-            <div style="width:320px; text-align:center;">
+        <div class="ttd">
+            <div class="block">
+                <br>
                 <div>DIKELUARKAN DI BANJARMASIN</div>
                 <div>TANGGAL: {{ now()->format('d-m-Y') }}</div>
-                <div style="margin-top:30px">KEPALA DINAS</div>
-                <div style="margin-top:60px; font-weight:700; text-decoration:underline">
-                    {{ config('app.kepala_nama', 'dr. H. DIAUDDIN, M.Kes') }}</div>
-                <div>NIP. {{ config('app.kepala_nip', '197709232006041015') }}</div>
+
+                <div style="margin-top:10px; font-weight: bold;">
+                    {{ isset($kepalaAktif) ? 'KEPALA BIDANG P2P' : 'KEPALA DINAS' }}
+                </div>
+
+                {{-- Kotak QR Code --}}
+                <div class="qr-container">
+                    @if(isset($qrToken) && isset($statusDokumen) && $statusDokumen == 'Disahkan')
+                        {!! QrCode::size(85)->generate($qrToken) !!}
+                    @else
+                        <div style="height: 85px;"></div>
+                    @endif
+                </div>
+
+                {{-- Nama Dinamis --}}
+                <div class="name">
+                    {{ $kepalaAktif->nama_kepala ?? config('app.kepala_nama', 'dr. H. DIAUDDIN, M.Kes') }}
+                </div>
+                <div style="margin-top:4px;">
+                    NIP. {{ $kepalaAktif->nip ?? config('app.kepala_nip', '197709232006041015') }}
+                </div>
             </div>
         </div>
 

@@ -30,7 +30,7 @@ class KegiatanPTMController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->role_name === 'pengguna') {
+        if ($user->role_name === 'pegawai') {
             abort(403);
         }
 
@@ -45,7 +45,7 @@ class KegiatanPTMController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->role_name === 'pengguna') {
+        if ($user->role_name === 'pegawai') {
             abort(403);
         }
 
@@ -80,7 +80,7 @@ class KegiatanPTMController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->role_name === 'pengguna') {
+        if ($user->role_name === 'pegawai') {
             abort(403);
         }
 
@@ -97,7 +97,7 @@ class KegiatanPTMController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->role_name === 'pengguna') {
+        if ($user->role_name === 'pegawai') {
             abort(403);
         }
 
@@ -134,7 +134,7 @@ class KegiatanPTMController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->role_name === 'pengguna') {
+        if ($user->role_name === 'pegawai') {
             abort(403);
         }
 

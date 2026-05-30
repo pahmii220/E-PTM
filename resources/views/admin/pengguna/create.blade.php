@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title', 'Tambah Pengguna (Pegawai Dinkes)')
+@section('title', 'Tambah Pegawai Dinkes')
 
 @section('content')
     <div class="container-fluid py-4" style="max-width:1400px">
@@ -9,7 +9,7 @@
         <div class="card border-0 shadow-sm mb-4 rounded-4"
             style="background:linear-gradient(135deg,#eef2ff,#f8fafc); backdrop-filter: blur(6px)">
             <div class="card-body">
-                <h4 class="fw-bold mb-0">Tambah Pengguna</h4>
+                <h4 class="fw-bold mb-0">Tambah Pegawai</h4>
                 <small class="text-muted">Input data pegawai dinas kesehatan</small>
             </div>
         </div>
@@ -60,7 +60,7 @@
                             <input type="password" name="password" class="form-control rounded-3"
                                 placeholder="Minimal 8 karakter" required>
                             <small class="text-muted">
-                                Password awal, pengguna dapat mengganti setelah login
+                                Password awal, Pegawai dapat mengganti setelah login
                             </small>
                         </div>
 

@@ -20,10 +20,10 @@ class RegisterController extends Controller
         // Validasi input
         $request->validate([
             'Nama_Lengkap' => 'required|string|max:255',
-            'Username' => 'required|string|max:255|unique:users,Username',
-            'nip' => 'required|string|max:50|unique:users,nip',
+            'Username' => 'required|string|max:255|unique:pengguna,Username',
+            'nip' => 'required|string|max:50|unique:pengguna,nip',
             'jenis_kelamin' => 'required|string',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email|unique:pengguna,email',
             'password' => 'required|min:6|confirmed',
         ]);
 
@@ -35,14 +35,14 @@ class RegisterController extends Controller
             'jenis_kelamin' => $request->jenis_kelamin,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role_name' => 'pengguna', // default role
-            'is_active' => 1, // 👈 WAJIB (menunggu verifikasi admin)
+            'role_name' => 'pegawai', // default role
+            'status_aktif' => 1, // 👈 WAJIB (menunggu verifikasi admin)
         ]);
 
         // Login otomatis
         Auth::login($user);
 
-        // Arahkan sesuai role
+// Arahkan sesuai role
         switch ($user->role_name) {
             case 'admin':
                 return redirect()->route('admin.dashboard');
@@ -50,9 +50,11 @@ class RegisterController extends Controller
                 return redirect()->route('petugas.dashboard');
             case 'operator':
                 return redirect()->route('dashboard.operator');
+            case 'pegawai':
+                return redirect()->route('pengguna.dashboard');
             default:
-
-            $request->session()->flash('success', 'Register berhasil! Silahkan Login.');
+                Auth::logout();
+                $request->session()->flash('success', 'Register berhasil! Silahkan Login.');
                 return redirect('/login');
         }
     }

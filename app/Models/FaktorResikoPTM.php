@@ -9,6 +9,10 @@ class FaktorResikoPTM extends Model
 {
     use HasFactory;
 
+
+    // Memberitahu Laravel untuk menggunakan nama kolom baru
+    const CREATED_AT = 'dibuat_pada';
+    const UPDATED_AT = 'diubah_pada';
     protected $table = 'faktor_resiko_ptm';
 
     protected $fillable = [
@@ -24,15 +28,15 @@ class FaktorResikoPTM extends Model
         'petugas_id',
 
         // fields verifikasi
-        'verification_status',
-        'verification_note',
-        'verified_by',
-        'verified_at',
+        'status_verifikasi',
+        'catatan_verifikasi',
+        'diverifikasi_oleh', 
+        'diverifikasi_pada',
     ];
 
     protected $casts = [
         'tanggal_pemeriksaan' => 'date',
-        'verified_at' => 'datetime',
+        'diverifikasi_pada' => 'datetime',
     ];
 
     // -----------------------
@@ -62,7 +66,7 @@ public function pasien()
     // Relasi ke User (verifikator)
     public function verifiedBy()
     {
-        return $this->belongsTo(User::class, 'verified_by');
+        return $this->belongsTo(User::class, 'diverifikasi_oleh');
     }
 
     // -----------------------
@@ -70,7 +74,7 @@ public function pasien()
     // -----------------------
     public function getStatusLabelAttribute()
     {
-        return ucfirst($this->verification_status ?? 'pending');
+        return ucfirst($this->status_verifikasi ?? 'pending');
     }
     
 }

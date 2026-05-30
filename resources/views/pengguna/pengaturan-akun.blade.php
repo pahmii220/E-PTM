@@ -11,7 +11,7 @@
         <div class="card mb-4 shadow-sm">
             <div class="card-body">
                 <p class="mb-1"><strong>Username:</strong> {{ auth()->user()->username }}</p>
-                <p class="mb-1"><strong>Role:</strong> Pengguna</p>
+                <p class="mb-1"><strong>Role:</strong> pegawai</p>
                 <p class="mb-1"><strong>Status Akun:</strong> Aktif</p>
                 <p class="mb-0">
                     <strong>Status Profil:</strong>

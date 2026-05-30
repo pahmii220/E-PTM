@@ -28,8 +28,8 @@ class PenggunaController extends Controller
     public function index()
     {
         $users = User::with('pegawaiDinkes')
-            ->where('role_name', 'pengguna')
-            ->orderBy('created_at', 'desc')
+            ->where('role_name', 'pegawai')
+            ->orderBy('dibuat_pada', 'desc')
             ->paginate(15);
 
         return view('admin.pengguna.index', compact('users'));
@@ -61,8 +61,8 @@ public function store(Request $request)
         'Nama_Lengkap' => $request->Nama_Lengkap,
         'email'        => $request->email ?? $request->Username.'@ptm.local',
         'password'     => Hash::make($request->password), // ✅ dari form
-        'role_name'    => 'pengguna',
-        'is_active'    => 1,
+        'role_name'    => 'pegawai',
+        'status_aktif'    => 1,
     ]);
 
     // =========================
@@ -79,7 +79,7 @@ public function store(Request $request)
 
     return redirect()
         ->route('admin.pengguna.index')
-        ->with('success', 'Pengguna berhasil ditambahkan.');
+        ->with('success', 'Pegawai Dinas Kesehatan berhasil ditambahkan.');
 }
 
 
@@ -146,19 +146,19 @@ public function store(Request $request)
     public function updateAccess(Request $request, $id)
     {
         $request->validate([
-            'role_name' => 'required|in:pengguna,petugas',
-            'is_active' => 'required|boolean',
-        ]);
+        'role_name' => 'required|in:pegawai,petugas,admin', 
+        'status_aktif' => 'required|boolean',
+    ]);
 
         $user = User::findOrFail($id);
         $user->update([
             'role_name' => $request->role_name,
-            'is_active' => $request->is_active,
+            'status_aktif' => $request->status_aktif,
         ]);
 
         return redirect()
             ->route('admin.pengguna.index')
-            ->with('success', 'Akses pengguna berhasil diperbarui.');
+            ->with('success', 'Akses untuk Pegawai Dinas Kesehatan berhasil diperbarui.');
     }
     public function destroy($id)
 {
@@ -171,7 +171,7 @@ public function store(Request $request)
 
     return redirect()
         ->route('admin.pengguna.index')
-        ->with('success', 'Pengguna berhasil dihapus.');
+        ->with('success', 'Data Pegawai Dinas Kesehatan berhasil dihapus.');
 }
 
 }

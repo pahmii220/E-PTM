@@ -12,7 +12,7 @@ class ForgotPasswordManualController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'username' => 'required|exists:users,Username'
+            'username' => 'required|exists:pengguna,Username'
         ]);
 
         $reset = PasswordResetRequest::where('username', $request->username)->first();
@@ -29,7 +29,7 @@ class ForgotPasswordManualController extends Controller
             $reset->update([
                 'status' => 'pending',
                 'approved_at' => null,
-                'created_at' => now(),
+                'dibuat_pada' => now(),
             ]);
         } else {
             PasswordResetRequest::create([

@@ -10,6 +10,10 @@ class DeteksiDiniPTM extends Model
 {
     use HasFactory;
 
+    // Memberitahu Laravel untuk menggunakan nama kolom baru
+    const CREATED_AT = 'dibuat_pada';
+    const UPDATED_AT = 'diubah_pada';
+
     protected $table = 'deteksi_dini_ptm';
 
     protected $fillable = [
@@ -26,15 +30,15 @@ class DeteksiDiniPTM extends Model
         'petugas_id',
 
         // fields verifikasi
-        'verification_status',
-        'verification_note',
-        'verified_by',
-        'verified_at',
+        'status_verifikasi',
+        'catatan_verifikasi',
+        'diverifikasi_oleh', 
+        'diverifikasi_pada',
     ];
 
     protected $casts = [
         'tanggal_pemeriksaan' => 'date',
-        'verified_at' => 'datetime',
+        'diverifikasi_pada' => 'datetime',
         'berat_badan' => 'float',
         'tinggi_badan' => 'float',
         'imt' => 'float',
@@ -66,7 +70,7 @@ public function pasien()
     // relasi ke user verifikator (Dinkes)
     public function verifiedBy()
     {
-        return $this->belongsTo(User::class, 'verified_by');
+        return $this->belongsTo(User::class, 'diverifikasi_oleh');
     }
 
 public function tindakLanjut()
@@ -89,7 +93,7 @@ public function deteksiDini()
 
     public function getStatusLabelAttribute()
     {
-        return ucfirst($this->verification_status ?? 'pending');
+        return ucfirst($this->status_verifikasi ?? 'pending');
     }
 
     // Hitung IMT jika belum disimpan

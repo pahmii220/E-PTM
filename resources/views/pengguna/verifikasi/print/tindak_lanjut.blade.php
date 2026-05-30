@@ -1,11 +1,14 @@
 <!doctype html>
 <html lang="id">
+
 <head>
     <meta charset="utf-8">
-    <title>Laporan Tindak Lanjut PTM</title>
+    <title>Cetak Laporan Tindak Lanjut PTM</title>
 
     <style>
-        @page { margin: 15mm 12mm; }
+        @page {
+            margin: 15mm 12mm;
+        }
 
         body {
             font-family: "Times New Roman", serif;
@@ -24,14 +27,42 @@
         }
 
         /* KOP */
-        .kop { text-align: center; margin-bottom: 6px; position: relative; }
-        .kop .left { float: left; width: 80px; }
-        .kop .center { display: inline-block; width: calc(100% - 160px); text-align: center; }
-        .clear { clear: both; }
+        .kop {
+            text-align: center;
+            margin-bottom: 6px;
+            position: relative;
+        }
 
-        .kop .prov { font-size: 14px; font-weight: 700; }
-        .kop .dinas { font-size: 18px; font-weight: 900; margin-top: 2px; }
-        .kop .addr { font-size: 12px; margin-top: 6px; }
+        .kop .left {
+            float: left;
+            width: 80px;
+        }
+
+        .kop .center {
+            display: inline-block;
+            width: calc(100% - 160px);
+            text-align: center;
+        }
+
+        .clear {
+            clear: both;
+        }
+
+        .kop .prov {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .kop .dinas {
+            font-size: 18px;
+            font-weight: 900;
+            margin-top: 2px;
+        }
+
+        .kop .addr {
+            font-size: 12px;
+            margin-top: 6px;
+        }
 
         hr.top {
             border: none;
@@ -46,7 +77,8 @@
             table-layout: fixed;
         }
 
-        table.grid th, table.grid td {
+        table.grid th,
+        table.grid td {
             border: 1px solid #111;
             padding: 4px 6px;
             vertical-align: middle;
@@ -59,11 +91,19 @@
             text-align: center;
         }
 
-        .no-print { margin-bottom: 10px; text-align: right; }
+        .no-print {
+            margin-bottom: 10px;
+            text-align: right;
+        }
 
         @media print {
-            .no-print { display: none; }
-            table.grid { font-size: 11.5px; }
+            .no-print {
+                display: none;
+            }
+
+            table.grid {
+                font-size: 11.5px;
+            }
         }
 
         /* Footer TTD */
@@ -81,88 +121,117 @@
         }
 
         .ttd .block .name {
-            margin-top: 70px;
+            margin-top: 5px;
             font-weight: 700;
             text-decoration: underline;
+        }
+
+        /* Kotak untuk QR Code */
+        .qr-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 85px;
+            margin: 10px 0;
         }
     </style>
 </head>
 
 <body>
-<div class="container">
+    <div class="container">
 
-    <div class="no-print">
-        <button onclick="window.print()" style="padding:8px 12px;">Print</button>
-        <a href="javascript:history.back()" style="padding:8px 12px; background:#eee; text-decoration:none;">Kembali</a>
-    </div>
-
-    <!-- KOP -->
-    <div class="kop">
-        <div class="left">
-            <img src="{{ asset('images/dinkes.png') }}" style="width:65px;">
+        <div class="no-print">
+            <button onclick="window.print()" style="padding:8px 12px;">Print</button>
+            <a href="javascript:history.back()"
+                style="padding:8px 12px; background:#eee; text-decoration:none;">Kembali</a>
         </div>
-        <br>
-        <div class="center">
-            <div class="prov">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
-            <div class="dinas">DINAS KESEHATAN</div>
-            <div class="addr">Jalan Belitung Darat No.118 — Banjarmasin 70116</div>
+
+        <div class="kop">
+            <div class="left">
+                <img src="{{ asset('images/dinkes.png') }}" style="width:65px;">
+            </div>
+            <br>
+            <div class="center">
+                <div class="prov">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+                <div class="dinas">DINAS KESEHATAN</div>
+                <div class="addr">Jalan Belitung Darat No.118 — Banjarmasin 70116</div>
+            </div>
+            <div class="clear"></div>
         </div>
-        <div class="clear"></div>
-    </div>
 
-    <hr class="top">
+        <hr class="top">
 
-    <div style="text-align:center; margin-bottom:10px;">
-        <h3 style="margin:0; font-size:15px;">LAPORAN TINDAK LANJUT PENYAKIT TIDAK MENULAR (PTM)</h3>
-    </div>
+        <div style="text-align:center; margin-bottom:15px;">
+            <h3 style="margin:0; font-size:15px;">LAPORAN TINDAK LANJUT PENYAKIT TIDAK MENULAR (PTM)</h3>
+        </div>
 
-    <!-- TABEL -->
-    <table class="grid">
-        <thead>
-            <tr>
-                <th style="width:40px">No</th>
-                <th>Peserta</th>
-                <th style="width:120px">Tanggal Pemeriksaan</th>
-                <th style="width:180px">Jenis Tindak Lanjut</th>
-                <th>Keterangan</th>
-                <th style="width:120px">Puskesmas</th>
-            </tr>
-        </thead>
-                <tbody>
-                    @forelse($items as $i => $row)
-                                    <tr>
-                                        <td style="text-align:center">{{ $i + 1 }}</td>
-                                        <td>{{ optional($row->pasien)->nama_lengkap ?? '-' }}</td>
-                                        <td style="text-align:center">
-                                            {{ $row->tanggal_tindak_lanjut
-                        ? \Carbon\Carbon::parse($row->tanggal_tindak_lanjut)->format('d-m-Y')
-                        : '-' }}
-                                        </td>
-                                        <td>{{ $row->jenis_tindak_lanjut ?? '-' }}</td>
-                                        <td>{{ $row->catatan_petugas ?? '-' }}</td>
-                                        <td>{{ optional($row->puskesmas)->nama_puskesmas ?? '-' }}</td>
-                                    </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" style="text-align:center;">
-                                Tidak ada data tindak lanjut.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-                </table>
-                
-                <!-- TTD -->
-                <div class="ttd">
-                    <div class="block">
-                        <div>Banjarmasin, {{ now()->format('d-m-Y') }}</div>
-                        <div style="margin-top:10px">KEPALA DINAS</div>
-                        <div class="name">dr. H. DIAUDDIN, M.Kes</div>
-                        <div>NIP. 197709232006041015</div>
-                    </div>
+        {{-- Keterangan Bulan Sebelah Kiri --}}
+        @if(isset($bulan) && isset($tahun))
+            <div style="text-align: left; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+                Bulan: {{ \Carbon\Carbon::create()->month((int) $bulan)->locale('id')->translatedFormat('F') }} {{ $tahun }}
+            </div>
+        @endif
+
+        <table class="grid">
+            <thead>
+                <tr>
+                    <th style="width:40px">No</th>
+                    <th>Peserta</th>
+                    <th style="width:120px">Tanggal Tindak Lanjut</th>
+                    <th style="width:160px">Jenis Tindak Lanjut</th>
+                    <th>Keterangan</th>
+                    <th style="width:120px">Puskesmas</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($items as $i => $row)
+                    <tr>
+                        <td style="text-align:center">{{ $i + 1 }}</td>
+                        <td>{{ optional($row->pasien)->nama_lengkap ?? '-' }}</td>
+                        <td style="text-align:center">
+                            {{ $row->tanggal_tindak_lanjut ? \Carbon\Carbon::parse($row->tanggal_tindak_lanjut)->format('d-m-Y') : '-' }}
+                        </td>
+                        <td>{{ $row->jenis_tindak_lanjut ?? '-' }}</td>
+                        <td>{{ $row->catatan_petugas ?? '-' }}</td>
+                        <td>{{ optional($row->puskesmas)->nama_puskesmas ?? '-' }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" style="text-align:center;">
+                            Tidak ada data tindak lanjut untuk periode ini.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+
+        <div class="ttd">
+            <div class="block">
+                <div>DIKELUARKAN DI BANJARMASIN</div>
+                <div>TANGGAL: {{ now()->format('d-m-Y') }}</div>
+
+                <div style="margin-top:10px; font-weight:bold;">
+                    {{ isset($kepalaAktif) ? 'KEPALA BIDANG P2P' : 'KEPALA DINAS' }}
                 </div>
-                
+
+                <div class="qr-container">
+                    @if(isset($qrToken) && isset($statusDokumen) && $statusDokumen == 'Disahkan')
+                        {!! QrCode::size(85)->generate($qrToken) !!}
+                    @else
+                        <div style="height: 85px;"></div>
+                    @endif
                 </div>
-                </body>
-                
-                </html>
+
+                <div class="name">
+                    {{ $kepalaAktif->nama_kepala ?? config('app.kepala_nama', 'dr. H. DIAUDDIN, M.Kes') }}
+                </div>
+                <div>
+                    NIP. {{ $kepalaAktif->nip ?? config('app.kepala_nip', '197709232006041015') }}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

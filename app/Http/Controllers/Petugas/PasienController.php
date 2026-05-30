@@ -16,7 +16,7 @@ class PasienController extends Controller
     {
         $user = Auth::user();
 
-        if (in_array($user->role_name, ['admin', 'pengguna'])) {
+        if (in_array($user->role_name, ['admin', 'pegawai'])) {
             $pasien = Pasien::with('puskesmas')
                 ->latest()
                 ->paginate(20);
@@ -37,7 +37,7 @@ class PasienController extends Controller
 {
     $user = Auth::user();
 
-    if ($user->role_name === 'pengguna') {
+    if ($user->role_name === 'pegawai') {
         abort(403);
     }
 
@@ -58,7 +58,7 @@ public function store(Request $request)
 {
     $user = Auth::user();
 
-    if ($user->role_name === 'pengguna') {
+    if ($user->role_name === 'pegawai') {
         abort(403);
     }
 
@@ -85,7 +85,7 @@ public function store(Request $request)
         'kontak'         => $request->kontak,
         'created_by'     => $user->id,
         'status_ptm' => $request->status_ptm,
-        'verification_status' => 'pending',
+        'status_verifikasi' => 'pending',
     ]);
 
     return redirect()
@@ -101,7 +101,7 @@ public function edit($id)
 {
     $user = Auth::user();
 
-    if ($user->role_name === 'pengguna') {
+    if ($user->role_name === 'pegawai') {
         abort(403);
     }
 
@@ -110,7 +110,7 @@ public function edit($id)
         : Pasien::where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
 
     // 🔒 hanya approved yang terkunci
-    if ($user->role_name !== 'admin' && $pasien->verification_status === 'approved') {
+    if ($user->role_name !== 'admin' && $pasien->status_verifikasi === 'approved') {
         return redirect()
             ->route('petugas.pasien.index')
             ->with('error', 'Data sudah disetujui dan tidak dapat diedit.');
@@ -132,7 +132,7 @@ public function edit($id)
     {
         $user = Auth::user();
 
-        if ($user->role_name === 'pengguna') {
+        if ($user->role_name === 'pegawai') {
             abort(403);
         }
 
@@ -140,7 +140,7 @@ public function edit($id)
             ? Pasien::findOrFail($id)
             : Pasien::where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
 
-        if ($user->role_name !== 'admin' && $pasien->verification_status === 'approved') {
+        if ($user->role_name !== 'admin' && $pasien->status_verifikasi === 'approved') {
             return redirect()
                 ->route('petugas.pasien.index')
                 ->with('error', 'Data sudah disetujui dan tidak dapat diubah.');
@@ -171,11 +171,11 @@ if ($request->tanggal_lahir !== optional($pasien->tanggal_lahir)->format('Y-m-d'
 }
 
         // 🔁 jika sebelumnya rejected → reset ke pending
-        if ($pasien->verification_status === 'rejected') {
-    $updateData['verification_status'] = 'pending';
-    $updateData['verification_note'] = null;
-    $updateData['verified_by'] = null;
-    $updateData['verified_at'] = null;
+        if ($pasien->status_verifikasi === 'rejected') {
+    $updateData['status_verifikasi'] = 'pending';
+    $updateData['catatan_verifikasi'] = null;
+    $updateData['diverifikasi_oleh'] = null;
+    $updateData['diverifikasi_pada'] = null;
 }
 
 
@@ -194,7 +194,7 @@ if ($request->tanggal_lahir !== optional($pasien->tanggal_lahir)->format('Y-m-d'
     {
         $user = Auth::user();
 
-        if ($user->role_name === 'pengguna') {
+        if ($user->role_name === 'pegawai') {
             abort(403);
         }
 
@@ -202,7 +202,7 @@ if ($request->tanggal_lahir !== optional($pasien->tanggal_lahir)->format('Y-m-d'
             ? Pasien::findOrFail($id)
             : Pasien::where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
 
-        if ($user->role_name !== 'admin' && $pasien->verification_status === 'approved') {
+        if ($user->role_name !== 'admin' && $pasien->status_verifikasi === 'approved') {
             return redirect()
                 ->route('petugas.pasien.index')
                 ->with('error', 'Data sudah disetujui dan tidak dapat dihapus.');

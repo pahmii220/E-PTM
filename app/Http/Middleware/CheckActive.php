@@ -19,7 +19,7 @@ class CheckActive
         }
 
         // Jika akun dinonaktifkan oleh admin
-        if (Auth::user()->is_active === false) {
+        if (Auth::user()->status_aktif=== false) {
             Auth::logout();
 
             // invalidate session

@@ -77,7 +77,7 @@
                         </button>
                     </form>
                 </div>
-
+                
                 <div class="card-footer text-center bg-transparent border-0">
                     <small class="text-muted">
                         Belum punya akun?

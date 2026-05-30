@@ -18,8 +18,8 @@ class FaktorResikoPTMController extends Controller
 {
     $user = Auth::user();
 
-    if (in_array($user->role_name, ['admin', 'pengguna'])) {
-        // ADMIN & PENGGUNA: lihat semua
+    if (in_array($user->role_name, ['admin', 'pegawai'])) {
+        // ADMIN & pegawai: lihat semua
         $faktor = FaktorResikoPTM::with(['pasien', 'puskesmas'])
             ->latest()
             ->get();
@@ -44,7 +44,7 @@ public function create()
 {
     $user = Auth::user();
 
-    if ($user->role_name === 'pengguna') {
+    if ($user->role_name === 'pegawai') {
         abort(403);
     }
 
@@ -77,7 +77,7 @@ public function create()
      */
     public function store(Request $request)
 {
-    if (Auth::user()->role_name === 'pengguna') {
+    if (Auth::user()->role_name === 'pegawai') {
         abort(403);
     }
 
@@ -116,7 +116,7 @@ public function edit($id)
 {
     $user = Auth::user();
 
-    if ($user->role_name === 'pengguna') {
+    if ($user->role_name === 'pegawai') {
         abort(403);
     }
 
@@ -127,7 +127,7 @@ public function edit($id)
             ->findOrFail($id);
 
     // 🔒 Jika sudah approved → petugas terkunci
-    if ($user->role_name !== 'admin' && $faktor->verification_status === 'approved') {
+    if ($user->role_name !== 'admin' && $faktor->status_verifikasi === 'approved') {
         return redirect()
             ->route('petugas.faktor_resiko.index')
             ->with('error', 'Data sudah diverifikasi dan tidak dapat diedit.');
@@ -162,7 +162,7 @@ public function edit($id)
 {
     $user = Auth::user();
 
-    if ($user->role_name === 'pengguna') {
+    if ($user->role_name === 'pegawai') {
         abort(403);
     }
 
@@ -171,7 +171,7 @@ public function edit($id)
         : FaktorResikoPTM::where('puskesmas_id', $user->petugas->puskesmas_id)
             ->findOrFail($id);
 
-    if ($user->role_name !== 'admin' && $faktor->verification_status === 'approved') {
+    if ($user->role_name !== 'admin' && $faktor->status_verifikasi === 'approved') {
         return redirect()
             ->route('petugas.faktor_resiko.index')
             ->with('error', 'Data sudah diverifikasi dan tidak dapat diubah.');
@@ -185,11 +185,11 @@ public function edit($id)
     ]);
 
     // 🔁 RESET STATUS JIKA SEBELUMNYA DITOLAK
-    if ($faktor->verification_status === 'rejected') {
-        $faktor->verification_status = 'pending';
-        $faktor->verification_note = null;
-        $faktor->verified_by = null;
-        $faktor->verified_at = null;
+    if ($faktor->status_verifikasi === 'rejected') {
+        $faktor->status_verifikasi = 'pending';
+        $faktor->catatan_verifikasi = null;
+        $faktor->vdiverifikasi_oleh = null;
+        $faktor->diverifikasi_pada = null;
     }
 
     // UPDATE DATA UTAMA
@@ -214,7 +214,7 @@ public function edit($id)
 {
     $user = Auth::user();
 
-    if ($user->role_name === 'pengguna') {
+    if ($user->role_name === 'pegawai') {
         abort(403);
     }
 
@@ -225,7 +225,7 @@ public function edit($id)
             ->findOrFail($id);
     }
 
-    if ($user->role_name !== 'admin' && $faktor->verification_status === 'approved') {
+    if ($user->role_name !== 'admin' && $faktor->status_verifikasi === 'approved') {
         return redirect()
             ->route('petugas.faktor_resiko.index')
             ->with('error', 'Data sudah diverifikasi dan tidak dapat dihapus.');

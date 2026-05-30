@@ -26,7 +26,7 @@ class StatusVerifikasiNotification extends Notification
     public function toMail($notifiable)
     {
         // Mengecek status dari database (sesuaikan dengan nama isian status di aplikasimu)
-        $status = $this->dataPtm->verification_status; 
+        $status = $this->dataPtm->status_verifikasi; 
         $labelStatus = ($status == 'verified' || $status == 'disetujui') ? 'Telah Diverifikasi ✅' : 'Perlu Direvisi/Ditolak ❌';
 
         return (new MailMessage)
@@ -34,7 +34,7 @@ class StatusVerifikasiNotification extends Notification
                     ->greeting('Halo Petugas Puskesmas,')
                     ->line('Data laporan PTM yang Anda kirimkan telah diperiksa oleh Dinas Kesehatan.')
                     ->line('Status laporan saat ini: **' . $labelStatus . '**')
-                    ->line('Catatan dari Verifikator: ' . ($this->dataPtm->verification_note ?? 'Tidak ada catatan tambahan.'))
+                    ->line('Catatan dari Verifikator: ' . ($this->dataPtm->catatan_verifikasi ?? 'Tidak ada catatan tambahan.'))
                     ->line('Silakan login ke aplikasi untuk melihat rincian lebih lanjut.');
     }
 }

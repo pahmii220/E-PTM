@@ -1,7 +1,6 @@
-<!-- Modal Verifikasi -->
 <div class="modal fade" id="verifyModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
-        <form id="verifyForm" method="POST">
+        <form id="verifyForm" method="POST" action="{{ route('pengguna.verifikasi.process') }}">
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
@@ -9,7 +8,10 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <input type="hidden" name="action" id="verifyAction" value="">
+                    <input type="hidden" name="id" id="modal_id">
+                    <input type="hidden" name="type" id="modal_type">
+                    <input type="hidden" name="action" id="verifyAction">
+
                     <div class="mb-3">
                         <label for="verifyNote" class="form-label">Catatan (opsional)</label>
                         <textarea name="note" id="verifyNote" rows="4" class="form-control"></textarea>
@@ -31,26 +33,21 @@
             var verifyModal = document.getElementById('verifyModal');
             verifyModal.addEventListener('show.bs.modal', function (event) {
                 var button = event.relatedTarget;
+
+                // Ambil data dari tombol
                 var id = button.getAttribute('data-id');
                 var type = button.getAttribute('data-type');
                 var action = button.getAttribute('data-action');
 
-                // set form action depending on type
-                var form = document.getElementById('verifyForm');
-                var route = '';
-                if (type === 'pasien') {
-                    route = "{{ url('/pengguna/verifikasi/pasien') }}/" + id;
-                } else if (type === 'deteksi') {
-                    route = "{{ url('/pengguna/verifikasi/deteksi') }}/" + id;
-                } else if (type === 'faktor') {
-                    route = "{{ url('/pengguna/verifikasi/faktor') }}/" + id;
-                }
-                form.action = route;
-
-                // set action and reset note
+                // 3. Masukkan ke input hidden agar terkirim ke Controller
+                document.getElementById('modal_id').value = id;
+                document.getElementById('modal_type').value = type;
                 document.getElementById('verifyAction').value = action;
-                document.getElementById('verifyNote').value = (action === 'approve') ? 'Disetujui oleh {{ auth()->user()->Nama_Lengkap }}' : '';
+
+                // Set tampilan catatan dan tombol
+                document.getElementById('verifyNote').value = (action === 'approve') ? 'Disetujui oleh {{ auth()->user()->Nama_Lengkap ?? 'Admin' }}' : '';
                 document.getElementById('verifySubmit').textContent = (action === 'approve') ? 'Approve' : 'Reject';
+
                 if (action === 'approve') {
                     document.getElementById('verifySubmit').classList.remove('btn-danger');
                     document.getElementById('verifySubmit').classList.add('btn-success');

@@ -38,7 +38,7 @@
                         </select>
                     </div>
 
-                    @if(in_array(auth()->user()->role_name, ['admin', 'pengguna']))
+                    @if(in_array(auth()->user()->role_name, ['admin', 'pegawai']))
                         <div class="col-md-3">
                             <select id="filterPuskesmas" class="form-select">
                                 <option value="">Semua Puskesmas</option>
@@ -103,22 +103,22 @@
 
                                 {{-- BAGIAN STATUS MENGGUNAKAN MODAL POP-UP --}}
                                 <td>
-                                    @if($p->verification_status === 'approved')
+                                    @if($p->status_verifikasi === 'approved')
                                         <span class="badge bg-success px-3 py-2 rounded-pill shadow-sm">
                                             <i class="bi bi-check-circle me-1"></i> Diterima
                                         </span>
-                                        @if($p->verified_at)
+                                        @if($p->diverifikasi_pada)
                                             <div class="text-muted mt-1" style="font-size: 11px;">
-                                                Proses: {{ \Carbon\Carbon::parse($p->created_at)->diffForHumans(\Carbon\Carbon::parse($p->verified_at), true) }}
+                                                Proses: {{ \Carbon\Carbon::parse($p->dibuat_pada)->diffForHumans(\Carbon\Carbon::parse($p->diverifikasi_pada), true) }}
                                             </div>
                                         @endif
 
-                                    @elseif($p->verification_status === 'rejected')
+                                    @elseif($p->status_verifikasi === 'rejected')
                                         <span class="badge bg-danger px-3 py-2 rounded-pill shadow-sm">
                                             <i class="bi bi-x-circle me-1"></i> Revisi
                                         </span>
 
-                                        @if($p->verification_note)
+                                        @if($p->catatan_verifikasi)
                                             <div class="mt-2">
                                                 {{-- Tombol untuk memunculkan Pop-up --}}
                                                 <button type="button" class="btn btn-outline-danger rounded-pill" style="font-size: 10px; padding: 2px 10px;"
@@ -144,7 +144,7 @@
                                                                 Pesan untuk data pasien: <strong>{{ $p->nama_lengkap }}</strong>
                                                             </div>
                                                             <div class="p-3 bg-light border-start border-danger border-4 rounded">
-                                                                {{ $p->verification_note }}
+                                                                {{ $p->catatan_verifikasi }}
                                                             </div>
                                                         </div>
                                                         <div class="modal-footer border-0 bg-light">
@@ -162,12 +162,12 @@
                                         <span class="badge bg-warning text-dark px-3 py-2 rounded-pill shadow-sm">
                                             <i class="bi bi-hourglass-split me-1"></i> Tertunda
                                         </span>
-                                        
+
                                     @endif
                                 </td>
 
                                 <td>
-                                    @if($p->verification_status === 'approved' && auth()->user()->role_name !== 'admin')
+                                    @if($p->status_verifikasi === 'approved' && auth()->user()->role_name !== 'admin')
                                         {{-- 🔒 TERKUNCI --}}
                                         <span class="badge bg-secondary">
                                             Terkunci

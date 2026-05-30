@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->string('nip')->nullable();
             $table->enum('jenis_kelamin', ['Laki-laki','Perempuan']);
             $table->string('email')->unique();
-            $table->enum('role_name', ['admin', 'petugas', 'operator', 'pengguna'])->default('pengguna');
+            $table->enum('role_name', ['admin', 'petugas', 'operator', 'pegawai'])->default('pegawai');
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();

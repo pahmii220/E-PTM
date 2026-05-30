@@ -34,7 +34,7 @@
                 <div class="bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-md transition">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-xs text-gray-500 font-medium">Total Pengguna</p>
+                            <p class="text-xs text-gray-500 font-medium">Total pegawai</p>
                             <h3 class="text-2xl font-extrabold text-gray-800 mt-1">
                                 {{ $totalPengguna ?? 0 }}
                             </h3>
@@ -70,7 +70,7 @@
                         <div>
                             <p class="text-xs text-gray-500 font-medium">Data Peserta</p>
                             <h3 class="text-2xl font-extrabold text-gray-800 mt-1">
-                                {{ $totalPasien?? 0 }}  
+                                {{ $totalPasien ?? 0 }}  
                             </h3>
                             <p class="text-[11px] text-gray-400 mt-1">Kasus tercatat</p>
                         </div>

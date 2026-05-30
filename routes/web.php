@@ -3,7 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\KepalaP2ptmController;
+use App\Http\Controllers\LaporanKepalaController;
+use App\Http\Controllers\AdminPejabatController;
 /*
 |--------------------------------------------------------------------------
 | AUTH CONTROLLERS
@@ -62,23 +65,31 @@ use App\Models\PasswordResetRequest;
 
 /*
 |--------------------------------------------------------------------------
-| ROOT
+| ROOT & PUBLIC PAGES
 |--------------------------------------------------------------------------
 */
-Route::get('/', fn () => redirect()->route('login'));
+// 1. HALAMAN UTAMA (LANDING PAGE)
+Route::get('/', [HomeController::class, 'index'])->name('frontend.home');
+
+// 2. HALAMAN PROFIL
+Route::get('/profil', [HomeController::class, 'profil'])->name('frontend.profil');
+
+// 3. HALAMAN STRUKTUR (INI YANG TADI ERROR)
+Route::get('/struktur', [HomeController::class, 'struktur'])->name('frontend.struktur');
 
 /*
 |--------------------------------------------------------------------------
 | AUTH (LOGIN, REGISTER, LOGOUT)
 |--------------------------------------------------------------------------
 */
-Route::get('/login', [LoginController::class,'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class,'login']);
-Route::post('/logout', [LoginController::class,'logout'])->name('logout')->middleware('auth');
+// RUTE AUTENTIKASI
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login']);
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
-Route::get('/register', [RegisterController::class,'showRegisterForm'])->name('register');
-Route::post('/register', [RegisterController::class,'register']);
-
+// RUTE REGISTER
+Route::get('/register', [RegisterController::class, 'showRegisterForm'])->name('register');
+Route::post('/register', [RegisterController::class, 'register']);
 /*
 |--------------------------------------------------------------------------
 | RESET PASSWORD (MANUAL, TANPA EMAIL)
@@ -223,6 +234,22 @@ Route::post(
     [ResetPasswordRequestController::class, 'reject']
 )->name('reset.requests.reject');
 
+
+// ... rute admin lainnya ...
+
+// Rute Pengaturan Kepala P2PTM (Master Pejabat)
+    Route::get('/master-pejabat', [AdminPejabatController::class, 'index'])->name('pejabat.index');
+    Route::post('/master-pejabat', [AdminPejabatController::class, 'store'])->name('pejabat.store');
+    Route::post('/master-pejabat/{id}/set-aktif', [AdminPejabatController::class, 'setAktif'])->name('pejabat.set_aktif');
+    
+    // Rute untuk menampilkan form edit
+    Route::get('/master-pejabat/{id}/edit', [AdminPejabatController::class, 'edit'])->name('pejabat.edit');
+
+    // Rute untuk memproses update data
+    Route::put('/master-pejabat/{id}', [AdminPejabatController::class, 'update'])->name('pejabat.update');
+
+    // Rute untuk menghapus data
+    Route::delete('/master-pejabat/{id}', [AdminPejabatController::class, 'destroy'])->name('pejabat.destroy');
 });
 
 /*
@@ -275,8 +302,6 @@ Route::post('/profil', [PetugasProfileController::class, 'update'])
     )->name('ganti.password');
 
 });
-
-
 
 
 /*
@@ -368,3 +393,46 @@ Route::get(
 
 });
 
+
+Route::middleware(['auth', 'active', 'role:kepala_p2ptm'])->prefix('kepala-p2ptm')->group(function () {
+    
+    // 1. Dashboard Utama (Tetap menggunakan controller lama)
+    Route::get('/dashboard', [KepalaP2ptmController::class, 'dashboard'])->name('kepala.dashboard');
+    
+    // ====================================================================
+    // GROUP LAPORAN KEPALA P2PTM
+    // ====================================================================
+    Route::prefix('laporan')->name('kepala.laporan.')->group(function () {
+        
+        // 1. Laporan Peserta (Master Data)
+        Route::get('/peserta', [LaporanKepalaController::class, 'peserta'])->name('peserta');
+        Route::get('/peserta/cetak', [LaporanKepalaController::class, 'cetakPeserta'])->name('peserta.cetak');
+
+        // 2. Laporan Deteksi Dini
+        Route::get('/deteksi-dini', [LaporanKepalaController::class, 'deteksiDini'])->name('deteksi_dini');
+        Route::get('/deteksi-dini/cetak', [LaporanKepalaController::class, 'cetakDeteksiDini'])->name('deteksi_dini.cetak');
+
+        // ==========================================
+        // 3. Laporan Faktor Risiko
+        // ==========================================
+        Route::get('/faktor-risiko', [LaporanKepalaController::class, 'faktorRisiko'])->name('faktor_risiko');
+        Route::get('/faktor-risiko/cetak', [LaporanKepalaController::class, 'cetakFaktorRisiko'])->name('faktor_risiko.cetak');
+
+        // ==========================================
+        // 4. Laporan Tindak Lanjut
+        // ==========================================
+        Route::get('/tindak-lanjut', [LaporanKepalaController::class, 'tindakLanjut'])->name('tindak_lanjut');
+        Route::get('/tindak-lanjut/cetak', [LaporanKepalaController::class, 'cetakTindakLanjut'])->name('tindak_lanjut.cetak');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| VERIFIKASI PUBLIK (SCAN QR CODE)
+|--------------------------------------------------------------------------
+| Route ini diletakkan di luar middleware auth, agar siapa saja yang 
+| scan barcode lewat HP bisa melihat status keabsahan dokumen.
+*/
+Route::get('/verifikasi-dokumen/{token}', [KepalaP2ptmController::class, 'verifikasiPublik'])->name('verifikasi.publik');
+
+
+});

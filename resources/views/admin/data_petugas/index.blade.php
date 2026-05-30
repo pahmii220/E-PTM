@@ -100,11 +100,11 @@
                                 <td class="text-center">
                                     @if($p->user)
                                                         <span class="badge rounded-pill px-3 py-1
-                                                                {{ $p->user->is_active
+                                                                {{ $p->user->status_aktif
                                         ? 'bg-success-subtle text-success'
                                         : 'bg-danger-subtle text-danger' }}">
-                                                            <i class="bi {{ $p->user->is_active ? 'bi-check-circle' : 'bi-x-circle' }}"></i>
-                                                            {{ $p->user->is_active ? 'Aktif' : 'Nonaktif' }}
+                                                            <i class="bi {{ $p->user->status_aktif ? 'bi-check-circle' : 'bi-x-circle' }}"></i>
+                                                            {{ $p->user->status_aktif ? 'Aktif' : 'Nonaktif' }}
                                                         </span>
                                                         <div class="small text-muted mt-1">
                                                             {{ ucfirst($p->user->role_name) }}

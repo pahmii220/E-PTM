@@ -9,6 +9,10 @@ class PegawaiDinkes extends Model
 {
     use HasFactory;
 
+
+    // Memberitahu Laravel untuk menggunakan nama kolom baru
+    const CREATED_AT = 'dibuat_pada';
+    const UPDATED_AT = 'diubah_pada';
     protected $table = 'pegawai_dinkes';
 
     protected $fillable = [

@@ -13,6 +13,9 @@ use App\Models\Pasien;
 use App\Models\DeteksiDiniPTM;
 use App\Models\FaktorResikoPTM;
 use App\Models\TindakLanjutPTM;
+use App\Models\User;
+use App\Notifications\DataPtmDitolakNotification;
+use App\Notifications\DataPtmDisetujuiNotification;
 
 class VerifikasiController extends Controller
 {
@@ -29,92 +32,63 @@ public function process(Request $request)
         'note'   => 'nullable|string|max:1000',
     ]);
 
-    if ($v->fails()) {
-        if ($request->expectsJson()) {
-            return response()->json(['success' => false, 'errors' => $v->errors()->all()], 422);
-        }
-        return redirect()->back()->withErrors($v)->withInput();
-    }
+    if ($v->fails()) return redirect()->back()->withErrors($v)->withInput();
 
-    // Resolve model class
     $modelMap = [
         'deteksi' => DeteksiDiniPTM::class,
         'pasien'  => Pasien::class,
         'faktor'  => FaktorResikoPTM::class,
     ];
 
-    $type = $request->type;
-    $id = $request->id;
-    $action = $request->action;
-    $note = $request->note ?? null;
-
-    if (!isset($modelMap[$type])) {
-        if ($request->expectsJson()) {
-            return response()->json(['success' => false, 'message' => 'Tipe tidak dikenal'], 400);
-        }
-        return redirect()->back()->with('error', 'Tipe tidak dikenal.');
-    }
-
-    $modelClass = $modelMap[$type];
+    $modelClass = $modelMap[$request->type];
 
     try {
-        $result = DB::transaction(function () use ($modelClass, $id, $action, $note) {
-            $item = $modelClass::findOrFail($id);
-
-            // Prevent double verification
-            if (in_array($item->verification_status, ['approved', 'rejected'])) {
-                return ['already' => true, 'item' => $item];
-            }
-
-            $item->verified_by = Auth::id();
-            $item->verified_at = Carbon::now();
-            $item->verification_status = $action === 'approve' ? 'approved' : 'rejected';
-            // use field name matching your models (you used verification_note elsewhere)
-            if (method_exists($item, 'setAttribute')) {
-                // safe write
-                $item->verification_note = $note;
-            } else {
-                $item->note = $note;
-            }
-
+        $verifiedItem = DB::transaction(function () use ($modelClass, $request) {
+            $item = $modelClass::findOrFail($request->id);
+            
+            $item->diverifikasi_oleh = Auth::id();
+            $item->diverifikasi_pada = Carbon::now();
+            $item->status_verifikasi = $request->action === 'approve' ? 'approved' : 'rejected';
+            $item->catatan_verifikasi = $request->note;
             $item->save();
 
-            return ['already' => false, 'item' => $item];
+            return $item;
         });
 
-        if ($result['already']) {
-            $msg = 'Data sudah pernah diverifikasi sebelumnya.';
-            if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => $msg], 409);
+        // NOTIFIKASI
+        // NOTIFIKASI
+        if (!empty($verifiedItem->petugas_id)) {
+            $petugas = \App\Models\Petugas::find($verifiedItem->petugas_id);
+            
+            if ($petugas && $petugas->user_id) {
+                $petugasUser = User::find($petugas->user_id);
+                
+                if ($petugasUser && $petugasUser->email) {
+                    // Cek aksi apa yang dilakukan
+                    if ($request->action === 'reject') {
+                        \Illuminate\Support\Facades\Notification::send($petugasUser, new \App\Notifications\DataPtmDitolakNotification($verifiedItem));
+                        Log::info("LOG-EMAIL: Notifikasi REJECT terkirim ke " . $petugasUser->email);
+                    } 
+                    elseif ($request->action === 'approve') {
+                        \Illuminate\Support\Facades\Notification::send($petugasUser, new \App\Notifications\DataPtmDisetujuiNotification($verifiedItem));
+                        Log::info("LOG-EMAIL: Notifikasi APPROVE terkirim ke " . $petugasUser->email);
+                    }
+                }
             }
-            return redirect()->back()->with('info', $msg);
         }
 
-        $msg = $action === 'approve' ? 'Berhasil menyetujui.' : 'Berhasil menolak.';
-        if ($request->expectsJson()) {
-            return response()->json(['success' => true, 'message' => $msg]);
-        }
-        return redirect()->back()->with('success', $msg);
+        return redirect()->back()->with('success', 'Verifikasi berhasil diproses.');
 
     } catch (\Throwable $e) {
-        Log::error("Verifikasi process error: {$e->getMessage()}", [
-            'type' => $type, 'id' => $id, 'action' => $action
-        ]);
-
-        $msg = 'Gagal memproses verifikasi.';
-
-        if ($request->expectsJson()) {
-            return response()->json(['success' => false, 'message' => $msg], 500);
-        }
-        return redirect()->back()->with('error', $msg);
+        Log::error("Error Verifikasi: " . $e->getMessage());
+        return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
     }
 }
-
     public function __construct()
 {
     $this->middleware(['auth']);
 
-    $this->middleware('role:pengguna')->except([
+    $this->middleware('role:pegawai')->except([
         'printPasien',
         'printDeteksi',
         'printFaktor',
@@ -130,9 +104,9 @@ public function process(Request $request)
      */
     public function index()
     {
-        $pendingPasien = Pasien::where('verification_status', 'pending')->count();
-        $pendingDeteksi = DeteksiDiniPTM::where('verification_status', 'pending')->count();
-        $pendingFaktor = FaktorResikoPTM::where('verification_status', 'pending')->count();
+        $pendingPasien = Pasien::where('status_verifikasi', 'pending')->count();
+        $pendingDeteksi = DeteksiDiniPTM::where('status_verifikasi', 'pending')->count();
+        $pendingFaktor = FaktorResikoPTM::where('status_verifikasi', 'pending')->count();
 
         return view('pengguna.verifikasi.index', compact('pendingPasien','pendingDeteksi','pendingFaktor'));
     }
@@ -144,10 +118,10 @@ public function process(Request $request)
 {
     $status = $request->status ?? 'pending';
 
-    $query = Pasien::orderBy('created_at','desc');
+    $query = Pasien::orderBy('dibuat_pada','desc');
 
     if ($status !== 'all') {
-        $query->where('verification_status', $status);
+        $query->where('status_verifikasi', $status);
     }
 
     $data = $query->paginate(20)->appends($request->query());
@@ -164,10 +138,10 @@ public function process(Request $request)
     $status = $request->query('status', 'pending');
 
     $query = DeteksiDiniPTM::with(['pasien','petugas'])
-        ->orderBy('created_at','desc');
+        ->orderBy('dibuat_pada','desc');
 
     if ($status !== 'all') {
-        $query->where('verification_status', $status);
+        $query->where('status_verifikasi', $status);
     }
 
     $data = $query->paginate(20)->appends($request->query());
@@ -185,10 +159,10 @@ public function faktorPending(Request $request)
     $status = $request->query('status', 'pending');
 
     $query = FaktorResikoPTM::with(['pasien','petugas'])
-        ->orderBy('created_at','desc');
+        ->orderBy('dibuat_pada','desc');
 
     if ($status !== 'all') {
-        $query->where('verification_status', $status);
+        $query->where('status_verifikasi', $status);
     }
 
     $data = $query->paginate(20)->appends($request->query());
@@ -209,10 +183,10 @@ public function faktorPending(Request $request)
         if ($v->fails()) return redirect()->back()->withErrors($v)->withInput();
 
         $item = Pasien::findOrFail($id);
-        $item->verified_by = Auth::id();
-        $item->verified_at = Carbon::now();
-        $item->verification_status = $request->action === 'approve' ? 'approved' : 'rejected';
-        $item->verification_note = $request->note ?? null;
+        $item->diverifikasi_oleh = Auth::id();
+        $item->diverifikasi_pada = Carbon::now();
+        $item->status_verifikasi = $request->action === 'approve' ? 'approved' : 'rejected';
+        $item->catatan_verifikasi = $request->note ?? null;
 
         try {
             $item->save();
@@ -235,10 +209,10 @@ public function faktorPending(Request $request)
         if ($v->fails()) return redirect()->back()->withErrors($v)->withInput();
 
         $item = DeteksiDiniPTM::findOrFail($id);
-        $item->verified_by = Auth::id();
-        $item->verified_at = Carbon::now();
-        $item->verification_status = $request->action === 'approve' ? 'approved' : 'rejected';
-        $item->verification_note = $request->note ?? null;
+        $item->diverifikasi_oleh = Auth::id();
+        $item->diverifikasi_pada = Carbon::now();
+        $item->status_verifikasi = $request->action === 'approve' ? 'approved' : 'rejected';
+        $item->catatan_verifikasi = $request->note ?? null;
 
         try {
             $item->save();
@@ -261,10 +235,10 @@ public function faktorPending(Request $request)
         if ($v->fails()) return redirect()->back()->withErrors($v)->withInput();
 
         $item = FaktorResikoPTM::findOrFail($id);
-        $item->verified_by = Auth::id();
-        $item->verified_at = Carbon::now();
-        $item->verification_status = $request->action === 'approve' ? 'approved' : 'rejected';
-        $item->verification_note = $request->note ?? null;
+        $item->diverifikasi_oleh = Auth::id();
+        $item->diverifikasi_pada = Carbon::now();
+        $item->status_verifikasi = $request->action === 'approve' ? 'approved' : 'rejected';
+        $item->catatan_verifikasi = $request->note ?? null;
 
         try {
             $item->save();
@@ -298,7 +272,7 @@ public function printDeteksi(Request $request)
     ])->orderBy('tanggal_pemeriksaan','desc');
 
     if ($status !== 'all') {
-        $query->where('verification_status', $status);
+        $query->where('status_verifikasi', $status);
     }
 
     $items = $query->get();
@@ -313,7 +287,7 @@ public function printDeteksi(Request $request)
     /**
      * Cetak laporan: pasien
      */
-    public function printPasien(Request $request)
+public function printPasien(Request $request)
 {
     $user = auth()->user();
 
@@ -327,14 +301,13 @@ public function printDeteksi(Request $request)
 
     // base query
     $query = Pasien::with('puskesmas')
-        ->orderBy('created_at', 'desc');
+        ->orderBy('dibuat_pada', 'desc');
 
+        $items = $query->get();
     // 🔐 ROLE-BASED FILTER
     if ($user->role_name === 'petugas') {
-        // petugas hanya puskesmas sendiri
         $query->where('puskesmas_id', $user->petugas->puskesmas_id);
-    } elseif (in_array($user->role_name, ['admin', 'pengguna'])) {
-        // admin & pengguna boleh pilih puskesmas
+    } elseif (in_array($user->role_name, ['admin', 'pegawai'])) {
         if ($request->filled('puskesmas')) {
             $query->whereHas('puskesmas', function ($q) use ($request) {
                 $q->where('nama_puskesmas', $request->puskesmas);
@@ -344,12 +317,17 @@ public function printDeteksi(Request $request)
 
     // 🎯 FILTER STATUS
     if ($status !== 'all') {
-        $query->where('verification_status', $status);
+        $query->where('status_verifikasi', $status);
     }
 
     $items = $query->get();
 
-    return view('pengguna.verifikasi.cetak_pasien', compact('items', 'status'));
+    // 🔥 TAMBAHKAN INI AGAR BLADE TIDAK ERROR
+    $qrToken = null; 
+    $statusDokumen = 'Menunggu';
+    $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
+
+    return view('pengguna.verifikasi.cetak_pasien', compact('items', 'status', 'qrToken', 'statusDokumen', 'kepalaAktif'));
 }
 
 
@@ -370,10 +348,10 @@ public function printFaktor(Request $request)
     }
 
     $query = FaktorResikoPTM::with(['pasien','petugas'])
-        ->orderBy('created_at','desc');
+        ->orderBy('dibuat_pada','desc');
 
     if ($status !== 'all') {
-        $query->where('verification_status', $status);
+        $query->where('status_verifikasi', $status);
     }
 
     $items = $query->get();

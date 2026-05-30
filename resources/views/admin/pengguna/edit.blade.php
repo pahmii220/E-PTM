@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title', 'Edit Pengguna (Pegawai Dinkes)')
+@section('title', 'Edit Pegawai Dinkes')
 
 @section('content')
     <div class="container-fluid py-3" style="max-width:1400px">
@@ -9,7 +9,7 @@
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body d-flex justify-content-between align-items-center">
                 <div>
-                    <h4 class="fw-bold mb-0">Edit Pengguna</h4>
+                    <h4 class="fw-bold mb-0">Edit pegawai</h4>
                     <small class="text-muted">Kelola data pegawai dinkes dan hak akses akun</small>
                 </div>
             </div>
@@ -104,8 +104,8 @@
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Role</label>
                             <select name="role_name" class="form-select">
-                                <option value="pengguna" {{ $user->role_name == 'pengguna' ? 'selected' : '' }}>
-                                    Pengguna
+                                <option value="pegawai" {{ $user->role_name == 'pegawai' ? 'selected' : '' }}>
+                                    pegawai
                                 </option>
                                 <option value="petugas" {{ $user->role_name == 'petugas' ? 'selected' : '' }}>
                                     Petugas
@@ -116,9 +116,9 @@
 
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Status Akun</label>
-                            <select name="is_active" class="form-select">
-                                <option value="1" {{ $user->is_active ? 'selected' : '' }}>Aktif</option>
-                                <option value="0" {{ !$user->is_active ? 'selected' : '' }}>Nonaktif</option>
+                            <select name="status_aktif" class="form-select">
+                                <option value="1" {{ $user->status_aktif ? 'selected' : '' }}>Aktif</option>
+                                <option value="0" {{ !$user->status_aktif ? 'selected' : '' }}>Nonaktif</option>
                             </select>
                             <small class="text-muted">Nonaktifkan untuk memblokir login</small>
                         </div>

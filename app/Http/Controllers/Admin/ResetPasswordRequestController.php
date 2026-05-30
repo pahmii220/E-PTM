@@ -12,7 +12,7 @@ class ResetPasswordRequestController extends Controller
 public function index()
 {
     $requests = PasswordResetRequest::whereIn('status', ['pending'])
-        ->orderBy('created_at', 'desc')
+        ->orderBy('dibuat_pada', 'desc')
         ->get();
 
     return view('admin.reset_requests.index', compact('requests'));
@@ -31,7 +31,7 @@ public function showProfile($username)
         $petugas = \App\Models\Petugas::where('user_id', $user->id)->first();
     }
 
-    if ($user->role_name === 'pengguna') {
+    if ($user->role_name === 'pegawai') {
         $pegawai = PegawaiDinkes::where('user_id', $user->id)->first();
     }
 

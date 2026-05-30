@@ -15,7 +15,7 @@ class RekapPuskesmasController extends Controller
      */
     public function __construct()
     {
-        $this->middleware(['auth', 'role:admin,pengguna']);
+        $this->middleware(['auth', 'role:admin,pegawai']);
     }
 
     /**

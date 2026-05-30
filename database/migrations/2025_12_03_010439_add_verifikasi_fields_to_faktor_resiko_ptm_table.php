@@ -9,12 +9,12 @@ class AddVerifikasiFieldsToFaktorResikoPtmTable extends Migration
     public function up()
     {
         Schema::table('faktor_resiko_ptm', function (Blueprint $table) {
-    $table->string('verification_status')->default('pending');
-    $table->text('verification_note')->nullable();
-    $table->unsignedBigInteger('verified_by')->nullable();
-    $table->timestamp('verified_at')->nullable();
+    $table->string('status_verifikasi')->default('pending');
+    $table->text('catatan_verifikasi')->nullable();
+    $table->unsignedBigInteger('diverifikasi_oleh')->nullable();
+    $table->timestamp('diverifikasi_pada')->nullable();
 
-    $table->foreign('verified_by')
+    $table->foreign('diverifikasi_oleh')
         ->references('id')
         ->on('users')
         ->nullOnDelete();
@@ -25,12 +25,12 @@ class AddVerifikasiFieldsToFaktorResikoPtmTable extends Migration
     public function down()
     {
         Schema::table('faktor_resiko_ptm', function (Blueprint $table) {
-            $table->dropForeign(['verified_by']);
+            $table->dropForeign(['diverifikasi_oleh']);
             $table->dropColumn([
-                'verification_status',
-                'verification_note',
-                'verified_by',
-                'verified_at',
+                'status_verifikasi',
+                'catatan_verifikasi',
+                'diverifikasi_oleh',
+                'diverifikasi_pada',
             ]);
         });
     }

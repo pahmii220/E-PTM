@@ -76,11 +76,11 @@
 
                                 {{-- STATUS (SAMA DENGAN PASIEN & DETEKSI) --}}
                                 <td>
-                                    @if ($row->verification_status === 'approved')
+                                    @if ($row->status_verifikasi === 'approved')
                                         <span class="status-badge status-approved">
                                             <i class="bi bi-check-circle"></i> Diterima
                                         </span>
-                                    @elseif ($row->verification_status === 'rejected')
+                                    @elseif ($row->status_verifikasi === 'rejected')
                                         <span class="status-badge status-rejected">
                                             <i class="bi bi-x-circle"></i> Ditolak
                                         </span>
@@ -92,12 +92,12 @@
                                 </td>
 
                                 <td class="text-muted small">
-                                    {{ $row->created_at->format('d-m-Y H:i') }}
+                                    {{ $row->dibuat_pada->format('d-m-Y H:i') }}
                                 </td>
 
                                 {{-- AKSI (SAMA DENGAN PASIEN) --}}
                                 <td class="text-end pe-4">
-                                    @if ($row->verification_status === 'pending')
+                                    @if ($row->status_verifikasi === 'pending')
 
                                         <button class="btn btn-success btn-sm rounded-circle me-1" title="Terima"
                                             data-bs-toggle="modal" data-bs-target="#verifyModal" data-id="{{ $row->id }}"
