@@ -1,92 +1,67 @@
 @extends('layouts.master')
 
 @section('content')
-    <div class="container-fluid py-4">
-        <div class="d-flex align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0 text-gray-800 fw-bold">Dashboard P2PTM</h1>
-                <p class="text-muted">Ringkasan data pengendalian penyakit tidak menular.</p>
-            </div>
-        </div>
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <h2 class="fw-bolder text-dark">Dashboard Eksekutif</h2>
+        <p class="text-secondary">Pantauan kinerja P2PTM Provinsi Kalimantan Selatan</p>
+    </div>
 
-        {{-- BARIS 1: SUMMARY CARDS --}}
-        <div class="row">
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-0 shadow-sm h-100 py-2 border-start border-primary border-4">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Peserta</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $data['totalPeserta'] }}</div>
-                            </div>
-                            <div class="col-auto"><i class="bi bi-people fs-2 text-gray-300"></i></div>
-                        </div>
+    {{-- BARIS 1: CARDS DENGAN GAYA MODERN --}}
+    <div class="row g-4">
+        @php 
+            $cards = [
+                ['title' => 'Total Peserta', 'value' => $data['totalPeserta'], 'icon' => 'bi-people', 'color' => 'primary'],
+                ['title' => 'Deteksi Dini', 'value' => $data['totalDeteksi'], 'icon' => 'bi-activity', 'color' => 'success'],
+                ['title' => 'Faktor Risiko', 'value' => $data['totalRisiko'], 'icon' => 'bi-exclamation-triangle', 'color' => 'danger'],
+                ['title' => 'Puskesmas', 'value' => $data['totalPuskesmas'], 'icon' => 'bi-hospital', 'color' => 'info']
+            ];
+        @endphp
+
+        @foreach($cards as $card)
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted text-uppercase small fw-bold mb-1">{{ $card['title'] }}</p>
+                        <h3 class="fw-bold mb-0">{{ $card['value'] }}</h3>
                     </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-0 shadow-sm h-100 py-2 border-start border-success border-4">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Deteksi Dini
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $data['totalDeteksi'] }}</div>
-                            </div>
-                            <div class="col-auto"><i class="bi bi-activity fs-2 text-gray-300"></i></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-0 shadow-sm h-100 py-2 border-start border-danger border-4">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Data Risiko</div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $data['totalRisiko'] }}</div>
-                            </div>
-                            <div class="col-auto"><i class="bi bi-exclamation-triangle fs-2 text-gray-300"></i></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-0 shadow-sm h-100 py-2 border-start border-info border-4">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Puskesmas Terdaftar
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $data['totalPuskesmas'] }}</div>
-                            </div>
-                            <div class="col-auto"><i class="bi bi-hospital fs-2 text-gray-300"></i></div>
-                        </div>
+                    <div class="bg-{{ $card['color'] }}-subtle p-3 rounded-circle text-{{ $card['color'] }}">
+                        <i class="bi {{ $card['icon'] }} fs-4"></i>
                     </div>
                 </div>
             </div>
         </div>
+        @endforeach
+    </div>
 
-        {{-- BARIS 2: WELCOME CARD --}}
-        <div class="row">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body py-4">
-                        <div class="d-flex align-items-center">
-                            <img src="{{ asset('images/dinkes.png') }}" alt="Logo Dinkes" width="60" class="me-4">
-                            <div>
-                                <h5 class="fw-bold text-success mb-1">Selamat Datang, Bapak/Ibu Kepala Bidang P2P</h5>
-                                <p class="text-muted mb-0">Sistem telah terintegrasi dengan data real-time dari seluruh
-                                    Puskesmas. Pilih menu laporan di sidebar untuk melakukan verifikasi dan cetak dokumen
-                                    resmi.</p>
-                            </div>
-                        </div>
-                    </div>
+    {{-- BARIS 2: PROGRESS BAR & INFORMASI --}}
+    <div class="row mt-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h5 class="fw-bold mb-3">Target Pelaporan Puskesmas</h5>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Aktivitas Puskesmas Bulan Ini</span>
+                    <span class="fw-bold text-success">{{ $data['persentase'] }}%</span>
                 </div>
+                <div class="progress rounded-pill" style="height: 15px;">
+                    <div class="progress-bar bg-success rounded-pill" role="progressbar" 
+                         style="width: {{ $data['persentase'] }}%"></div>
+                </div>
+                <p class="small text-muted mt-3 italic">*Puskesmas yang sudah mengunggah laporan bulan berjalan.</p>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-success text-white">
+                <div class="d-flex align-items-center mb-3">
+                    <img src="{{ asset('images/dinkes.png') }}" width="50" class="me-3">
+                    <h6 class="mb-0 fw-bold">Dinas Kesehatan Kalsel</h6>
+                </div>
+                <p class="small opacity-75">Sistem ini memfasilitasi pengesahan dokumen digital dengan QR-Code terverifikasi.</p>
+                <a href="{{ route('kepala.laporan.deteksi_dini') }}" class="btn btn-outline-light btn-sm rounded-pill mt-2">Lihat Laporan Terbaru</a>
             </div>
         </div>
     </div>
+</div>
 @endsection
