@@ -1,105 +1,148 @@
-@extends('layouts.master') {{-- Sesuaikan nama template admin kamu --}}
+@extends('layouts.master')
+
+@section('title', 'Riwayat Pejabat P2PTM')
 
 @section('content')
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
+
+        {{-- HEADER --}}
+        <div class="card border-0 shadow-sm mb-4 rounded-4" style="background:linear-gradient(135deg,#ecfeff,#f8fafc);">
+            <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="fw-bold mb-0">Riwayat Pejabat P2PTM</h4>
+                    <small class="text-muted">Kelola data Kepala Bidang untuk pengesahan laporan</small>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
-            <div class="col-md-4">
-                <div class="card shadow mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h6 class="m-0 font-weight-bold">Tambah Kepala P2PTM Baru</h6>
-                    </div>
-                    <div class="card-body">
+            {{-- FORM TAMBAH --}}
+            <div class="col-md-4 mb-4">
+                <div class="card border-0 shadow-sm rounded-4 h-100">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-4"><i class="bi bi-plus-circle-fill text-success me-2"></i>Tambah Pejabat</h6>
                         <form action="{{ route('admin.pejabat.store') }}" method="POST">
                             @csrf
                             <div class="mb-3">
-                                <label>Nama Lengkap (Berta Gelar)</label>
-                                <input type="text" name="nama_kepala" class="form-control" required
+                                <label class="small text-muted fw-semibold">Nama Lengkap & Gelar</label>
+                                <input type="text" name="nama_kepala" class="form-control rounded-3" required
                                     placeholder="Contoh: Dr. H. Budi, M.Kes">
                             </div>
                             <div class="mb-3">
-                                <label>NIP</label>
-                                <input type="text" name="nip" class="form-control" required
+                                <label class="small text-muted fw-semibold">NIP</label>
+                                <input type="number" name="nip" class="form-control rounded-3" required
                                     placeholder="Contoh: 198001012005011003">
                             </div>
-                            <div class="mb-3">
-                                <label>Jabatan</label>
-                                <input type="text" name="jabatan" class="form-control" value="Kepala Bidang P2PTM" required>
+                            <div class="mb-4">
+                                <label class="small text-muted fw-semibold">Jabatan</label>
+                                <input type="text" name="jabatan" class="form-control rounded-3" placeholder="Contoh: Kepala Bidang P2PTM" required>
                             </div>
-                            <button type="submit" class="btn btn-primary w-100">Simpan Pejabat</button>
+                            <button type="submit" class="btn btn-success rounded-pill w-100 shadow-sm">Simpan Data</button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-8">
-                <div class="card shadow mb-4">
-                    <div class="card-header bg-dark text-white">
-                        <h6 class="m-0 font-weight-bold">Daftar Riwayat Pejabat</h6>
-                    </div>
-                    <div class="card-body">
-                        @if(session('success'))
-                            <div class="alert alert-success">{{ session('success') }}</div>
-                        @endif
+            {{-- TABEL --}}
+            <div class="col-md-8 mb-4">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead class="bg-light text-muted small text-uppercase">
+                                <tr>
+                                    <th class="text-center" width="50">No</th>
+                                    <th>Identitas Pejabat</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center" width="160">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($daftarPejabat as $pejabat)
+                                    <tr class="hover-shadow">
+                                        <td class="text-center text-muted">{{ $loop->iteration }}</td>
 
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle">
-                                <thead class="table-light text-center">
-                                    <tr>
-                                        <th>Nama & NIP</th>
-                                        <th>Jabatan</th>
-                                        <th>Status Saat Ini</th>
-                                        <th>Aksi Pengaturan</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($daftarPejabat as $pejabat)
-                                        <tr>
-                                            <td>
-                                                <strong>{{ $pejabat->nama_kepala }}</strong><br>
-                                                <small class="text-muted">NIP: {{ $pejabat->nip }}</small>
-                                            </td>
-                                            <td>{{ $pejabat->jabatan }}</td>
-                                            <td class="text-center">
-                                                @if($pejabat->status == 'aktif')
-                                                    <span class="badge bg-success">Menjabat (Aktif)</span>
-                                                @else
-                                                    <span class="badge bg-secondary">Tidak Aktif / Demisioner</span>
-                                                @endif
-                                            </td>
-                                            <td class="text-center">
+                                        {{-- RINGKASAN DATA (NAMA, NIP, JABATAN) --}}
+                                        <td>
+                                            <div class="fw-bold text-dark">{{ $pejabat->nama_kepala }}</div>
+                                            <div class="small text-muted">
+                                                NIP: {{ $pejabat->nip }} &nbsp;•&nbsp; {{ $pejabat->jabatan }}
+                                            </div>
+                                        </td>
+
+                                        <td class="text-center">
+                                            @if($pejabat->status == 'aktif')
+                                                <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2">
+                                                    <i class="bi bi-check-circle-fill me-1"></i> Menjabat (Aktif)
+                                                </span>
+                                            @else
+                                                <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-2">
+                                                    <i class="bi bi-x-circle-fill me-1"></i> Tidak Aktif
+                                                </span>
+                                            @endif
+                                        </td>
+
+                                        <td class="text-center">
+                                            <div class="d-flex justify-content-center gap-2">
                                                 @if($pejabat->status != 'aktif')
-                                                    <form action="{{ route('admin.pejabat.set_aktif', $pejabat->id) }}" method="POST" class="mb-2">
+                                                    <form action="{{ route('admin.pejabat.set_aktif', $pejabat->id) }}"
+                                                        method="POST" class="m-0">
                                                         @csrf
-                                                        <button type="submit" class="btn btn-sm btn-warning font-weight-bold w-100"
-                                                            onclick="return confirm('Yakin ingin mengganti pejabat aktif ke beliau?')">
-                                                            <i class="fas fa-check-circle"></i> Jadikan Aktif
+                                                        <button type="submit"
+                                                            class="btn btn-sm btn-light rounded-circle shadow-sm text-success"
+                                                            title="Jadikan Aktif"
+                                                            onclick="return confirm('Resmikan sebagai pejabat aktif?')">
+                                                            <i class="bi bi-check2-all"></i>
                                                         </button>
                                                     </form>
-                                                @else
-                                                    <button class="btn btn-sm btn-light w-100 mb-2" disabled>Sedang Menjabat</button>
                                                 @endif
-
-                                                <a href="{{ route('admin.pejabat.edit', $pejabat->id) }}" class="btn btn-sm btn-info text-white">
-                                                    Edit
+                                                <a href="{{ route('admin.pejabat.edit', $pejabat->id) }}"
+                                                    class="btn btn-sm btn-light rounded-circle shadow-sm" title="Edit">
+                                                    <i class="bi bi-pencil text-warning"></i>
                                                 </a>
-
-                                                <form action="{{ route('admin.pejabat.destroy', $pejabat->id) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger"
-                                                        onclick="return confirm('Yakin ingin menghapus data pejabat ini?')">
-                                                        Hapus
+                                                <form action="{{ route('admin.pejabat.destroy', $pejabat->id) }}" method="POST"
+                                                    class="m-0" onsubmit="return confirm('Hapus data ini?')">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-light rounded-circle shadow-sm"
+                                                        title="Hapus">
+                                                        <i class="bi bi-trash text-danger"></i>
                                                     </button>
                                                 </form>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center py-5 text-muted">Tidak ada data riwayat pejabat</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <style>
+        .hover-shadow:hover {
+            background-color: #f8fafc;
+            transition: all .2s;
+        }
+
+        .bg-success-subtle {
+            background-color: #d1e7dd !important;
+        }
+
+        .text-success {
+            color: #0f5132 !important;
+        }
+
+        .bg-secondary-subtle {
+            background-color: #e2e3e5 !important;
+        }
+
+        .text-secondary {
+            color: #41464b !important;
+        }
+    </style>
 @endsection

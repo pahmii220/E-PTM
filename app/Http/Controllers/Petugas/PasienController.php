@@ -72,11 +72,8 @@ public function store(Request $request)
         'puskesmas_id'   => $user->role_name === 'admin' ? 'required|exists:puskesmas,id' : '',
     ]);
 
-    Pasien::create([
-        'puskesmas_id' => $user->role_name === 'admin'
-            ? $request->puskesmas_id
-            : $user->petugas->puskesmas_id,
-
+   $pasienBaru = Pasien::create([
+        'puskesmas_id' => $user->role_name === 'admin' ? $request->puskesmas_id : $user->petugas->puskesmas_id,
         'nama_lengkap'   => $request->nama_lengkap,
         'no_rekam_medis' => $request->no_rekam_medis,
         'tanggal_lahir'  => $request->tanggal_lahir,
@@ -84,13 +81,12 @@ public function store(Request $request)
         'alamat'         => $request->alamat,
         'kontak'         => $request->kontak,
         'created_by'     => $user->id,
-        'status_ptm' => $request->status_ptm,
+        'status_ptm'     => $request->status_ptm,
         'status_verifikasi' => 'pending',
-    ]);
-
-    return redirect()
-        ->route('petugas.pasien.index')
-        ->with('success', 'Data pasien berhasil ditambahkan.');
+    ]); 
+return redirect()
+        ->route('petugas.deteksi_dini.create', ['pasien_id' => $pasienBaru->id])
+        ->with('success', 'Data Pasien tersimpan. Silakan lanjut isi form Deteksi Dini berikut.');
 }
 
 

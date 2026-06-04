@@ -118,7 +118,6 @@
         }
 
         .ttd .block .name {
-            margin-top: 70px;
             font-weight: 700;
             text-decoration: underline;
         }
@@ -140,13 +139,10 @@
 
         {{-- KOP DINAS --}}
         <div class="kop">
-
             <div class="left">
                 <img src="{{ asset('images/dinkes.png') }}" style="width:65px;">
             </div>
-
             <br>
-
             <div class="center">
                 <div class="prov">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
                 <div class="dinas">DINAS KESEHATAN</div>
@@ -154,27 +150,19 @@
                     Jalan Belitung Darat No.118 — Telp: (0511) 3355661 — Banjarmasin 70116
                 </div>
             </div>
-
             <div class="clear"></div>
-
         </div>
 
         <hr class="top">
 
         <div style="width:100%; text-align:center; margin-bottom:12px;">
-            <h3 style="
-                        margin:0;
-                        font-size:15px;
-                        letter-spacing:0.6px;
-                        font-weight:700;
-                    ">
+            <h3 style="margin:0; font-size:15px; letter-spacing:0.6px; font-weight:700;">
                 LAPORAN KEGIATAN PENCEGAHAN<br>
                 PENYAKIT TIDAK MENULAR (PTM)
             </h3>
         </div>
 
         <table class="grid">
-
             <thead>
                 <tr>
                     <th style="width:40px">No</th>
@@ -182,78 +170,111 @@
                     <th>Jenis Kegiatan</th>
                     <th style="width:110px">Tanggal</th>
                     <th>Lokasi</th>
-                    <th style="width:100px">Jumlah Peserta</th>
-                    <th>Keterangan</th>
+                    <th>Keterangan</th> {{-- Posisi Baru: Keterangan Bergeser ke Kiri --}}
+                    <th style="width:100px">Jumlah Peserta</th> {{-- Posisi Baru: Jumlah Peserta di Pojok Kanan --}}
                 </tr>
             </thead>
 
             <tbody>
-
                 @forelse($items as $i => $row)
-
                     <tr>
-
                         <td style="text-align:center">{{ $i + 1 }}</td>
-
                         <td>{{ $row->nama_kegiatan }}</td>
-
                         <td style="text-align:center">{{ $row->jenis_kegiatan }}</td>
-
                         <td style="text-align:center">
                             {{ \Carbon\Carbon::parse($row->tanggal)->format('d-m-Y') }}
                         </td>
-
                         <td>{{ $row->lokasi }}</td>
-
+                        <td>{{ $row->keterangan ?? '-' }}</td> {{-- Data Keterangan --}}
                         <td style="text-align:center">
                             {{ $row->jumlah_peserta ?? '-' }}
-                        </td>
-
-                        <td>{{ $row->keterangan ?? '-' }}</td>
-
+                        </td> {{-- Data Jumlah Peserta --}}
                     </tr>
-
                 @empty
-
                     <tr>
                         <td colspan="7" style="text-align:center;">
                             Tidak ada data kegiatan PTM
                         </td>
                     </tr>
-
                 @endforelse
-
             </tbody>
 
+            {{-- FOOTER TABEL: Baris Total Jumlah Peserta otomatis --}}
+            @if($items->count() > 0)
+                <tfoot>
+                    <tr style="font-weight: bold; background-color: #eee;">
+                        {{-- 1. Kosongkan satu sel di bawah kolom 'No' agar teks bergeser --}}
+                        <td></td>
+
+                        {{-- 2. Teks TOTAL PESERTA diletakkan mulai dari bawah 'Nama Kegiatan' (colspan dikurangi jadi 5) --}}
+                        <td colspan="5" style="text-align: left; padding: 6px;">TOTAL</td>
+
+                        {{-- 3. Angka Total --}}
+                        <td style="text-align: center; padding: 6px;">{{ $items->sum('jumlah_peserta') }}</td>
+                    </tr>
+                </tfoot>
+            @endif
         </table>
 
-        <div style="margin-top:6px;font-size:12px;font-weight:700;">
-            Jumlah kegiatan PTM sebanyak = {{ $items->count() }} kegiatan
+        {{-- TEKS REKAPITULASI DI BAWAH TABEL --}}
+        <div style="margin-top:10px; font-size:12px; font-weight:700; line-height: 1.6;">
+            <div>Jumlah kegiatan PTM sebanyak = {{ $items->count() }} kegiatan</div>
+
         </div>
 
-        {{-- TANDA TANGAN --}}
-        <div class="ttd">
+{{-- TANDA TANGAN --}}
+<div class="ttd">
+    <div class="block">
+        <br>
+        <div>DIKELUARKAN DI BANJARMASIN</div>
+        <div>TANGGAL: {{ now()->format('d-m-Y') }}</div>
 
-            <div class="block">
-
-                <br>
-
-                <div>DIKELUARKAN DI BANJARMASIN</div>
-                <div>TANGGAL: {{ now()->format('d-m-Y') }}</div>
-
-                <div style="margin-top:10px">KEPALA DINAS</div>
-
-                <div class="name">
-                    {{ config('app.kepala_nama', 'dr. H. DIAUDDIN, M.Kes') }}
-                </div>
-
-                <div style="margin-top:4px;">
-                    NIP. {{ config('app.kepala_nip', '197709232006041015') }}
-                </div>
-
+        @if(auth()->check() && auth()->user()->role_name === 'pegawai')
+            {{-- ======================================================= --}}
+            {{-- 1. TAMPILAN KHUSUS PEGAWAI (HARDCODE & TANPA QR CODE) --}}
+            {{-- ======================================================= --}}
+            <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
+                KEPALA BIDANG P2PTM
             </div>
 
-        </div>
+            <div class="qr-container" style="margin: 10px 0;">
+                {{-- Ruang kosong pengganti QR Code agar posisi seimbang --}}
+                <div style="height: 85px;"></div>
+            </div>
+
+            <div class="name" style="margin-top: 0;">
+                Deny Haryuniansyah
+            </div>
+            <div style="margin-top:4px;">
+                NIP. 1973062022006041016
+            </div>
+
+        @else
+            {{-- ======================================================= --}}
+            {{-- 2. TAMPILAN DINAMIS ADMIN/KEPALA (DARI DB & ADA QR CODE)--}}
+            {{-- ======================================================= --}}
+            <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
+                {{ $kepalaAktif->jabatan ?? 'KEPALA BIDANG P2PTM' }}
+            </div>
+
+            <div class="qr-container" style="margin: 10px 0;">
+                @if(isset($qrToken))
+                    {!! QrCode::size(85)->generate($qrToken) !!}
+                @else
+                    <div style="height: 85px;"></div>
+                @endif
+            </div>
+
+            <div class="name" style="margin-top: 0;">
+                {{ $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah' }}
+            </div>
+            <div style="margin-top:4px;">
+                NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}
+            </div>
+        @endif
+
+    </div>
+</div>
 
     </div>
 

@@ -77,5 +77,8 @@ public function pasien()
         return ucfirst($this->status_verifikasi ?? 'pending');
     }
     
+    public function deteksi() {
+    return $this->belongsTo(DeteksiDiniPTM::class, 'deteksi_dini_id'); // sesuaikan nama kolom relasinya
+}
 }
 

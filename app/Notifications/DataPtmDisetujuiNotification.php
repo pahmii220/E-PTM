@@ -5,17 +5,17 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use App\Models\DeteksiDiniPTM;
 
 class DataPtmDisetujuiNotification extends Notification
 {
     use Queueable;
 
-    protected $deteksi;
+    protected $item;
 
-    public function __construct(DeteksiDiniPTM $deteksi)
+    // Hapus Type Hint agar bisa menerima model apa saja
+    public function __construct($item)
     {
-        $this->deteksi = $deteksi;
+        $this->item = $item;
     }
 
     public function via($notifiable): array
@@ -23,15 +23,37 @@ class DataPtmDisetujuiNotification extends Notification
         return ['mail'];
     }
 
-    public function toMail($notifiable): MailMessage
+public function toMail($notifiable): MailMessage
     {
+        // Tentukan URL dan Nama Peserta secara dinamis
+        $url = '#';
+        $namaPeserta = '-';
+        $jenisData = 'Data PTM';
+
+        if (get_class($this->item) === 'App\Models\DeteksiDiniPTM') {
+            $url = url('/petugas/deteksi-dini/' . $this->item->id);
+            $namaPeserta = $this->item->pasien->nama_lengkap ?? '-';
+            $jenisData = 'Data Deteksi Dini';
+            
+        } elseif (get_class($this->item) === 'App\Models\FaktorResikoPTM') {
+            $url = url('/petugas/faktor-resiko/' . $this->item->id);
+            $namaPeserta = $this->item->pasien->nama_lengkap ?? '-';
+            $jenisData = 'Data Faktor Risiko';
+            
+        } elseif (get_class($this->item) === 'App\Models\Pasien') {
+            $url = url('/petugas/pasien/' . $this->item->id);
+            // KARENA INI DATA PASIEN, LANGSUNG PANGGIL NAMA LENGKAPNYA
+            $namaPeserta = $this->item->nama_lengkap ?? '-'; 
+            $jenisData = 'Data Peserta Baru';
+        }
+
         return (new MailMessage)
-            ->subject('Selamat! Data PTM Anda Telah Disetujui')
+            ->subject('Pemberitahuan: ' . $jenisData . ' Disetujui')
             ->greeting('Halo, ' . $notifiable->name)
-            ->line('Kabar baik! Data deteksi dini pasien Anda telah diperiksa dan disetujui oleh Dinkes.')
-            ->line('Nama Pasien: ' . ($this->deteksi->pasien->nama_lengkap ?? '-'))
-            ->line('Tanggal Verifikasi: ' . now()->format('d-m-Y H:i'))
-            ->action('Lihat Data', url('/petugas/deteksi-dini'))
-            ->line('Terima kasih atas dedikasi Anda dalam pelayanan kesehatan.');
+            ->line('Kabar gembira! ' . $jenisData . ' yang Anda kirimkan telah disetujui oleh pihak Dinas Kesehatan P2PTM.')
+            ->line('Nama Peserta: ' . $namaPeserta)
+            ->line('Catatan: ' . ($this->item->catatan_verifikasi ?? 'Data telah diverifikasi dan valid.'))
+            ->action('Lihat Data', $url)
+            ->line('Terima kasih atas partisipasi Anda dalam layanan PTM.');
     }
 }

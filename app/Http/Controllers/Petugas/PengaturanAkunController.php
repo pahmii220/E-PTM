@@ -19,13 +19,16 @@ class PengaturanAkunController extends Controller
     // ===============================
 public function updateUsername(Request $request)
 {
+    // 1. Definisikan $user di atas agar bisa digunakan di validasi
+    $user = Auth::user();
+
+    // 2. Ganti 'users' jadi 'pengguna' dan tambahkan ID agar tidak duplikat dengan diri sendiri
     $request->validate([
-        'username' => 'required|string|min:4|unique:users,username',
+        'username' => 'required|string|min:4|unique:pengguna,username,' . $user->id,
         'password' => 'required'
     ]);
 
-    $user = Auth::user();
-
+    // 3. Lanjutkan sisa kodenya
     if (!Hash::check($request->password, $user->password)) {
         return back()->with('error', 'Password salah.');
     }

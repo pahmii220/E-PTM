@@ -12,12 +12,12 @@ class CheckPetugasProfile
         if (
             auth()->check() &&
             auth()->user()->role_name === 'petugas' &&
-            !auth()->user()->petugas &&
+            !auth()->user()->profilPetugasLengkap() && // 🔥 UBAH DI SINI
             !request()->routeIs('petugas.profil*')
         ) {
             return redirect()
                 ->route('petugas.profil')
-                ->with('warning', 'Lengkapi profil petugas terlebih dahulu');
+                ->with('warning', 'Harap lengkapi Alamat, Telepon, dan Tanggal Lahir Anda terlebih dahulu untuk dapat menggunakan fitur sistem.');
         }
 
         return $next($request);

@@ -12,14 +12,16 @@ class DataPtmRevisiNotification extends Notification
 {
     use Queueable;
 
-    protected $deteksi;
+    // 1. Ubah namanya menjadi $item agar lebih umum
+    public $item;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct(DeteksiDiniPTM $deteksi)
+    // 2. Hapus kata "DeteksiDiniPTM" di dalam kurung
+    public function __construct($item) 
     {
-        $this->deteksi = $deteksi;
+        $this->item = $item;
     }
 
     /**
@@ -33,16 +35,44 @@ class DataPtmRevisiNotification extends Notification
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail(object $notifiable): MailMessage
+public function toMail(object $notifiable): MailMessage
     {
+        // Tentukan URL, Nama Peserta, Jenis Data, dan Tanggal secara dinamis
+        $url = '#';
+        $namaPeserta = '-';
+        $jenisData = 'Data PTM';
+        $tanggal = '-';
+
+        // Pastikan variabel di constructor Anda bernama $this->item 
+        // (Ubah $this->deteksi menjadi $this->item di seluruh class ini jika sebelumnya berbeda)
+        if (get_class($this->item) === 'App\Models\DeteksiDiniPTM') {
+            $url = url('/pengguna/verifikasi-deteksi'); // Arahkan ke halaman verifikasi Dinkes
+            $namaPeserta = $this->item->pasien->nama_lengkap ?? '-';
+            $jenisData = 'Data Deteksi Dini';
+            $tanggal = $this->item->tanggal_pemeriksaan ?? '-';
+            
+        } elseif (get_class($this->item) === 'App\Models\FaktorResikoPTM') {
+            $url = url('/pengguna/verifikasi-faktor'); // Arahkan ke halaman verifikasi Dinkes
+            $namaPeserta = $this->item->pasien->nama_lengkap ?? '-';
+            $jenisData = 'Data Faktor Risiko';
+            $tanggal = $this->item->tanggal_pemeriksaan ?? '-';
+            
+        } elseif (get_class($this->item) === 'App\Models\Pasien') {
+            $url = url('/pengguna/verifikasi-pasien'); // Arahkan ke halaman verifikasi Dinkes
+            $namaPeserta = $this->item->nama_lengkap ?? '-'; 
+            $jenisData = 'Data Peserta';
+            // Pasien biasanya tidak punya tanggal_pemeriksaan, gunakan created_at
+            $tanggal = $this->item->created_at ? $this->item->created_at->format('Y-m-d') : '-'; 
+        }
+
         return (new MailMessage)
-            ->subject('Pemberitahuan: Revisi Data PTM Terkirim')
+            ->subject('Pemberitahuan: Revisi ' . $jenisData . ' Terkirim')
             ->greeting('Halo, ' . $notifiable->name)
-            ->line('Terdapat Data Deteksi Dini PTM yang telah di REVISI.')
-            ->line('Nama Peserta: ' . ($this->deteksi->pasien->nama_lengkap ?? 'Tidak diketahui'))
-            ->line('Tanggal Pemeriksaan: ' . $this->deteksi->tanggal_pemeriksaan)
+            ->line('Terdapat ' . $jenisData . ' yang telah selesai di-REVISI oleh Petugas Puskesmas.')
+            ->line('Nama Peserta: ' . $namaPeserta)
+            ->line('Tanggal Pemeriksaan / Input: ' . $tanggal)
             ->line('Status saat ini: Menunggu Verifikasi Kembali')
-            ->action('Lihat Data', url('/petugas/deteksi-dini/' . $this->deteksi->id . '/edit'))
-            ->line('Terima kasih atas kerja sama Anda.');
+            ->action('Verifikasi Data', $url)
+            ->line('Mohon segera ditinjau kembali. Terima kasih atas kerja sama Anda.');
     }
 }

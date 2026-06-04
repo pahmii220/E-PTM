@@ -14,27 +14,30 @@ class PengaturanAkunController extends Controller
         return view('pengguna.pengaturan-akun');
     }
 
-    public function updateUsername(Request $request)
-    {
-        $request->validate([
-            'username' => 'required|string|min:4|unique:users,username',
-            'password' => 'required'
-        ]);
+public function updateUsername(Request $request)
+{
+    // 1. Definisikan variable $user di PALING ATAS
+    $user = Auth::user(); 
 
-        $user = Auth::user();
+    // 2. Baru gunakan $user->id di dalam validasi
+    $request->validate([
+        'username' => 'required|string|min:4|unique:pengguna,username,' . $user->id,
+        'password' => 'required'
+    ]);
 
-        if (!Hash::check($request->password, $user->password)) {
-            return back()->withErrors(['password' => 'Password salah']);
-        }
-
-        $user->username = $request->username;
-        $user->save();
-
-        Auth::logout();
-
-        return redirect('/login')
-            ->with('success', 'Username berhasil diubah. Silakan login kembali.');
+    // 3. Sisa logika Anda...
+    if (!Hash::check($request->password, $user->password)) {
+        return back()->withErrors(['password' => 'Password salah']);
     }
+
+    $user->username = $request->username;
+    $user->save();
+
+    Auth::logout();
+
+    return redirect('/login')
+        ->with('success', 'Username berhasil diubah. Silakan login kembali.');
+}
 
     public function updatePassword(Request $request)
     {

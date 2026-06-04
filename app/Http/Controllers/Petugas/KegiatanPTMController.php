@@ -65,6 +65,7 @@ class KegiatanPTMController extends Controller
             'lokasi' => $request->lokasi,
             'jumlah_peserta' => $request->jumlah_peserta,
             'keterangan' => $request->keterangan,
+            'puskesmas_id' => $user->puskesmas_id,
         ]);
 
         return redirect()

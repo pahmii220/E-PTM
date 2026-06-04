@@ -1,130 +1,247 @@
 @extends('layouts.master')
 
-@section('title', 'Tambah Pegawai Dinkes')
+@section('title', 'Tambah Pegawai Dinas Kesehatan')
 
 @section('content')
-    <div class="container-fluid py-4" style="max-width:1400px">
+    <div class="container-fluid px-md-5 py-4">
 
         {{-- ================= HEADER ================= --}}
-        <div class="card border-0 shadow-sm mb-4 rounded-4"
-            style="background:linear-gradient(135deg,#eef2ff,#f8fafc); backdrop-filter: blur(6px)">
-            <div class="card-body">
-                <h4 class="fw-bold mb-0">Tambah Pegawai</h4>
-                <small class="text-muted">Input data pegawai dinas kesehatan</small>
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div class="page-header">
+                <div class="header-icon">
+                    <i class="bi bi-person-plus-fill"></i>
+                </div>
+                <div class="header-text">
+                    <h1>Tambah Pegawai Baru</h1>
+                    <p>Daftarkan akun dasar pegawai. Kelengkapan profil dapat diisi mandiri oleh pegawai nanti.</p>
+                </div>
             </div>
+            <a href="{{ route('admin.pengguna.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="bi bi-arrow-left me-1"></i> Kembali
+            </a>
         </div>
 
-        {{-- ================= FORM ================= --}}
-        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-            <div class="card-body p-4">
+        {{-- ================= ALERT ERROR ================= --}}
+        @if ($errors->any())
+            <div class="alert alert-danger alert-modern shadow-sm">
+                <i class="bi bi-exclamation-octagon-fill fs-5"></i>
+                <div class="ms-2">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        @endif
 
-                {{-- ERROR --}}
-                @if ($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm mb-4">
-                        <i class="bi bi-exclamation-triangle me-1"></i>
-                        <strong>Terjadi kesalahan:</strong>
-                        <ul class="mb-0 mt-1">
-                            @foreach ($errors->all() as $err)
-                                <li>{{ $err }}</li>
-                            @endforeach
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <form action="{{ route('admin.pengguna.store') }}" method="POST">
+            @csrf
+            <div class="row g-4 justify-content-center">
+
+                {{-- KIRI: IDENTITAS DASAR --}}
+                <div class="col-lg-7">
+                    <div class="data-card p-4 h-100">
+                        <div class="section-title mb-4">
+                            <i class="bi bi-person-vcard text-primary"></i>
+                            <span>Identitas Dasar Pegawai</span>
+                        </div>
+
+                        <div class="row g-4">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Nama Lengkap <span class="text-danger">*</span></label>
+                                <input type="text" name="Nama_Lengkap" class="form-control"
+                                    placeholder="Contoh: Budi Santoso, S.KM" value="{{ old('Nama_Lengkap') }}" required>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Nomor Induk Pegawai (NIP)</label>
+                                <input type="text" name="nip" class="form-control" placeholder="Opsional, dapat diisi nanti"
+                                    value="{{ old('nip') }}">
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Alamat Email</label>
+                                <input type="email" name="email" class="form-control" placeholder="email@contoh.com"
+                                    value="{{ old('email') }}">
+                                <small class="text-muted">Digunakan jika sistem memerlukan notifikasi email.</small>
+                            </div>
+                        </div>
                     </div>
-                @endif
+                </div>
 
-                <form action="{{ route('admin.pengguna.store') }}" method="POST">
-                    @csrf
-
-                    {{-- ================= AKUN ================= --}}
-                    <h6 class="fw-semibold mb-3 text-primary">Informasi Akun</h6>
-                    <div class="row g-4 mb-4">
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium">
-                                Username <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" name="Username" class="form-control rounded-3" placeholder="Username login"
-                                value="{{ old('Username') }}" required>
+                {{-- KANAN: AKUN LOGIN --}}
+                <div class="col-lg-5">
+                    <div class="data-card p-4 h-100 d-flex flex-column">
+                        <div class="section-title mb-4">
+                            <i class="bi bi-key-fill text-warning"></i>
+                            <span>Kredensial Akun Login</span>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium">Email</label>
-                            <input type="email" name="email" class="form-control rounded-3" placeholder="email@contoh.com"
-                                value="{{ old('email') }}">
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-bold">Username <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted">@</span>
+                                <input type="text" name="Username" class="form-control" placeholder="Pilih username unik"
+                                    value="{{ old('Username') }}" required>
+                            </div>
+                            <small class="text-muted">Gunakan huruf kecil, tanpa spasi.</small>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium">
-                                Password Awal <span class="text-danger">*</span>
-                            </label>
-                            <input type="password" name="password" class="form-control rounded-3"
-                                placeholder="Minimal 8 karakter" required>
-                            <small class="text-muted">
-                                Password awal, Pegawai dapat mengganti setelah login
-                            </small>
+                        <div class="form-group mb-4">
+                            <label class="form-label fw-bold">Password Awal <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="password" name="password" id="password" class="form-control"
+                                    placeholder="Minimal 8 karakter" required style="border-right: none;">
+                                <span class="input-group-text bg-white" id="togglePassword"
+                                    style="cursor: pointer; border-left: none; border-radius: 0 10px 10px 0; border-color: #e2e8f0;">
+                                    <i class="bi bi-eye text-muted"></i>
+                                </span>
+                            </div>
                         </div>
 
+                        <div class="mt-2 p-3 bg-light rounded-3 small text-muted mb-4">
+                            <i class="bi bi-info-circle me-1"></i> Admin hanya membuat akun untuk login ke Sistem. Pegawai dapat melengkapi Profile Lengkap secara mandiri melalui menu Profil
+                            mereka nanti.
+                        </div>
+
+                        <div class="mt-auto pt-2">
+                            <button type="submit" class="btn-action-primary w-100 py-3">
+                                <i class="bi bi-person-check-fill me-2"></i> Daftarkan Pegawai
+                            </button>
+                        </div>
                     </div>
-
-                    {{-- ================= DATA PEGAWAI ================= --}}
-                    <h6 class="fw-semibold mb-3 text-primary">Data Pegawai Dinkes</h6>
-                    <div class="row g-4 mb-4">
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium">
-                                Nama Lengkap <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" name="Nama_Lengkap" class="form-control rounded-3"
-                                placeholder="Nama lengkap pegawai" value="{{ old('Nama_Lengkap') }}" required>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium">NIP</label>
-                            <input type="text" name="nip" class="form-control rounded-3" placeholder="Nomor Induk Pegawai"
-                                value="{{ old('nip') }}">
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium">Jabatan</label>
-                            <input type="text" name="jabatan" class="form-control rounded-3"
-                                placeholder="Contoh: Staf Kesehatan" value="{{ old('jabatan') }}">
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium">Bidang</label>
-                            <input type="text" name="bidang" class="form-control rounded-3"
-                                placeholder="Contoh: Pencegahan Penyakit" value="{{ old('bidang') }}">
-                        </div>
-
-                        <div class="col-md-12">
-                            <label class="form-label fw-medium">Alamat</label>
-                            <textarea name="alamat" rows="2" class="form-control rounded-3"
-                                placeholder="Alamat lengkap">{{ old('alamat') }}</textarea>
-                        </div>
-
-                    </div>
-
-                    {{-- ================= ACTION ================= --}}
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <a href="{{ route('admin.pengguna.index') }}" class="btn btn-light rounded-pill px-4 shadow-sm">
-                            <i class="bi bi-x-circle"></i> Batal
-                        </a>
-                        <button type="submit" class="btn btn-success rounded-pill px-4 shadow-sm">
-                            <i class="bi bi-save"></i> Simpan
-                        </button>
-                    </div>
-
-                </form>
+                </div>
 
             </div>
-        </div>
-
+        </form>
     </div>
 
     {{-- ================= STYLE ================= --}}
     <style>
         body {
             background-color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+            color: #fff;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            box-shadow: 0 4px 12px rgba(67, 56, 202, 0.2);
+        }
+
+        .header-text h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .header-text p {
+            font-size: 14px;
+            color: #64748b;
+            margin: 0;
+        }
+
+        .data-card {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+            border: 1px solid #f1f5f9;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-control,
+        .input-group-text {
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            font-size: 14.5px;
+        }
+
+        .form-control:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn-action-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-action-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+            color: white;
+        }
+
+        .alert-modern {
+            display: flex;
+            align-items: flex-start;
+            padding: 16px;
+            border-radius: 16px;
+            border: none;
+        }
+
+        .alert-danger {
+            background-color: #fef2f2;
+            color: #b91c1c;
+            border-left: 5px solid #ef4444;
+        }
+
+        #togglePassword:hover i {
+            color: #4f46e5 !important;
+        }
+
+        .input-group:focus-within .form-control {
+            border-color: #6366f1;
+        }
+
+        .input-group:focus-within .input-group-text {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
         }
     </style>
+
+    {{-- ================= SCRIPT ================= --}}
+    <script>
+        // Script untuk Toggle Show/Hide Password
+        const togglePassword = document.querySelector('#togglePassword');
+        const password = document.querySelector('#password');
+
+        togglePassword.addEventListener('click', function (e) {
+            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+            password.setAttribute('type', type);
+
+            const icon = this.querySelector('i');
+            icon.classList.toggle('bi-eye');
+            icon.classList.toggle('bi-eye-slash');
+        });
+    </script>
 @endsection

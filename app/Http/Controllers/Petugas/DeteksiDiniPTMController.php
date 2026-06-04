@@ -74,8 +74,8 @@ public function create()
     public function store(Request $request)
     {
         if (Auth::user()->role_name === 'pegawai') {
-        abort(403);
-    }
+            abort(403);
+        }
         $request->validate([
             'pasien_id'           => 'required|exists:pasien,id',
             'tanggal_pemeriksaan' => 'required|date',
@@ -117,6 +117,7 @@ public function create()
             : Auth::user()->petugas->puskesmas_id;
 
       // Ubah sedikit bagian create agar datanya ditampung dalam variabel $deteksiBaru
+
         $deteksiBaru = DeteksiDiniPTM::create([
             'pasien_id'           => $request->pasien_id,
             'petugas_id'          => Auth::user()->role_name === 'petugas'
@@ -133,27 +134,9 @@ public function create()
             'hasil_skrining'      => $hasil,
             'created_by'          => Auth::id(),
         ]);
-
-        // =======================================================
-        // KODE NOTIFIKASI EMAIL KE DINKES (DATA BARU)
-        // =======================================================
-        // Cari pegawai Dinkes (yang rolenya admin atau pengguna)
-        $usersDinkes = User::whereIn('role_name', ['admin', 'pegawai'])->get();
-        
-        ;
-        // Kirim email jika user ditemukan
-        if ($usersDinkes->count() > 0) {
-            // KODE BARU: Kirim satu per satu dengan jeda 1 detik
-            foreach ($usersDinkes as $user) {
-                Notification::send($user, new DataPtmBaruNotification($deteksiBaru));
-                sleep(1); // Ini kuncinya! Memberi jeda 1 detik sebelum mengirim email berikutnya
-            }
-        }
-        // =======================================================
-
         return redirect()
-            ->route('petugas.deteksi_dini.index')
-            ->with('success', 'Data berhasil disimpan. Hasil Skrining: ' . $hasil);
+        ->route('petugas.faktor_resiko.create', ['pasien_id' => $request->pasien_id])
+        ->with('success', 'Deteksi Dini tersimpan. Terakhir, silakan lengkapi Faktor Risiko.');
     }
     /**
      * Form edit

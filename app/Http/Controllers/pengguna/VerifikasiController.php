@@ -423,7 +423,8 @@ public function printKelompokUsia()
 {
     $pasien = Pasien::all();
 
-    $data = [
+    // 1. Ubah nama variabel menjadi $dataUsia
+    $dataUsia = [
         'remaja' => 0,
         'dewasa' => 0,
         'pra_lansia' => 0,
@@ -437,17 +438,21 @@ public function printKelompokUsia()
         $umur = Carbon::parse($p->tanggal_lahir)->age;
 
         if ($umur < 18) {
-            $data['remaja']++;
+            $dataUsia['remaja']++;
         } elseif ($umur <= 44) {
-            $data['dewasa']++;
+            $dataUsia['dewasa']++;
         } elseif ($umur <= 59) {
-            $data['pra_lansia']++;
+            $dataUsia['pra_lansia']++;
         } else {
-            $data['lansia']++;
+            $dataUsia['lansia']++;
         }
 
     }
 
-    return view('pengguna.laporan.print_kelompok_usia', compact('data'));
+    // 2. (Opsional tapi disarankan) Ambil data Kepala P2PTM agar tidak ada variabel missing di View
+    $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
+
+    // 3. Kirim ke view menggunakan compact('dataUsia', 'kepalaAktif')
+    return view('pengguna.laporan.print_kelompok_usia', compact('dataUsia', 'kepalaAktif'));
 }
 }

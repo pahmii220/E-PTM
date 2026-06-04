@@ -6,6 +6,30 @@
     <div class="flex flex-col md:flex-row min-h-screen bg-slate-50/50">
         <main class="flex-1 p-6 lg:p-8">
 
+            {{-- ================= ALERT PROFIL BELUM LENGKAP ================= --}}
+            @if(auth()->check() && !auth()->user()->profilPetugasLengkap())
+                <div id="alert-profil"
+                    class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-2xl shadow-sm mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fade-in-up">
+                    <div class="flex items-center gap-4">
+                        <div class="flex-shrink-0 text-amber-500 text-3xl">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-amber-800 text-base font-bold mb-0">Profil Anda Belum Lengkap!</h3>
+                            <p class="text-amber-700 text-sm mt-1 mb-0">Silakan lengkapi profil, kontak, dan identitas Anda
+                                untuk memaksimalkan penggunaan sistem.</p>
+                        </div>
+                    </div>
+
+                    {{-- PENTING: Sesuaikan href di bawah ini dengan Route halaman Edit Profil Petugas Anda --}}
+                <a href="{{ route('petugas.profil', auth()->id()) }}"
+                    class="inline-block bg-amber-400 hover:bg-amber-500 text-amber-900 text-sm font-bold py-2.5 px-5 rounded-xl shadow-sm transition-colors whitespace-nowrap">
+                    Lengkapi Sekarang
+                </a>
+                </div>
+            @endif
+            {{-- =============================================================== --}}
+
             {{-- Header --}}
             <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 animate-fade-in-up">
                 <div>
@@ -33,7 +57,7 @@
                     <div class="relative flex justify-between items-center">
                         <div>
                             <div class="text-indigo-100 text-sm font-medium mb-1">Deteksi Dini</div>
-                            <div class="text-3xl font-bold text-white">{{ $totalDeteksi }}</div>
+                            <div class="text-3xl font-bold text-white">{{ $totalDeteksi ?? 0 }}</div>
                         </div>
                         <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
                             <i class="bi bi-activity text-2xl text-white"></i>
@@ -50,7 +74,7 @@
                     <div class="relative flex justify-between items-center">
                         <div>
                             <div class="text-amber-50 text-sm font-medium mb-1">Faktor Risiko</div>
-                            <div class="text-3xl font-bold text-white">{{ $totalFaktor }}</div>
+                            <div class="text-3xl font-bold text-white">{{ $totalFaktor ?? 0 }}</div>
                         </div>
                         <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
                             <i class="bi bi-exclamation-triangle-fill text-2xl text-white"></i>
@@ -67,7 +91,7 @@
                     <div class="relative flex justify-between items-center">
                         <div>
                             <div class="text-rose-100 text-sm font-medium mb-1">Risiko Tinggi</div>
-                            <div class="text-3xl font-bold text-white">{{ $highRiskCount }}</div>
+                            <div class="text-3xl font-bold text-white">{{ $highRiskCount ?? 0 }}</div>
                         </div>
                         <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
                             <i class="bi bi-heart-pulse-fill text-2xl text-white"></i>
@@ -84,7 +108,7 @@
                     <div class="relative flex justify-between items-center">
                         <div>
                             <div class="text-emerald-100 text-sm font-medium mb-1">Total Peserta</div>
-                            <div class="text-3xl font-bold text-white">{{ number_format($totalPeserta) }}</div>
+                            <div class="text-3xl font-bold text-white">{{ number_format($totalPeserta ?? 0) }}</div>
                         </div>
                         <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
                             <i class="bi bi-people-fill text-2xl text-white"></i>

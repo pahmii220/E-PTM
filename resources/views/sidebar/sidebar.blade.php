@@ -257,7 +257,7 @@
                     </button>
 
                     <ul x-show="laporanKepalaOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden text-sm">
-                        {{-- Fitur Lama/Existing --}}
+                        {{-- Fitur Existing --}}
                         <li>
                             <a href="{{ route('kepala.laporan.peserta') }}"
                                 class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.peserta*') ? 'bg-green-500 text-white' : '' }}">
@@ -265,7 +265,6 @@
                             </a>
                         </li>
 
-                        {{-- 1. Laporan Deteksi Dini --}}
                         <li>
                             <a href="{{ route('kepala.laporan.deteksi_dini') }}"
                                 class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.deteksi_dini*') ? 'bg-green-500 text-white' : '' }}">
@@ -273,7 +272,6 @@
                             </a>
                         </li>
 
-                        {{-- 2. Laporan Faktor Risiko --}}
                         <li>
                             <a href="{{ route('kepala.laporan.faktor_risiko') }}"
                                 class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.faktor_risiko*') ? 'bg-green-500 text-white' : '' }}">
@@ -281,7 +279,6 @@
                             </a>
                         </li>
 
-                        {{-- 3. Laporan Tindak Lanjut --}}
                         <li>
                             <a href="{{ route('kepala.laporan.tindak_lanjut') }}"
                                 class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.tindak_lanjut*') ? 'bg-green-500 text-white' : '' }}">
@@ -289,37 +286,13 @@
                             </a>
                         </li>
 
-                        {{-- 4. Laporan Rekap per Puskesmas --}}
-                        {{-- <li>
-                            <a href="{{ route('kepala.laporan.rekap_puskesmas') }}"
-                                class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.rekap_puskesmas*') ? 'bg-green-500 text-white' : '' }}">
-                                <i class="bi bi-hospital me-2"></i> Rekap Per Puskesmas
+                        {{-- GABUNGAN 4 LAPORAN BARU: Menjadi Satu Pintu --}}
+                        <li>
+                            <a href="{{ route('kepala.laporan.eksekutif') }}"
+                                class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.eksekutif*') ? 'bg-green-500 text-white' : '' }}">
+                                <i class="bi bi-clipboard-data-fill me-2"></i> Rekapitulasi & Kegiatan
                             </a>
-                        </li> --}}
-
-                        {{-- 5. Laporan PTM Berdasarkan Kelompok Usia --}}
-                        {{-- <li>
-                            <a href="{{ route('kepala.laporan.kelompok_usia') }}"
-                                class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.kelompok_usia*') ? 'bg-green-500 text-white' : '' }}">
-                                <i class="bi bi-person-badge me-2"></i> PTM by Kelompok Usia
-                            </a>
-                        </li> --}}
-
-                        {{-- 6. Laporan Rekapitulasi Hasil Skrining --}}
-                        {{-- <li>
-                            <a href="{{ route('kepala.laporan.rekap_skrining') }}"
-                                class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.rekap_skrining*') ? 'bg-green-500 text-white' : '' }}">
-                                <i class="bi bi-clipboard2-data me-2"></i> Rekap Hasil Skrining
-                            </a>
-                        </li> --}}
-
-                        {{-- 7. Laporan Kegiatan PTM --}}
-                        {{-- <li>
-                            <a href="{{ route('kepala.laporan.kegiatan') }}"
-                                class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.kegiatan*') ? 'bg-green-500 text-white' : '' }}">
-                                <i class="bi bi-calendar2-check me-2"></i> Kegiatan PTM
-                            </a>
-                        </li> --}}
+                        </li>
                     </ul>
                 </li>
             @endif

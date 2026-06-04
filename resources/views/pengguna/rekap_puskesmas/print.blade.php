@@ -4,7 +4,6 @@
 <head>
     <meta charset="utf-8">
     <title>Laporan Rekap PTM Per Puskesmas</title>
-
     <style>
         /* ====== SETTING CETAK ====== */
         @page {
@@ -32,6 +31,7 @@
         .kop {
             text-align: center;
             margin-bottom: 6px;
+            position: relative;
         }
 
         .kop .left {
@@ -49,10 +49,38 @@
             clear: both;
         }
 
+        .kop .prov {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .kop .dinas {
+            font-size: 18px;
+            font-weight: 900;
+            margin-top: 2px;
+        }
+
+        .kop .addr {
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
         hr.top {
             border: none;
             border-top: 2px solid #000;
             margin: 8px 0 12px 0;
+        }
+
+        /* ====== TOMBOL PRINT ====== */
+        .no-print {
+            margin-bottom: 10px;
+            text-align: right;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
         }
 
         /* ====== JUDUL ====== */
@@ -60,24 +88,27 @@
             text-align: center;
             font-weight: 700;
             font-size: 14px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             letter-spacing: 0.5px;
         }
 
         /* ====== TABEL ====== */
         table.grid {
             width: 100%;
+            max-width: 100%;
             border-collapse: collapse;
-            table-layout: fixed;
             font-size: 12px;
+            table-layout: fixed;
+            box-sizing: border-box;
         }
 
         table.grid th,
         table.grid td {
-            border: 1px solid #000;
+            border: 1px solid #111;
             padding: 5px 6px;
             vertical-align: middle;
             word-wrap: break-word;
+            box-sizing: border-box;
         }
 
         table.grid th {
@@ -94,10 +125,10 @@
             text-align: left;
         }
 
-        /* ====== TTD ====== */
+        /* ====== TTD & QR CODE ====== */
         .ttd {
             width: 100%;
-            margin-top: 30px;
+            margin-top: 24px;
             display: flex;
             justify-content: flex-end;
         }
@@ -108,43 +139,58 @@
             font-size: 12px;
         }
 
+        .qr-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 85px;
+            margin: 10px 0;
+        }
+
         .ttd .block .name {
-            margin-top: 70px;
+            margin-top: 5px;
             font-weight: 700;
             text-decoration: underline;
         }
 
-        /* ====== PRINT ====== */
+        /* ====== PRINT FALLBACK ====== */
         @media print {
             table.grid {
+                -webkit-print-color-adjust: exact;
+                box-shadow: inset -1px 0 0 #111;
                 font-size: 11.5px;
             }
 
             table.grid tr>td:last-child,
             table.grid tr>th:last-child {
-                border-right: 1px solid #000;
+                border-right: 1px solid #111;
+                box-shadow: inset -1px 0 0 #111;
             }
         }
     </style>
 </head>
 
-<body onload="window.print()">
+<body>
     <div class="container">
 
-        {{-- KOP --}}
+        {{-- TOMBOL ACTION --}}
+        <div class="no-print">
+            <button onclick="window.print()" style="padding:8px 12px; margin-right:6px; cursor:pointer;">Print</button>
+            <button onclick="window.close()"
+                style="padding:8px 12px; background:#eee; color:#000; border:1px solid #ccc; cursor:pointer;">Tutup</button>
+        </div>
+
+        {{-- KOP SURAT --}}
         <div class="kop">
             <div class="left">
-                <img src="{{ asset('images/dinkes.png') }}" style="width:65px;">
+                <img src="{{ asset('images/dinkes.png') }}" alt="logo" style="width:65px; height:auto;">
             </div>
-
+            <br>
             <div class="center">
-                <div style="font-size:16px; font-weight:700;">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
-                <div style="font-size:18px; font-weight:900;">DINAS KESEHATAN</div>
-                <div style="font-size:12px; margin-top:4px;">
-                    Jalan Belitung Darat No.118 — Telp. (0511) 3355661 — Banjarmasin
-                </div>
+                <div class="prov">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+                <div class="dinas">DINAS KESEHATAN</div>
+                <div class="addr">Jalan Belitung Darat No.118 — Telp: (0511) 3355661 — Banjarmasin 70116</div>
             </div>
-
             <div class="clear"></div>
         </div>
 
@@ -156,7 +202,7 @@
             PER PUSKESMAS
         </div>
 
-        {{-- TABEL --}}
+        {{-- TABEL DATA --}}
         <table class="grid">
             <thead>
                 <tr>
@@ -168,7 +214,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($rekapPuskesmas as $item)
+                @forelse ($rekapPuskesmas as $item)
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td class="left">{{ $item->nama_puskesmas }}</td>
@@ -176,24 +222,65 @@
                         <td>{{ $item->total_deteksi }}</td>
                         <td>{{ $item->total_faktor }}</td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="5">Tidak ada data rekap puskesmas.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
 
-        {{-- TTD --}}
+        {{-- BAGIAN TANDA TANGAN & QR CODE (Sudah Disinkronkan Berdasarkan Role) --}}
         <div class="ttd">
             <div class="block">
-                <div>Dikeluarkan di Banjarmasin</div>
-                <div>Tanggal: {{ now()->format('d-m-Y') }}</div>
+                <br>
+                <div>DIKELUARKAN DI BANJARMASIN</div>
+                <div>TANGGAL: {{ now()->format('d-m-Y') }}</div>
 
-                <div style="margin-top:12px;">KEPALA DINAS KESEHATAN</div>
+                @if(auth()->check() && auth()->user()->role_name === 'pegawai')
+                    {{-- ======================================================= --}}
+                    {{-- 1. TAMPILAN KHUSUS PEGAWAI (HARDCODE & TANPA QR CODE) --}}
+                    {{-- ======================================================= --}}
+                    <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
+                        KEPALA BIDANG P2PTM
+                    </div>
 
-                <div class="name">
-                    {{ config('app.kepala_nama', 'dr. H. DIAUDDIN, M.Kes') }}
-                </div>
-                <div>
-                    NIP. {{ config('app.kepala_nip', '197709232006041015') }}
-                </div>
+                    <div class="qr-container">
+                        {{-- Ruang kosong pengganti QR Code agar tata letak tetap presisi --}}
+                        <div style="height: 85px;"></div>
+                    </div>
+
+                    <div class="name" style="margin-top: 0;">
+                        Deny Haryuniansyah
+                    </div>
+                    <div style="margin-top:4px;">
+                        NIP. 1973062022006041016
+                    </div>
+
+                @else
+                    {{-- ======================================================= --}}
+                    {{-- 2. TAMPILAN DINAMIS ADMIN/KEPALA (DARI DB & ADA QR CODE)--}}
+                    {{-- ======================================================= --}}
+                    <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
+                        {{ $kepalaAktif->jabatan ?? 'KEPALA BIDANG P2PTM' }}
+                    </div>
+
+                    <div class="qr-container">
+                        @if(isset($qrToken))
+                            {!! QrCode::size(85)->generate($qrToken) !!}
+                        @else
+                            <div style="height: 85px;"></div>
+                        @endif
+                    </div>
+
+                    <div class="name" style="margin-top: 0;">
+                        {{ $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah' }}
+                    </div>
+                    <div style="margin-top:4px;">
+                        NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}
+                    </div>
+                @endif
+
             </div>
         </div>
 

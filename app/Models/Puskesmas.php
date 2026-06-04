@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Pasien;
 use App\Models\DeteksiDiniPTM;
 use App\Models\FaktorResikoPTM;
+use App\Models\TindakLanjutPTM; // Menambahkan import model TindakLanjutPTM
 
 class Puskesmas extends Model
 {
@@ -69,6 +70,21 @@ class Puskesmas extends Model
 
     /**
      * ==========================
+     * RELASI TINDAK LANJUT PTM
+     * ==========================
+     */
+    public function tindakLanjut()
+    {
+        return $this->hasManyThrough(
+            TindakLanjutPTM::class,
+            Pasien::class,
+            'puskesmas_id', // FK di tabel pasien
+            'pasien_id'     // FK di tabel tindak_lanjut_ptm
+        );
+    }
+
+    /**
+     * ==========================
      * ACCESSOR ALAMAT LENGKAP
      * ==========================
      */
@@ -83,4 +99,10 @@ class Puskesmas extends Model
 
         return implode(', ', $parts);
     }
+
+    public function deteksiDiniPTM()
+{
+    // Sesuaikan 'puskesmas_id' dengan nama foreign key di tabel deteksi_dini_p_t_m
+    return $this->hasMany(DeteksiDiniPTM::class, 'puskesmas_id'); 
+}
 }

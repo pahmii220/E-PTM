@@ -76,7 +76,7 @@ class PegawaiDinkesController extends Controller
         return view('pengguna.pegawai_dinkes.edit', compact('pegawai'));
     }
 
-    /**
+/**
      * ===============================
      * SIMPAN / UPDATE PROFIL
      * ===============================
@@ -88,30 +88,47 @@ class PegawaiDinkesController extends Controller
         }
 
         $request->validate([
-            'nip'          => 'nullable|string|max:50',
-            'nama_pegawai' => 'required|string|max:191',
-            'tgl_lahir'    => 'nullable|date',
-            'alamat'       => 'nullable|string',
-            'jabatan'      => 'nullable|string|max:100',
-            'bidang'       => 'nullable|string|max:100',
-            'telepon'      => 'nullable|string|max:30',
+            'nip'            => 'nullable|string|max:50',
+            'nama_pegawai'   => 'required|string|max:191',
+            'tgl_lahir'      => 'nullable|date',
+            'alamat'         => 'nullable|string',
+            'jabatan'        => 'nullable|string|max:100',
+            'bidang'         => 'nullable|string|max:100',
+            'telepon'        => 'nullable|string|max:30',
+            'provinsi'       => 'nullable|string|max:100',
+            'kabupaten_kota' => 'nullable|string|max:100',
+            'foto'           => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        // cek apakah data sudah ada
         $pegawai = PegawaiDinkes::where('user_id', auth()->id())->first();
         $isCreate = !$pegawai;
 
+        // Siapkan data
+        $data = $request->only([
+            'nip', 'nama_pegawai', 'tgl_lahir', 'alamat', 'jabatan', 
+            'bidang', 'telepon', 'provinsi', 'kabupaten_kota'
+        ]);
+
+        // Cek Logika Foto
+        if ($request->hasFile('foto')) {
+            // Jika user UPLOAD foto baru -> Hapus file foto lama di storage
+            if ($pegawai && $pegawai->foto) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($pegawai->foto);
+            }
+            $data['foto'] = $request->file('foto')->store('profil_pegawai', 'public');
+        } 
+        elseif ($request->hapus_foto == '1') {
+            // Jika user MENEKAN TOMBOL HAPUS -> Hapus file di storage dan set null di DB
+            if ($pegawai && $pegawai->foto) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($pegawai->foto);
+            }
+            $data['foto'] = null; // Jadikan kosong di database
+        }
+
+        // Simpan ke database
         PegawaiDinkes::updateOrCreate(
             ['user_id' => auth()->id()],
-            $request->only([
-                'nip',
-                'nama_pegawai',
-                'tgl_lahir',
-                'alamat',
-                'jabatan',
-                'bidang',
-                'telepon',
-            ])
+            $data
         );
 
         return redirect()

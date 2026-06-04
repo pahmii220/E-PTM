@@ -26,6 +26,18 @@
             $ikonUcapan = 'bi-moon-stars-fill text-blue-200';
         }
 
+        // Logika Tanggal Indonesia Manual (Anti-Error)
+        $namaHari = [
+            'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 
+            'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
+        ];
+        $namaBulan = [
+            'January' => 'Januari', 'February' => 'Februari', 'March' => 'Maret', 'April' => 'April', 
+            'May' => 'Mei', 'June' => 'Juni', 'July' => 'Juli', 'August' => 'Agustus', 
+            'September' => 'September', 'October' => 'Oktober', 'November' => 'November', 'December' => 'Desember'
+        ];
+        $tanggalIndo = $namaHari[$waktuSekarang->format('l')] . ', ' . $waktuSekarang->format('d') . ' ' . $namaBulan[$waktuSekarang->format('F')] . ' ' . $waktuSekarang->format('Y');
+
         // =======================================================================
         // 2. JALAN PINTAS MENGAMBIL DATA LANGSUNG DARI DATABASE (BYPASS CONTROLLER)
         // =======================================================================
@@ -87,7 +99,7 @@
 
             <div class="relative z-10 hidden md:block text-right">
                 <div class="text-blue-100 text-xs fw-semibold uppercase tracking-wider mb-1">Tanggal Hari Ini</div>
-                <div class="fs-5 fw-bold">{{ $waktuSekarang->translatedFormat('l, d F Y') }}</div>
+                <div class="fs-5 fw-bold">{{ $tanggalIndo }}</div>
             </div>
         </div>
 

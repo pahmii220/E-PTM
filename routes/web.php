@@ -7,6 +7,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\KepalaP2ptmController;
 use App\Http\Controllers\LaporanKepalaController;
 use App\Http\Controllers\AdminPejabatController;
+
 /*
 |--------------------------------------------------------------------------
 | AUTH CONTROLLERS
@@ -394,6 +395,7 @@ Route::get(
 });
 
 
+
 Route::middleware(['auth', 'active', 'role:kepala_p2ptm'])->prefix('kepala-p2ptm')->group(function () {
     
     // 1. Dashboard Utama (Tetap menggunakan controller lama)
@@ -423,6 +425,19 @@ Route::middleware(['auth', 'active', 'role:kepala_p2ptm'])->prefix('kepala-p2ptm
         // ==========================================
         Route::get('/tindak-lanjut', [LaporanKepalaController::class, 'tindakLanjut'])->name('tindak_lanjut');
         Route::get('/tindak-lanjut/cetak', [LaporanKepalaController::class, 'cetakTindakLanjut'])->name('tindak_lanjut.cetak');
+
+        // ==========================================
+        // 5. PUSAT LAPORAN EKSEKUTIF (TAB GABUNGAN)
+        // ==========================================
+        Route::get('/eksekutif', [LaporanKepalaController::class, 'eksekutif'])->name('eksekutif');
+
+        Route::get('/eksekutif/cetak-puskesmas', [LaporanKepalaController::class, 'cetakPuskesmas'])->name('eksekutif.cetak_puskesmas');
+
+        Route::get('/eksekutif/cetak-usia', [LaporanKepalaController::class, 'cetakUsia'])->name('eksekutif.cetak_usia');
+
+        Route::get('/eksekutif/cetak-skrining', [LaporanKepalaController::class, 'cetakSkrining'])->name('eksekutif.cetak_skrining');
+
+        Route::get('/kegiatan/print', [LaporanKepalaController::class, 'cetakKegiatan'])->name('kepala.kegiatan.print');
     });
 
 /*

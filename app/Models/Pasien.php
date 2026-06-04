@@ -65,6 +65,12 @@ public function faktorResikoPTM()
     return $this->hasOne(\App\Models\FaktorResikoPTM::class, 'pasien_id');
 }
 
+public function faktorRisiko() {
+    return $this->hasOne(FaktorResikoPTM::class, 'pasien_id'); // Sesuaikan foreign key
+}
 
+public function deteksiDini() {
+    return $this->hasOne(DeteksiDiniPTM::class, 'pasien_id'); // Sesuaikan foreign key
+}
 
 }

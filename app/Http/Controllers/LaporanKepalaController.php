@@ -8,6 +8,7 @@ use App\Models\KepalaP2ptm;
 use App\Models\Pasien;
 use App\Models\DeteksiDiniPTM;
 use App\Models\FaktorResikoPTM;
+use App\Models\Kegiatan;
 
 class LaporanKepalaController extends Controller
 {
@@ -195,5 +196,112 @@ class LaporanKepalaController extends Controller
             'bulan'         => $bulan,
             'tahun'         => $tahun
         ]);
+    }
+
+   /*
+    |--------------------------------------------------------------------------
+    | 5. PUSAT LAPORAN EKSEKUTIF (GABUNGAN 4 LAPORAN BARU)
+    |--------------------------------------------------------------------------
+    */
+    public function eksekutif(Request $request)
+    {
+        // --- DATA TAB 1: REKAP PUSKESMAS ---
+        $dataPuskesmas = \App\Models\Puskesmas::withCount([
+            'pasien as total_peserta',
+            'deteksiDini as total_skrining', 
+            'faktorResiko as total_risiko',
+            'tindakLanjut as total_tindak_lanjut'
+        ])->get();
+
+        // --- DATA TAB 2: KELOMPOK USIA ---
+        $dataUsia = [
+            'remaja'     => \App\Models\Pasien::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) < 18')->count(),
+            'dewasa'     => \App\Models\Pasien::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 18 AND 44')->count(),
+            'pra_lansia' => \App\Models\Pasien::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 45 AND 59')->count(),
+            'lansia'     => \App\Models\Pasien::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 60')->count(),
+        ];
+
+        $dataSkrining = \App\Models\DeteksiDiniPTM::selectRaw('hasil_skrining, COUNT(*) as jumlah')
+            ->groupBy('hasil_skrining')
+            ->get();
+
+        $kegiatan = Kegiatan::with('puskesmas')->orderBy('tanggal', 'desc')->get();
+
+        // 👇 UTAMAKAN BAGIAN INI: Tambahkan 'kegiatan' di dalam compact
+        return view('kepala_p2ptm.laporan.eksekutif', compact('dataPuskesmas', 'dataUsia', 'dataSkrining', 'kegiatan'));
+    }
+
+    public function cetakPuskesmas(Request $request)
+    {
+        // 1. Ambil data rekapitulasi
+        $rekapPuskesmas = \App\Models\Puskesmas::withCount([
+            'pasien as total_pasien',
+            'deteksiDini as total_deteksi',
+            'faktorResiko as total_faktor'
+        ])->get();
+
+        // 2. Ambil data Kepala P2PTM
+        $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
+
+        // 3. Generate Token QR Code
+        $qrToken = "REKAP-FASKES-" . date('m-Y') . "-" . strtoupper(uniqid());
+
+        // 4. Return View Cetak Puskesmas
+        return view('pengguna.rekap_puskesmas.print', compact('rekapPuskesmas', 'qrToken', 'kepalaAktif'));
+    }
+
+    // 👇 TAMBAHKAN METHOD INI KHUSUS UNTUK TOMBOL CETAK USIA
+    public function cetakUsia(Request $request)
+    {
+        // 1. Hitung ulang data usia
+        $dataUsia = [
+            'remaja'     => \App\Models\Pasien::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) < 18')->count(),
+            'dewasa'     => \App\Models\Pasien::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 18 AND 44')->count(),
+            'pra_lansia' => \App\Models\Pasien::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 45 AND 59')->count(),
+            'lansia'     => \App\Models\Pasien::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 60')->count(),
+        ];
+
+        // 2. Ambil data Kepala P2PTM 
+        $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
+        
+        // 3. Buat QR Token (Ini yang menyebabkan error undefined variable)
+        $qrToken = "REKAP-USIA-" . date('m-Y') . "-" . strtoupper(uniqid());
+
+        // 4. MENGARAH KE: resources/views/pengguna/laporan/print_kelompok_usia.blade.php
+        return view('pengguna.laporan.print_kelompok_usia', compact('dataUsia', 'qrToken', 'kepalaAktif'));
+    }
+
+public function cetakSkrining(Request $request)
+{
+    // Ubah nama variabel dari $dataSkrining menjadi $data
+    $data = \App\Models\DeteksiDiniPTM::selectRaw('hasil_skrining, COUNT(*) as jumlah')
+        ->groupBy('hasil_skrining')
+        ->get();
+
+    $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
+    $qrToken = "REKAP-SKRINING-" . date('m-Y') . "-" . strtoupper(uniqid());
+
+    // Sekarang compact('data') akan cocok dengan @foreach($data...) di Blade
+    return view('pengguna.laporan.status_ptm', compact('data', 'qrToken', 'kepalaAktif'));
+}
+
+
+/*
+    |--------------------------------------------------------------------------
+    | 6. CETAK LAPORAN KEGIATAN PTM
+    |--------------------------------------------------------------------------
+    */
+    public function cetakKegiatan(Request $request)
+    {
+        // 1. Tarik semua data kegiatan, urutkan dari yang terbaru
+        $items = Kegiatan::orderBy('tanggal', 'desc')->get();
+
+        // 2. Ambil data Kepala P2PTM untuk tanda tangan
+        $kepalaAktif = KepalaP2ptm::where('status', 'aktif')->first();
+
+        $qrToken = "LAPORAN-KEGIATAN-" . date('m-Y') . "-" . strtoupper(uniqid());
+
+        // 3. Arahkan ke file blade cetakan (sesuaikan dengan nama dan lokasi file cetakmu)
+        return view('pengguna.laporan.print_kegiatan', compact('items', 'kepalaAktif', 'qrToken'));
     }
 }

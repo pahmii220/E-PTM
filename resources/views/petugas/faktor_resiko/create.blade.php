@@ -27,12 +27,11 @@
                         <label class="form-label fw-semibold">
                             Nama Peserta <span class="text-danger">*</span>
                         </label>
-                        <select name="pasien_id" class="form-select rounded-3 @error('pasien_id') is-invalid @enderror"
-                            required>
-                            <option value="">-- Pilih Peserta --</option>
+                        <select name="pasien_id" class="form-control" required>
+                            <option value="">-- Pilih Pasien --</option>
                             @foreach($pasien as $p)
-                                <option value="{{ $p->id }}" {{ old('pasien_id') == $p->id ? 'selected' : '' }}>
-                                    {{ $p->nama_lengkap }}
+                                <option value="{{ $p->id }}" {{ request('pasien_id') == $p->id ? 'selected' : '' }}>
+                                    {{ $p->nama_lengkap }} - {{ $p->no_rekam_medis }}
                                 </option>
                             @endforeach
                         </select>

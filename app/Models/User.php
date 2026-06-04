@@ -31,81 +31,90 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $casts = [
+        'status_aktif' => 'integer',
+    ];
+
     // ==========================
     // ROLE HELPERS
     // ==========================
 
-    // Admin
     public function isAdmin()
     {
         return $this->role_name === 'admin';
     }
 
-    // Petugas Puskesmas
     public function isPetugas()
     {
         return $this->role_name === 'petugas';
     }
 
-    // Operator (jika ada khusus)
     public function isOperator()
     {
         return $this->role_name === 'operator';
     }
 
-    // Pengguna (Staff Dinas Kesehatan)
     public function isPengguna()
     {
         return $this->role_name === 'pegawai';
     }
 
-    // Helper umum → cek role apapun
     public function hasRole($role)
     {
         return $this->role_name === $role;
     }
 
-    // Helper multiple role → misal hasAnyRole(['admin','pengguna'])
     public function hasAnyRole(array $roles)
     {
         return in_array($this->role_name, $roles);
     }
 
-public function petugas()
-{
-    return $this->hasOne(\App\Models\Petugas::class);
-}
+    // ==========================
+    // RELATIONS & PROFILE CHECKS
+    // ==========================
 
-
-public function pegawaiDinkes()
-{
-    return $this->hasOne(PegawaiDinkes::class);
-}
-
-protected $casts = [
-    'status_aktif' => 'integer',
-];
-
-
-public function profilDinkesLengkap(): bool
-{
-    if (!$this->pegawaiDinkes) {
-        return false;
+    public function petugas()
+    {
+        return $this->hasOne(\App\Models\Petugas::class, 'user_id');
     }
 
-    return
-        !empty($this->pegawaiDinkes->nama_pegawai) &&
-        !empty($this->pegawaiDinkes->nip) &&
-        !empty($this->pegawaiDinkes->jabatan) &&
-        !empty($this->pegawaiDinkes->bidang) &&
-        !empty($this->pegawaiDinkes->telepon);
-}
+    public function pegawaiDinkes()
+    {
+        return $this->hasOne(PegawaiDinkes::class, 'user_id');
+    }
 
-// Di dalam file app/Models/Pengguna.php
+    public function kepalaP2ptm()
+    {
+        return $this->hasOne(KepalaP2ptm::class, 'pengguna_id');
+    }
 
-public function kepalaP2ptm()
-{
-    return $this->hasOne(KepalaP2ptm::class, 'pengguna_id');
-}
+    // Cek Kelengkapan Profil Pegawai Dinkes
+    public function profilDinkesLengkap(): bool
+    {
+        if (!$this->pegawaiDinkes) {
+            return false;
+        }
+
+        return
+            !empty($this->pegawaiDinkes->nama_pegawai) &&
+            !empty($this->pegawaiDinkes->nip) &&
+            !empty($this->pegawaiDinkes->jabatan) &&
+            !empty($this->pegawaiDinkes->bidang) &&
+            !empty($this->pegawaiDinkes->telepon);
+    }
+
+    // Cek Kelengkapan Profil Petugas (TAMBAHAN BARU)
+    public function profilPetugasLengkap(): bool
+    {
+        if (!$this->petugas) {
+            return false;
+        }
+
+        // Tentukan kolom mana yang wajib diisi oleh petugas secara mandiri
+        return 
+            !empty($this->petugas->alamat) && 
+            !empty($this->petugas->telepon) && 
+            !empty($this->petugas->tanggal_lahir);
+    }
 
 }

@@ -6,8 +6,9 @@
     <title>Laporan Hasil Skrining PTM</title>
 
     <style>
+        /* ====== SETTING CETAK ====== */
         @page {
-            margin: 15mm 12mm
+            margin: 15mm 12mm;
         }
 
         body {
@@ -26,9 +27,11 @@
             box-sizing: border-box;
         }
 
+        /* ====== KOP ====== */
         .kop {
             text-align: center;
-            margin-bottom: 6px
+            margin-bottom: 6px;
+            position: relative;
         }
 
         .kop .left {
@@ -39,10 +42,27 @@
         .kop .center {
             display: inline-block;
             width: calc(100% - 160px);
+            text-align: center;
         }
 
         .clear {
-            clear: both
+            clear: both;
+        }
+
+        .kop .prov {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .kop .dinas {
+            font-size: 18px;
+            font-weight: 900;
+            margin-top: 2px;
+        }
+
+        .kop .addr {
+            font-size: 12px;
+            margin-top: 6px;
         }
 
         hr.top {
@@ -51,6 +71,7 @@
             margin: 8px 0 12px 0;
         }
 
+        /* ====== TABLE ====== */
         table.grid {
             width: 100%;
             border-collapse: collapse;
@@ -72,6 +93,19 @@
             text-align: center;
         }
 
+        /* ====== NO PRINT ====== */
+        .no-print {
+            margin-bottom: 10px;
+            text-align: right;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+
+        /* ====== TTD & QR CODE ====== */
         .ttd {
             width: 100%;
             margin-top: 24px;
@@ -85,89 +119,61 @@
             font-size: 12px;
         }
 
+        .qr-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 85px;
+            margin: 10px 0;
+        }
+
         .ttd .block .name {
-            margin-top: 70px;
+            margin-top: 5px;
             font-weight: 700;
             text-decoration: underline;
         }
-
-        .no-print {
-            margin-bottom: 10px;
-            text-align: right;
-        }
-
-        @media print {
-            .no-print {
-                display: none
-            }
-        }
     </style>
-
 </head>
 
 <body>
 
     <div class="container">
 
+        {{-- TOMBOL PRINT (Sembunyi saat dicetak) --}}
         <div class="no-print">
-            <button onclick="window.print()" style="padding:8px 12px;margin-right:6px;">
-                Print
-            </button>
-
-            <a href="javascript:history.back()"
-                style="padding:8px 12px;background:#eee;text-decoration:none;color:#000;">
-                Kembali
-            </a>
+            <button onclick="window.print()" style="padding:8px 12px; margin-right:6px; cursor:pointer;">Print</button>
+            <button onclick="window.close()"
+                style="padding:8px 12px; background:#eee; color:#000; border:1px solid #ccc; cursor:pointer;">Tutup</button>
         </div>
-
 
         {{-- KOP SURAT --}}
         <div class="kop">
-
             <div class="left">
                 <img src="{{ asset('images/dinkes.png') }}" style="width:65px;">
             </div>
-
-            <br><br>
-
+            <br>
             <div class="center">
-                <div style="font-size:17px;font-weight:700;">
-                    PEMERINTAH PROVINSI KALIMANTAN SELATAN
-                </div>
-
-                <div style="font-size:18px;font-weight:900;">
-                    DINAS KESEHATAN
-                </div>
-
-                <div style="font-size:12px;">
+                <div class="prov">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+                <div class="dinas">DINAS KESEHATAN</div>
+                <div class="addr">
                     Jalan Belitung Darat No.118 — Telp: (0511) 3355661 — Banjarmasin 70116
                 </div>
-
             </div>
-
             <div class="clear"></div>
-
         </div>
 
         <hr class="top">
 
-
-        <div style="width:100%; text-align:center; margin-bottom:12px;">
-            <h3 style="
-                margin:0;
-                font-size:15px;
-                letter-spacing:0.6px;
-                font-weight:700;
-            ">
+        {{-- JUDUL --}}
+        <div style="width:100%; text-align:center; margin-bottom:15px;">
+            <h3 style="margin:0; font-size:15px; letter-spacing:0.6px; font-weight:700;">
                 LAPORAN REKAPITULASI HASIL SKRINING <br>
                 PENYAKIT TIDAK MENULAR (PTM)
             </h3>
         </div>
 
-
-        {{-- TABLE --}}
+        {{-- TABEL --}}
         <table class="grid">
-
             <thead>
                 <tr>
                     <th style="width:40px">No</th>
@@ -175,78 +181,74 @@
                     <th>Jumlah Peserta</th>
                 </tr>
             </thead>
-
             <tbody>
-
                 @foreach($data as $i => $row)
-
                     <tr>
-
-                        <td style="text-align:center">
-                            {{ $loop->iteration }}
-                        </td>
-
-                        <td style="text-align:center">
-
-                            @if($row->hasil_skrining == 'Normal')
-
-                                Normal
-
-                            @elseif($row->hasil_skrining == 'Risiko Tinggi')
-
-                                Berisiko
-
-                            @elseif($row->hasil_skrining == 'Dicurigai PTM')
-
-                                Dicurigai PTM
-
-                            @endif
-
-                        </td>
-
-                        <td style="text-align:center">
-                            {{ $row->jumlah }}
-                        </td>
-
+                        <td style="text-align:center">{{ $i + 1 }}</td>
+                        <td style="text-align:center">{{ $row->hasil_skrining }}</td>
+                        <td style="text-align:center">{{ $row->jumlah }}</td>
                     </tr>
-
                 @endforeach
-
             </tbody>
-
         </table>
 
-
         {{-- TOTAL --}}
-        <div style="margin-top:6px;font-size:12px;font-weight:700;text-align:left;">
-
-            Jumlah keseluruhan peserta yang diperiksa sebanyak =
-            {{ $data->sum('jumlah') }} orang
-
+        <div style="margin-top:10px; font-size:12px; font-weight:700;">
+            Jumlah keseluruhan peserta yang diperiksa sebanyak = {{ $data->sum('jumlah') }} orang
         </div>
 
-
-        {{-- TTD --}}
+        {{-- TTD & QR CODE (Sudah Disinkronkan Sesuai Hak Akses Role) --}}
         <div class="ttd">
-
             <div class="block">
-
+                <br>
                 <div>DIKELUARKAN DI BANJARMASIN</div>
-
                 <div>TANGGAL: {{ now()->format('d-m-Y') }}</div>
 
-                <div style="margin-top:10px">KEPALA DINAS</div>
+                @if(auth()->check() && auth()->user()->role_name === 'pegawai')
+                    {{-- ======================================================= --}}
+                    {{-- 1. TAMPILAN KHUSUS PEGAWAI (HARDCODE & TANPA QR CODE) --}}
+                    {{-- ======================================================= --}}
+                    <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
+                        KEPALA BIDANG P2PTM
+                    </div>
 
-                <div class="name">
-                    {{ config('app.kepala_nama', 'dr. H. DIAUDDIN, M.Kes') }}
-                </div>
+                    <div class="qr-container">
+                        {{-- Ruang kosong pengganti QR Code agar posisi seimbang --}}
+                        <div style="height: 85px;"></div>
+                    </div>
 
-                <div>
-                    NIP. {{ config('app.kepala_nip', '197709232006041015') }}
-                </div>
+                    <div class="name" style="margin-top: 0;">
+                        Deny Haryuniansyah
+                    </div>
+                    <div style="margin-top:4px;">
+                        NIP. 1973062022006041016
+                    </div>
+
+                @else
+                    {{-- ======================================================= --}}
+                    {{-- 2. TAMPILAN DINAMIS ADMIN/KEPALA (DARI DB & ADA QR CODE)--}}
+                    {{-- ======================================================= --}}
+                    <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
+                        {{ $kepalaAktif->jabatan ?? 'KEPALA BIDANG P2PTM' }}
+                    </div>
+
+                    <div class="qr-container">
+                        @if(isset($qrToken))
+                            {!! QrCode::size(85)->generate($qrToken) !!}
+                        @else
+                            <div style="height: 85px;"></div>
+                        @endif
+                    </div>
+
+                    <div class="name" style="margin-top: 0;">
+                        {{ $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah' }}
+                    </div>
+                    <div style="margin-top:4px;">
+                        NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}
+                    </div>
+                @endif
 
             </div>
-
         </div>
 
     </div>

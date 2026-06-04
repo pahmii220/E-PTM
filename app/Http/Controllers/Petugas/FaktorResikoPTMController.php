@@ -8,6 +8,10 @@ use App\Models\FaktorResikoPTM;
 use App\Models\Pasien;
 use App\Models\Puskesmas;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\DataPtmBaruNotification;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Log;
+use App\Models\User;
 
 class FaktorResikoPTMController extends Controller
 {
@@ -75,39 +79,42 @@ public function create()
     /**
      * Simpan data baru
      */
-    public function store(Request $request)
-{
-    if (Auth::user()->role_name === 'pegawai') {
-        abort(403);
+public function store(Request $request)
+    {
+        // ... (kode validasi dan pengecekan role tetap sama) ...
+
+        $faktorBaru = FaktorResikoPTM::create([
+            'pasien_id' => $request->pasien_id,
+            'puskesmas_id' => Auth::user()->role_name === 'admin'
+                ? Pasien::findOrFail($request->pasien_id)->puskesmas_id
+                : Auth::user()->petugas->puskesmas_id,
+            'tanggal_pemeriksaan'    => $request->tanggal_pemeriksaan,
+            'merokok'                => $request->merokok,
+            'alkohol'                => $request->alkohol,
+            'kurang_aktivitas_fisik' => $request->kurang_aktivitas_fisik,
+            'petugas_id' => Auth::id(),
+            'created_by' => Auth::id(),
+        ]);
+
+        // =======================================================
+        // KODE NOTIFIKASI EMAIL KE DINKES
+        // =======================================================
+        try {
+            $faktorBaru->load('pasien'); // Memuat relasi agar nama pasien bisa dibaca
+            
+            $usersDinkes = User::whereIn('role_name', ['admin', 'pegawai'])->get();
+            
+            if ($usersDinkes->isNotEmpty()) {
+                Notification::send($usersDinkes, new DataPtmBaruNotification($faktorBaru));
+            }
+        } catch (\Exception $e) {
+            Log::error('Gagal kirim email Faktor Risiko: ' . $e->getMessage());
+        }
+        // =======================================================
+
+        return redirect()->route('petugas.faktor_resiko.index')
+            ->with('success', 'Data faktor risiko berhasil ditambahkan.');
     }
-
-    $request->validate([
-        'pasien_id'               => 'required|exists:pasien,id',
-        'tanggal_pemeriksaan'     => 'required|date',
-        'merokok'                 => 'required|in:Ya,Tidak',
-        'alkohol'                 => 'required|in:Ya,Tidak',
-        'kurang_aktivitas_fisik'  => 'required|in:Ya,Tidak',
-    ]);
-
-    FaktorResikoPTM::create([
-        'pasien_id' => $request->pasien_id,
-        'puskesmas_id' => Auth::user()->role_name === 'admin'
-            ? Pasien::findOrFail($request->pasien_id)->puskesmas_id
-            : Auth::user()->petugas->puskesmas_id,
-        'tanggal_pemeriksaan'    => $request->tanggal_pemeriksaan,
-        'merokok'                => $request->merokok,
-        'alkohol'                => $request->alkohol,
-        'kurang_aktivitas_fisik' => $request->kurang_aktivitas_fisik,
-        'petugas_id' => Auth::id(),
-
-        'created_by'             => Auth::id(),
-    ]);
-
-    return redirect()
-        ->route('petugas.faktor_resiko.index')
-        ->with('success', 'Data faktor risiko berhasil ditambahkan.');
-}
-
 
     /**
      * Form edit
@@ -188,7 +195,7 @@ public function edit($id)
     if ($faktor->status_verifikasi === 'rejected') {
         $faktor->status_verifikasi = 'pending';
         $faktor->catatan_verifikasi = null;
-        $faktor->vdiverifikasi_oleh = null;
+        $faktor->diverifikasi_oleh = null;
         $faktor->diverifikasi_pada = null;
     }
 

@@ -24,6 +24,9 @@ class PegawaiDinkes extends Model
         'jabatan',
         'bidang',
         'telepon',
+        'provinsi',        // <--- TAMBAHAN BARU
+        'kabupaten_kota',  // <--- TAMBAHAN BARU
+        'foto',
     ];
 
     public function user()

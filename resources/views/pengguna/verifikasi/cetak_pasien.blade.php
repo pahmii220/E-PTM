@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <title>Laporan Peserta Pemeriksaan</title>
     <style>
+        /* ====== SETTING CETAK ====== */
         @page {
             margin: 15mm 12mm;
         }
@@ -14,6 +15,7 @@
             margin: 0;
             padding: 0;
             background: #fff;
+            -webkit-print-color-adjust: exact;
         }
 
         .container {
@@ -24,6 +26,7 @@
             box-sizing: border-box;
         }
 
+        /* ====== KOP ====== */
         .kop {
             text-align: center;
             margin-bottom: 6px;
@@ -49,6 +52,7 @@
             margin: 8px 0 12px 0;
         }
 
+        /* ====== TABLE ====== */
         table.grid {
             width: 100%;
             border-collapse: collapse;
@@ -71,26 +75,7 @@
             text-align: center;
         }
 
-        /* Layout TTD & QR */
-        .ttd-wrapper {
-            width: 100%;
-            margin-top: 20px;
-            overflow: hidden;
-        }
-
-        .ttd-right {
-            float: right;
-            width: 40%;
-            text-align: center;
-            font-size: 12px;
-        }
-
-        .name {
-            margin-top: 60px;
-            font-weight: 700;
-            text-decoration: underline;
-        }
-
+        /* ====== NO PRINT ====== */
         .no-print {
             margin-bottom: 10px;
             text-align: right;
@@ -101,18 +86,48 @@
                 display: none;
             }
         }
+
+        /* ====== TTD & QR CODE ====== */
+        .ttd {
+            width: 100%;
+            margin-top: 24px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .ttd .block {
+            width: 40%;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .qr-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 85px;
+            margin: 10px 0;
+        }
+
+        .ttd .block .name {
+            margin-top: 5px;
+            font-weight: 700;
+            text-decoration: underline;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
 
+        {{-- TOMBOL ACTION --}}
         <div class="no-print">
             <button onclick="window.print()" style="padding:8px 12px; margin-right:6px;">Print</button>
             <a href="javascript:history.back()"
                 style="padding:8px 12px; background:#eee; text-decoration:none; color:#000;">Kembali</a>
         </div>
 
+        {{-- KOP SURAT --}}
         <div class="kop">
             <div class="left"><img src="{{ asset('images/dinkes.png') }}" alt="logo" style="width:65px;"></div>
             <br><br>
@@ -126,6 +141,7 @@
         </div>
         <hr class="top">
 
+        {{-- JUDUL --}}
         <div style="text-align:center;margin-bottom:10px;">
             <h3 style="margin:0;font-size:15px;letter-spacing:0.6px;">LAPORAN PESERTA</h3>
         </div>
@@ -133,10 +149,11 @@
         {{-- INFO BULAN --}}
         <div style="font-size: 13px; font-weight: bold; margin-bottom: 5px;">
             Bulan:
-            {{ \Carbon\Carbon::create()->month((int) request('bulan'))->locale('id')->translatedFormat('F') }}
+            {{ \Carbon\Carbon::create()->month((int) request('bulan', now()->month))->locale('id')->translatedFormat('F') }}
             {{ request('tahun', now()->year) }}
         </div>
 
+        {{-- TABEL DATA --}}
         <table class="grid">
             <thead>
                 <tr>
@@ -166,34 +183,64 @@
             </tbody>
         </table>
 
+        {{-- TOTAL --}}
         <div style="margin-top:6px; font-size:12px; font-weight:700;">
             Jumlah keseluruhan peserta sebanyak = {{ $items->count() }} orang
         </div>
 
-        {{-- BLOK TTD & QR --}}
-<div class="ttd-wrapper">
-    <div class="ttd-right">
-        <div>Banjarmasin, {{ now()->format('d-m-Y') }}</div>
-        <div style="font-weight:bold;">KEPALA BIDANG P2PTM</div>
+        {{-- BLOK TTD & QR (Telah disinkronkan) --}}
+        <div class="ttd">
+            <div class="block">
+                <br>
+                <div>DIKELUARKAN DI BANJARMASIN</div>
+                <div>TANGGAL: {{ now()->format('d-m-Y') }}</div>
 
-        {{-- QR Code hanya muncul jika ada token --}}
-        @if(!empty($qrToken))
-            <div style="margin: 5px 0;">
-                {!! QrCode::size(85)->generate($qrToken) !!}
+                @if(auth()->check() && auth()->user()->role_name === 'pegawai')
+                    {{-- ======================================================= --}}
+                    {{-- 1. TAMPILAN KHUSUS PEGAWAI (HARDCODE & TANPA QR CODE) --}}
+                    {{-- ======================================================= --}}
+                    <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
+                        KEPALA BIDANG P2PTM
+                    </div>
+
+                    <div class="qr-container">
+                        {{-- Ruang kosong pengganti QR Code agar tata letak tetap presisi --}}
+                        <div style="height: 85px;"></div>
+                    </div>
+
+                    <div class="name" style="margin-top: 0;">
+                        Deny Haryuniansyah
+                    </div>
+                    <div style="margin-top:4px;">
+                        NIP. 1973062022006041016
+                    </div>
+
+                @else
+                    {{-- ======================================================= --}}
+                    {{-- 2. TAMPILAN DINAMIS ADMIN/KEPALA (DARI DB & ADA QR CODE)--}}
+                    {{-- ======================================================= --}}
+                    <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
+                        {{ $kepalaAktif->jabatan ?? 'KEPALA BIDANG P2PTM' }}
+                    </div>
+
+                    <div class="qr-container">
+                        @if(!empty($qrToken))
+                            {!! QrCode::size(85)->generate($qrToken) !!}
+                        @else
+                            <div style="height: 85px;"></div>
+                        @endif
+                    </div>
+
+                    <div class="name" style="margin-top: 0;">
+                        {{ $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah' }}
+                    </div>
+                    <div style="margin-top:4px;">
+                        NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}
+                    </div>
+                @endif
+
             </div>
-        @else
-            <div style="height: 20px; margin: 5px 0;"></div>
-        @endif
-
-    <!-- Tambahkan style margin-top negatif di sini -->
-    <div style="margin-top: -50px;">
-        <div class="name" style="text-decoration: underline; font-weight: bold;">
-            {{ $kepalaAktif->nama_kepala ?? 'dr. H. DIAUDDIN, M.Kes' }}
         </div>
-        <div>NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}</div>
-    </div>
-    </div>
-</div>
 
     </div>
 </body>

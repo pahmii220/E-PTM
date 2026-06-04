@@ -149,7 +149,8 @@
         <hr class="top">
 
         <div style="text-align:center; margin-bottom:15px;">
-            <h3 style="margin:0; font-size:15px; letter-spacing:0.6px;">LAPORAN FAKTOR RESIKO PENYAKIT TIDAK MENULAR(PTM)
+            <h3 style="margin:0; font-size:15px; letter-spacing:0.6px;">LAPORAN FAKTOR RESIKO PENYAKIT TIDAK
+                MENULAR(PTM)
             </h3>
         </div>
 
@@ -196,32 +197,58 @@
             </tbody>
         </table>
 
+        {{-- BAGIAN TANDA TANGAN & QR CODE (Telah disinkronkan) --}}
         <div class="ttd">
             <div class="block">
                 <br>
                 <div>DIKELUARKAN DI BANJARMASIN</div>
                 <div>TANGGAL: {{ now()->format('d-m-Y') }}</div>
 
-                <div style="margin-top:10px; font-weight: bold;">
-                    {{ isset($kepalaAktif) ? 'KEPALA BIDANG P2P' : 'KEPALA DINAS' }}
-                </div>
+                {{-- Cek URL: Jika diakses dari rute yang diawali 'pengguna/' maka ini adalah role Pegawai --}}
+                @if(request()->is('pengguna/*'))
+                    {{-- ======================================================= --}}
+                    {{-- 1. TAMPILAN KHUSUS PEGAWAI (HARDCODE & TANPA QR CODE) --}}
+                    {{-- ======================================================= --}}
+                    <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
+                        KEPALA BIDANG P2PTM
+                    </div>
 
-                {{-- Kotak QR Code --}}
-                <div class="qr-container">
-                    @if(isset($qrToken) && isset($statusDokumen) && $statusDokumen == 'Disahkan')
-                        {!! QrCode::size(85)->generate($qrToken) !!}
-                    @else
+                    <div class="qr-container">
+                        {{-- Ruang kosong pengganti QR Code agar posisi seimbang --}}
                         <div style="height: 85px;"></div>
-                    @endif
-                </div>
+                    </div>
 
-                {{-- Nama Dinamis --}}
-                <div class="name">
-                    {{ $kepalaAktif->nama_kepala ?? config('app.kepala_nama', 'dr. H. DIAUDDIN, M.Kes') }}
-                </div>
-                <div style="margin-top:4px;">
-                    NIP. {{ $kepalaAktif->nip ?? config('app.kepala_nip', '197709232006041015') }}
-                </div>
+                    <div class="name" style="margin-top: 0;">
+                        Deny Haryuniansyah
+                    </div>
+                    <div style="margin-top:4px;">
+                        NIP. 1973062022006041016
+                    </div>
+
+                @else
+                    {{-- ======================================================= --}}
+                    {{-- 2. TAMPILAN DINAMIS ADMIN/KEPALA (DARI DB & ADA QR CODE)--}}
+                    {{-- ======================================================= --}}
+                    <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
+                        {{ $kepalaAktif->jabatan ?? 'KEPALA BIDANG P2PTM' }}
+                    </div>
+
+                    <div class="qr-container">
+                        @if(!empty($qrToken))
+                            {!! QrCode::size(85)->generate($qrToken) !!}
+                        @else
+                            <div style="height: 85px;"></div>
+                        @endif
+                    </div>
+
+                    <div class="name" style="margin-top: 0;">
+                        {{ $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah' }}
+                    </div>
+                    <div style="margin-top:4px;">
+                        NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}
+                    </div>
+                @endif
+
             </div>
         </div>
 

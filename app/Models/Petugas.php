@@ -26,6 +26,7 @@ class Petugas extends Model
         'bidang',
         'telepon',
         'puskesmas_id',
+        'foto',
     ];
 
     protected $casts = [
