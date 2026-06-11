@@ -215,8 +215,25 @@
                 </div>
 
                 <div class="qr-container">
-                    @if(isset($qrToken) && isset($statusDokumen) && $statusDokumen == 'Disahkan')
-                        {!! QrCode::size(85)->generate($qrToken) !!}
+                    @if(!empty($qrToken))
+                                        @php
+                                            $bulanAngka = (int) request('bulan', now()->month);
+                                            $tahun = request('tahun', now()->year);
+                                            $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
+                                            $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
+
+                                            $namaPejabat = $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah';
+                                            $nipPejabat = $kepalaAktif->nip ?? '1973062022006041016';
+                                        @endphp
+
+                                        {{-- KODE YANG SUDAH DIPERSINGKAT --}}
+                                        {!! QrCode::size(85)->generate(route('verifikasi.laporan', [
+                            'judul' => 'Laporan Tindak Lanjut PTM',
+                            'periode' => $periode,
+                            'tanggal_sah' => $tanggalSah,
+                            'nama_kepala' => $namaPejabat,
+                            'nip' => $nipPejabat
+                        ])) !!}
                     @else
                         <div style="height: 85px;"></div>
                     @endif

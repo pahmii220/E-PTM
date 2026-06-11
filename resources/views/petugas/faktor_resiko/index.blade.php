@@ -249,6 +249,16 @@
             const table = $('#faktorTable').DataTable({
                 responsive: true,
                 order: [[2, 'desc']],
+
+                // TAMBAHKAN KODE INI:
+                "drawCallback": function (settings) {
+                    var api = this.api();
+                    // Mengupdate kolom ke-0 (No) setiap kali tabel digambar ulang
+                    api.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell, i) {
+                        cell.innerHTML = i + 1;
+                    });
+                },
+
                 language: {
                     search: "Cari:",
                     lengthMenu: "Tampilkan _MENU_ data",

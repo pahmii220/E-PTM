@@ -111,65 +111,92 @@ public function process(Request $request)
         return view('pengguna.verifikasi.index', compact('pendingPasien','pendingDeteksi','pendingFaktor'));
     }
 
-    /**
-     * List pasien — mendukung filter status (approved/rejected/pending) atau null untuk semua.
+/**
+     * List pasien — mendukung filter status (approved/rejected/pending) dan filter Puskesmas
      */
-        public function pasien(Request $request)
-{
-    $status = $request->status ?? 'pending';
+    public function pasien(Request $request)
+    {
+        $status = $request->status ?? 'pending';
+        $puskesmasId = $request->puskesmas_id ?? 'all';
 
-    $query = Pasien::orderBy('dibuat_pada','desc');
+        // Gunakan with('puskesmas') agar load datanya lebih ringan (Eager Loading)
+        $query = Pasien::with('puskesmas')->orderBy('dibuat_pada','desc');
 
-    if ($status !== 'all') {
-        $query->where('status_verifikasi', $status);
+        // Filter berdasarkan Status
+        if ($status !== 'all') {
+            $query->where('status_verifikasi', $status);
+        }
+
+        // Filter berdasarkan Puskesmas
+        if ($puskesmasId !== 'all') {
+            $query->where('puskesmas_id', $puskesmasId);
+        }
+
+        // Simpan semua parameter query agar pagination tidak mereset filter
+        $data = $query->paginate(20)->appends($request->query());
+
+        // Ambil daftar puskesmas untuk ditampilkan di dropdown filter
+        $puskesmasList = \App\Models\Puskesmas::all();
+
+        return view('pengguna.verifikasi.pasien', compact('data', 'status', 'puskesmasList'));
     }
 
-    $data = $query->paginate(20)->appends($request->query());
 
-    return view('pengguna.verifikasi.pasien', compact('data','status'));
-}
-
-
-    /**
-     * List deteksi — mendukung filter status (approved/rejected/pending) atau null untuk semua.
+/**
+     * List deteksi — mendukung filter status dan Puskesmas
      */
     public function deteksiPending(Request $request)
-{
-    $status = $request->query('status', 'pending');
+    {
+        $status = $request->query('status', 'pending');
+        $puskesmasId = $request->query('puskesmas_id', 'all');
 
-    $query = DeteksiDiniPTM::with(['pasien','petugas'])
-        ->orderBy('dibuat_pada','desc');
+        $query = DeteksiDiniPTM::with(['pasien', 'petugas', 'puskesmas'])
+            ->orderBy('dibuat_pada', 'desc');
 
-    if ($status !== 'all') {
-        $query->where('status_verifikasi', $status);
+        // Filter Status
+        if ($status !== 'all') {
+            $query->where('status_verifikasi', $status);
+        }
+
+        // Filter Puskesmas
+        if ($puskesmasId !== 'all') {
+            $query->where('puskesmas_id', $puskesmasId);
+        }
+
+        $data = $query->paginate(20)->appends($request->query());
+        $puskesmasList = \App\Models\Puskesmas::all();
+
+        return view('pengguna.verifikasi.deteksi', compact('data', 'status', 'puskesmasList'));
     }
 
-    $data = $query->paginate(20)->appends($request->query());
-
-    return view('pengguna.verifikasi.deteksi', compact('data','status'));
-}
 
 
-
-    /**
-     * List faktor — mendukung filter status (approved/rejected/pending) atau null untuk semua.
+/**
+     * List faktor — mendukung filter status dan Puskesmas
      */
-public function faktorPending(Request $request)
-{
-    $status = $request->query('status', 'pending');
+    public function faktorPending(Request $request)
+    {
+        $status = $request->query('status', 'pending');
+        $puskesmasId = $request->query('puskesmas_id', 'all');
 
-    $query = FaktorResikoPTM::with(['pasien','petugas'])
-        ->orderBy('dibuat_pada','desc');
+        $query = FaktorResikoPTM::with(['pasien', 'petugas', 'puskesmas'])
+            ->orderBy('dibuat_pada', 'desc');
 
-    if ($status !== 'all') {
-        $query->where('status_verifikasi', $status);
+        // Filter Status
+        if ($status !== 'all') {
+            $query->where('status_verifikasi', $status);
+        }
+
+        // Filter Puskesmas
+        if ($puskesmasId !== 'all') {
+            $query->where('puskesmas_id', $puskesmasId);
+        }
+
+        $data = $query->paginate(20)->appends($request->query());
+        $puskesmasList = \App\Models\Puskesmas::all();
+
+        return view('pengguna.verifikasi.faktor', compact('data', 'status', 'puskesmasList'));
     }
-
-    $data = $query->paginate(20)->appends($request->query());
-
-    return view('pengguna.verifikasi.faktor', compact('data','status'));
-}
-
 
     /**
      * Aksi verifikasi pasien (approve/reject) — hanya update status, kembali ke halaman sebelumnya
@@ -249,117 +276,132 @@ public function faktorPending(Request $request)
         }
     }
 
-    /**
+/**
      * Cetak laporan: deteksi (print-friendly view)
      */
-public function printDeteksi(Request $request)
-{
-    $user = Auth::user();
+    public function printDeteksi(Request $request)
+    {
+        $user = Auth::user();
 
-    // 🔥 ADMIN default cetak semua
-    if ($user->role_name === 'admin') {
-        $status = $request->query('status', 'all');
-    } else {
-        // pengguna biasa default pending
-        $status = $request->query('status', 'pending');
-    }
+        // 🔥 ADMIN default cetak semua
+        if ($user->role_name === 'admin') {
+            $status = $request->query('status', 'all');
+        } else {
+            // pengguna biasa default pending
+            $status = $request->query('status', 'pending');
+        }
 
-    $query = DeteksiDiniPTM::with([
-        'pasien',
-        'petugas',
-        'puskesmas',
-        'tindakLanjut'
-    ])->orderBy('tanggal_pemeriksaan','desc');
+        // Tangkap parameter puskesmas_id dari URL (Tambahan Baru)
+        $puskesmasId = $request->query('puskesmas_id', 'all');
 
-    if ($status !== 'all') {
-        $query->where('status_verifikasi', $status);
-    }
+        $query = DeteksiDiniPTM::with([
+            'pasien',
+            'petugas',
+            'puskesmas',
+            'tindakLanjut'
+        ])->orderBy('tanggal_pemeriksaan','desc');
 
-    $items = $query->get();
+        if ($status !== 'all') {
+            $query->where('status_verifikasi', $status);
+        }
 
-    return view('pengguna.verifikasi.print.deteksi', compact('items','status'));
-}
-
-
-
-
-
-    /**
-     * Cetak laporan: pasien
-     */
-public function printPasien(Request $request)
-{
-    $user = auth()->user();
-
-    // status yang diizinkan
-    $allowedStatus = ['approved', 'rejected', 'pending', 'all'];
-    $status = $request->query('status', 'all');
-
-    if (!in_array($status, $allowedStatus)) {
-        $status = 'all';
-    }
-
-    // base query
-    $query = Pasien::with('puskesmas')
-        ->orderBy('dibuat_pada', 'desc');
+        // Terapkan filter puskesmas jika bukan 'all' (Tambahan Baru)
+        if ($puskesmasId !== 'all') {
+            $query->where('puskesmas_id', $puskesmasId);
+        }
 
         $items = $query->get();
-    // 🔐 ROLE-BASED FILTER
-    if ($user->role_name === 'petugas') {
-        $query->where('puskesmas_id', $user->petugas->puskesmas_id);
-    } elseif (in_array($user->role_name, ['admin', 'pegawai'])) {
-        if ($request->filled('puskesmas')) {
-            $query->whereHas('puskesmas', function ($q) use ($request) {
-                $q->where('nama_puskesmas', $request->puskesmas);
-            });
+
+        return view('pengguna.verifikasi.print.deteksi', compact('items','status'));
+    }
+
+
+
+
+/**
+     * Cetak laporan: pasien
+     */
+    public function printPasien(Request $request)
+    {
+        $user = auth()->user();
+
+        // status yang diizinkan
+        $allowedStatus = ['approved', 'rejected', 'pending', 'all'];
+        $status = $request->query('status', 'all');
+
+        if (!in_array($status, $allowedStatus)) {
+            $status = 'all';
         }
+
+        // Tangkap parameter puskesmas_id dari URL (Tambahan Baru)
+        $puskesmasId = $request->query('puskesmas_id', 'all');
+
+        // base query
+        $query = Pasien::with('puskesmas')->orderBy('dibuat_pada', 'desc');
+
+        // 🔐 ROLE-BASED FILTER & PUSKESMAS FILTER
+        if ($user->role_name === 'petugas') {
+            $query->where('puskesmas_id', $user->petugas->puskesmas_id);
+        } elseif (in_array($user->role_name, ['admin', 'pegawai'])) {
+            // Terapkan filter puskesmas jika bukan 'all' (Tambahan Baru)
+            if ($puskesmasId !== 'all') {
+                $query->where('puskesmas_id', $puskesmasId);
+            }
+        }
+
+        // 🎯 FILTER STATUS
+        if ($status !== 'all') {
+            $query->where('status_verifikasi', $status);
+        }
+
+        $items = $query->get();
+
+        // 🔥 TAMBAHKAN INI AGAR BLADE TIDAK ERROR
+        $qrToken = null; 
+        $statusDokumen = 'Menunggu';
+        $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
+
+        return view('pengguna.verifikasi.cetak_pasien', compact('items', 'status', 'qrToken', 'statusDokumen', 'kepalaAktif'));
     }
-
-    // 🎯 FILTER STATUS
-    if ($status !== 'all') {
-        $query->where('status_verifikasi', $status);
-    }
-
-    $items = $query->get();
-
-    // 🔥 TAMBAHKAN INI AGAR BLADE TIDAK ERROR
-    $qrToken = null; 
-    $statusDokumen = 'Menunggu';
-    $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
-
-    return view('pengguna.verifikasi.cetak_pasien', compact('items', 'status', 'qrToken', 'statusDokumen', 'kepalaAktif'));
-}
 
 
     
-    /**
+/**
      * Cetak laporan: faktor
      */
-public function printFaktor(Request $request)
-{
-    $user = Auth::user();
+    public function printFaktor(Request $request)
+    {
+        $user = Auth::user();
 
-    // 🔥 ADMIN default cetak semua
-    if ($user->role_name === 'admin') {
-        $status = $request->query('status', 'all');
-    } else {
-        // pengguna default pending
-        $status = $request->query('status', 'pending');
+        // 🔥 ADMIN default cetak semua
+        if ($user->role_name === 'admin') {
+            $status = $request->query('status', 'all');
+        } else {
+            // pengguna default pending
+            $status = $request->query('status', 'pending');
+        }
+
+        // Tangkap parameter puskesmas_id dari URL (Tambahan Baru)
+        $puskesmasId = $request->query('puskesmas_id', 'all');
+
+        $query = FaktorResikoPTM::with(['pasien','petugas'])
+            ->orderBy('dibuat_pada','desc');
+
+        if ($status !== 'all') {
+            $query->where('status_verifikasi', $status);
+        }
+
+        // Terapkan filter puskesmas jika bukan 'all' (Tambahan Baru)
+        if ($puskesmasId !== 'all') {
+            $query->where('puskesmas_id', $puskesmasId);
+        }
+
+        $items = $query->get();
+
+        return view('pengguna.verifikasi.print.faktor', compact('items','status'));
     }
 
-    $query = FaktorResikoPTM::with(['pasien','petugas'])
-        ->orderBy('dibuat_pada','desc');
-
-    if ($status !== 'all') {
-        $query->where('status_verifikasi', $status);
-    }
-
-    $items = $query->get();
-
-    return view('pengguna.verifikasi.print.faktor', compact('items','status'));
-}
-
-
+    
 public function printTindakLanjut()
 {
     $items = TindakLanjutPTM::with(['pasien','puskesmas'])

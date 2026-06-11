@@ -109,7 +109,7 @@
     <nav class="bg-white border-b border-gray-200 px-4 py-2 flex justify-end items-center fixed top-0 left-64 right-0 z-50 shadow-sm">
         <div class="flex items-center gap-4">
             
-            {{-- ================= FITUR NOTIFIKASI SISTEM ================= --}}
+       {{-- ================= FITUR NOTIFIKASI SISTEM ================= --}}
 @php
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -119,9 +119,11 @@ $notifData = collect();
 $notifCount = 0;
 $isNearDeadline = false;
 $role = auth()->check() ? auth()->user()->role_name : '';
-$totalPending = 0;
-
-$allNotifIds = [];
+if ($jumlahPendingAdmin > 0) {
+    // ID sekarang menjadi dinamis, misal: 'admin-verif-petugas-1'
+    $allNotifIds[] = 'admin-verif-petugas-' . $jumlahPendingAdmin;
+    $notifCount++;
+}
 
 if (auth()->check()) {
     // 1. PENGINGAT DEADLINE LAPORAN
@@ -165,6 +167,17 @@ if (auth()->check()) {
                 $allNotifIds[] = 'pengingat-verif';
                 $notifCount++;
             }
+
+            // 🔥 TAMBAHAN LOGIKA KHUSUS UNTUK ROLE ADMIN 🔥
+        } elseif ($role === 'admin') {
+            // Hitung pengguna dengan role_name 'petugas' yang status_aktif nya masih 0
+            $jumlahPendingAdmin = DB::table('pengguna')->where('role_name', 'petugas')->where('status_aktif', 0)->count();
+
+            //echo "Jumlah Petugas Nonaktif: " . $jumlahPendingAdmin; die();
+            if ($jumlahPendingAdmin > 0) {
+                $allNotifIds[] = 'admin-verif-petugas'; // ID unik untuk local storage admin
+                $notifCount++;
+            }
         }
 
         // Gabungkan ID unik untuk keperluan LocalStorage
@@ -178,114 +191,141 @@ if (auth()->check()) {
 }
 @endphp
 
-        {{-- Script Alpine.js --}}
-        <div class="dropdown" x-data="{ 
-                        readList: JSON.parse(localStorage.getItem('readNotifs') || '[]'),
-                        totalNotif: {{ $notifCount }},
-                        allIds: {{ json_encode($allNotifIds) }},
-                        
-                        init() {
-                            let alreadyRead = this.allIds.filter(id => this.readList.includes(id)).length;
-                            this.totalNotif = Math.max(0, this.totalNotif - alreadyRead);
-                        },
-                        markRead(id) {
-                            if(!this.readList.includes(id)) {
-                                this.readList.push(id);
-                                localStorage.setItem('readNotifs', JSON.stringify(this.readList));
-                                this.totalNotif = Math.max(0, this.totalNotif - 1);
-                            }
-                        },
-                    markAll() {
-                    this.allIds.forEach(id => {
-                    if(!this.readList.includes(id)) this.readList.push(id);
-                    });
-                    
-                    // Tambahan: Tutup juga pop-up toast secara manual tanpa mengganggu perhitungan
-                    if(!this.readList.includes('deadline-notif-v2')) {
-                    this.readList.push('deadline-notif-v2');
-                    }
-                    
-                    localStorage.setItem('readNotifs', JSON.stringify(this.readList));
-                    this.totalNotif = 0;
-                    }
-                    }">
+{{-- Script Alpine.js --}}
+<div class="dropdown" x-data="{ 
+        readList: JSON.parse(localStorage.getItem('readNotifs') || '[]'),
+        totalNotif: {{ $notifCount }},
+        allIds: {{ json_encode($allNotifIds) }},
         
-            {{-- Ikon Lonceng (Biru Dinamis) --}}
-            <a class="nav-link position-relative flex items-center p-2" href="#" id="notificationDropdown" role="button"
-                data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
-        
-                <i class="bi bi-bell-fill fs-5 transition duration-300 drop-shadow-sm"
-                    :class="totalNotif > 0 ? 'text-amber-500 animate-pulse' : 'text-gray-500 hover:text-green-600'"></i>
-        
-                <span x-show="totalNotif > 0" x-text="totalNotif" style="display: none;"
-                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger shadow-sm"
-                    style="font-size: 0.6rem; transform: translate(-30%, 15%) !important; border: 2px solid white;"></span>
-            </a>
-        
-            {{-- Kotak Dropdown List Notifikasi --}}
-            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-xl mt-2 p-0 overflow-hidden"
-                aria-labelledby="notificationDropdown" style="width: 380px;">
-                <li
-                    class="fw-bold text-dark border-bottom px-4 py-3 d-flex justify-content-between align-items-center bg-gray-50">
-                    <span class="text-gray-800 text-sm"><i class="bi bi-bell me-1"></i> Notifikasi Sistem</span>
-                    <span x-show="totalNotif > 0" style="display: none;" class="badge bg-green-500 rounded-pill"><span
-                            x-text="totalNotif"></span> Baru</span>
-                </li>
-        
-                <div class="notif-body overflow-y-auto" style="max-height: 350px;">
-        
-                    {{-- DEADLINE --}}
-                    @if($isNearDeadline)
-                        <li x-show="!readList.includes('deadline-notif')" x-transition.opacity.duration.300ms
-                            class="relative border-bottom bg-blue-50 hover:bg-blue-100 transition">
-                            <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="#">
-                                <div class="d-flex align-items-start">
-                                    <div class="text-blue-500 me-3 fs-4"><i class="bi bi-calendar-event-fill"></i></div>
-                                    <div style="line-height: 1.4;">
-                                        <div class="fw-bold text-dark" style="font-size: 14px;">Pengingat Laporan</div>
-                                        <div class="text-muted mt-1" style="font-size: 12px;">Jangan lupa mencetak rekapitulasi
-                                            laporan bulan ini maksimal tanggal 5.</div>
-                                        <div class="text-secondary mt-2 fw-semibold" style="font-size: 10px;">Sistem Otomatis</div>
-                                    </div>
-                                </div>
-                            </a>
-                            <button @click.prevent="markRead('deadline-notif')"
-                                class="absolute top-3 right-3 text-gray-400 hover:text-blue-600 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"
-                                title="Tandai sudah dibaca">
-                                <i class="bi bi-check2"></i>
-                            </button>
-                        </li>
-                    @endif
-        
-                    {{-- PENGINGAT VERIFIKASI (KHUSUS PEGAWAI DINKES) --}}
-                    @if($role === 'pegawai' && isset($totalPending) && $totalPending > 0)
-                        <li x-show="!readList.includes('pengingat-verif')" x-transition.opacity.duration.300ms
-                            class="relative border-bottom bg-blue-50 hover:bg-blue-100 transition">
-                            <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent"
-                                href="{{ route('pengguna.verifikasi.pasien') }}">
-                                <div class="d-flex align-items-start">
-                                    <div class="text-blue-500 me-3 fs-4"><i class="bi bi-clock-history"></i></div>
-                                    <div style="line-height: 1.4;">
-                                        <div class="fw-bold text-dark" style="font-size: 14px;">Pengingat Verifikasi</div>
-                                        <div class="text-muted mt-1" style="font-size: 12px;">Terdapat total
-                                            <strong>{{ $totalPending }} antrean data</strong> yang masih menunggu verifikasi Anda.
-                                            Mohon segera diproses.</div>
-                                        <div class="text-secondary mt-2 fw-semibold" style="font-size: 10px;">Sistem Otomatis</div>
-                                    </div>
-                                </div>
-                            </a>
-                            <button @click.prevent="markRead('pengingat-verif')"
-                                class="absolute top-3 right-3 text-gray-400 hover:text-blue-600 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"
-                                title="Tandai sudah dibaca">
-                                <i class="bi bi-check2"></i>
-                            </button>
-                        </li>
-                    @endif
-        
-                    {{-- LOOPING DATA VERIFIKASI --}}
-                    @forelse($notifData as $notif)
+        init() {
+            let alreadyRead = this.allIds.filter(id => this.readList.includes(id)).length;
+            this.totalNotif = Math.max(0, this.totalNotif - alreadyRead);
+        },
+        markRead(id) {
+            if(!this.readList.includes(id)) {
+                this.readList.push(id);
+                localStorage.setItem('readNotifs', JSON.stringify(this.readList));
+                this.totalNotif = Math.max(0, this.totalNotif - 1);
+            }
+        },
+        markAll() {
+            this.allIds.forEach(id => {
+                if(!this.readList.includes(id)) this.readList.push(id);
+            });
+            
+            // Tambahan: Tutup juga pop-up toast secara manual tanpa mengganggu perhitungan
+            if(!this.readList.includes('deadline-notif-v2')) {
+                this.readList.push('deadline-notif-v2');
+            }
+            
+            localStorage.setItem('readNotifs', JSON.stringify(this.readList));
+            this.totalNotif = 0;
+        }
+    }">
 
-                        @php
+    {{-- Ikon Lonceng (Biru Dinamis) --}}
+    <a class="nav-link position-relative flex items-center p-2" href="#" id="notificationDropdown" role="button"
+        data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+
+        <i class="bi bi-bell-fill fs-5 transition duration-300 drop-shadow-sm"
+            :class="totalNotif > 0 ? 'text-amber-500 animate-pulse' : 'text-gray-500 hover:text-green-600'"></i>
+
+        <span x-show="totalNotif > 0" x-text="totalNotif" style="display: none;"
+            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger shadow-sm"
+            style="font-size: 0.6rem; transform: translate(-30%, 15%) !important; border: 2px solid white;"></span>
+    </a>
+
+    {{-- Kotak Dropdown List Notifikasi --}}
+    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-xl mt-2 p-0 overflow-hidden"
+        aria-labelledby="notificationDropdown" style="width: 380px;">
+        <li
+            class="fw-bold text-dark border-bottom px-4 py-3 d-flex justify-content-between align-items-center bg-gray-50">
+            <span class="text-gray-800 text-sm"><i class="bi bi-bell me-1"></i> Notifikasi Sistem</span>
+            <span x-show="totalNotif > 0" style="display: none;" class="badge bg-green-500 rounded-pill"><span
+                    x-text="totalNotif"></span> Baru</span>
+        </li>
+
+        <div class="notif-body overflow-y-auto" style="max-height: 350px;">
+
+            {{-- DEADLINE --}}
+            @if($isNearDeadline)
+                <li x-show="!readList.includes('deadline-notif')" x-transition.opacity.duration.300ms
+                    class="relative border-bottom bg-blue-50 hover:bg-blue-100 transition">
+                    <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="#">
+                        <div class="d-flex align-items-start">
+                            <div class="text-blue-500 me-3 fs-4"><i class="bi bi-calendar-event-fill"></i></div>
+                            <div style="line-height: 1.4;">
+                                <div class="fw-bold text-dark" style="font-size: 14px;">Pengingat Laporan</div>
+                                <div class="text-muted mt-1" style="font-size: 12px;">Jangan lupa mencetak rekapitulasi
+                                    laporan bulan ini maksimal tanggal 5.</div>
+                                <div class="text-secondary mt-2 fw-semibold" style="font-size: 10px;">Sistem Otomatis</div>
+                            </div>
+                        </div>
+                    </a>
+                    <button @click.prevent="markRead('deadline-notif')"
+                        class="absolute top-3 right-3 text-gray-400 hover:text-blue-600 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"
+                        title="Tandai sudah dibaca">
+                        <i class="bi bi-check2"></i>
+                    </button>
+                </li>
+            @endif
+
+            {{-- PENGINGAT VERIFIKASI (KHUSUS PEGAWAI DINKES) --}}
+            @if($role === 'pegawai' && isset($totalPending) && $totalPending > 0)
+                <li x-show="!readList.includes('pengingat-verif')" x-transition.opacity.duration.300ms
+                    class="relative border-bottom bg-blue-50 hover:bg-blue-100 transition">
+                    <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent"
+                        href="{{ route('pengguna.verifikasi.pasien') }}">
+                        <div class="d-flex align-items-start">
+                            <div class="text-blue-500 me-3 fs-4"><i class="bi bi-clock-history"></i></div>
+                            <div style="line-height: 1.4;">
+                                <div class="fw-bold text-dark" style="font-size: 14px;">Pengingat Verifikasi</div>
+                                <div class="text-muted mt-1" style="font-size: 12px;">Terdapat total
+                                    <strong>{{ $totalPending }} antrean data</strong> yang masih menunggu verifikasi Anda.
+                                    Mohon segera diproses.</div>
+                                <div class="text-secondary mt-2 fw-semibold" style="font-size: 10px;">Sistem Otomatis</div>
+                            </div>
+                        </div>
+                    </a>
+                    <button @click.prevent="markRead('pengingat-verif')"
+                        class="absolute top-3 right-3 text-gray-400 hover:text-blue-600 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"
+                        title="Tandai sudah dibaca">
+                        <i class="bi bi-check2"></i>
+                    </button>
+                </li>
+            @endif
+
+            {{-- 🔥 AKTIVASI AKUN PETUGAS (KHUSUS ADMIN) --}}
+            @if($role === 'admin' && isset($jumlahPendingAdmin) && $jumlahPendingAdmin > 0)
+                {{-- Gunakan ID dinamis yang menyertakan jumlah pendaftar --}}
+                <li x-show="!readList.includes('admin-verif-petugas-{{ $jumlahPendingAdmin }}')" x-transition.opacity.duration.300ms
+                    class="relative border-bottom bg-indigo-50 hover:bg-indigo-100 transition">
+
+                    <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="{{ route('admin.data_petugas.index') }}">
+                        <div class="d-flex align-items-start">
+                            <div class="text-indigo-600 me-3 fs-4"><i class="bi bi-person-lines-fill"></i></div>
+                            <div style="line-height: 1.4;">
+                                <div class="fw-bold text-dark" style="font-size: 14px;">Aktivasi Akun Petugas</div>
+                                <div class="text-muted mt-1" style="font-size: 12px;">Terdapat
+                                    <strong>{{ $jumlahPendingAdmin }} pendaftar baru</strong> yang menunggu verifikasi.
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+
+                    {{-- Pastikan tombol markRead juga menggunakan ID dinamis yang sama --}}
+                    <button @click.prevent="markRead('admin-verif-petugas-{{ $jumlahPendingAdmin }}')"
+                        class="absolute top-3 right-3 text-gray-400 hover:text-indigo-600 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"
+                        title="Tandai sudah dibaca">
+                        <i class="bi bi-check2"></i>
+                    </button>
+                </li>
+            @endif
+
+            {{-- LOOPING DATA VERIFIKASI (PASIEN/DETEKSI/FAKTOR) --}}
+            @forelse($notifData as $notif)
+
+                @php
     $notifId = $notif->type . '-' . $notif->id . '-' . strtotime($notif->time);
     $dataName = $notif->type === 'peserta' ? 'Data Peserta' : ($notif->type === 'deteksi' ? 'Data Deteksi Dini' : 'Data Faktor Risiko');
 
@@ -304,196 +344,196 @@ if (auth()->check()) {
         $adminRoute = route('pengguna.verifikasi.deteksi');
     elseif ($notif->type === 'faktor')
         $adminRoute = route('pengguna.verifikasi.faktor'); 
-                        @endphp
+                @endphp
 
-                        {{-- CEK ROLE --}}
-                        @if($role === 'petugas')
+                {{-- CEK ROLE --}}
+                @if($role === 'petugas')
 
-                            @if($notif->status === 'rejected')
-                                <li x-show="!readList.includes('{{ $notifId }}')" x-transition.opacity.duration.300ms
-                                    class="relative border-bottom bg-red-50 hover:bg-red-100 transition">
-                                    <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="{{ $editRoute }}">
-                                        <div class="d-flex align-items-start">
-                                            <div class="text-danger me-3 fs-4"><i class="bi bi-x-circle-fill"></i></div>
-                                            <div style="line-height: 1.4;">
-                                                <div class="fw-bold text-dark" style="font-size: 14px;">{{ $dataName }} Perlu Revisi</div>
-                                                <div class="text-muted mt-1" style="font-size: 12px;">Pasien
-                                                    <strong>{{ $notif->nama }}</strong> ditolak.<br><span class="text-danger">Catatan:
-                                                        {{ Str::limit($notif->note, 45) }}</span></div>
-                                                <div class="text-secondary mt-2 fw-semibold" style="font-size: 10px;">
-                                                    {{ Carbon::parse($notif->time)->diffForHumans() }}</div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <button @click.prevent="markRead('{{ $notifId }}')"
-                                        class="absolute top-3 right-3 text-gray-400 hover:text-green-500 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"
-                                        title="Tandai sudah dibaca"><i class="bi bi-check2"></i></button>
-                                </li>
-                            @elseif($notif->status === 'approved')
-                                <li x-show="!readList.includes('{{ $notifId }}')" x-transition.opacity.duration.300ms
-                                    class="relative border-bottom hover:bg-gray-50 transition">
-                                    <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="#">
-                                        <div class="d-flex align-items-start">
-                                            <div class="text-green-500 me-3 fs-4"><i class="bi bi-check-circle-fill"></i></div>
-                                            <div style="line-height: 1.4;">
-                                                <div class="fw-bold text-dark" style="font-size: 14px;">Approved</div>
-                                                <div class="text-muted mt-1" style="font-size: 12px;">{{ $dataName }} atas nama
-                                                    <strong>{{ $notif->nama }}</strong> disetujui.</div>
-                                                <div class="text-secondary mt-2 fw-semibold" style="font-size: 10px;">
-                                                    {{ Carbon::parse($notif->time)->diffForHumans() }}</div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <button @click.prevent="markRead('{{ $notifId }}')"
-                                        class="absolute top-3 right-3 text-gray-400 hover:text-green-500 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"
-                                        title="Tandai sudah dibaca"><i class="bi bi-check2"></i></button>
-                                </li>
-                            @else
-                                {{-- Jika ada notifikasi masuk ke petugas tapi statusnya bukan rejected/approved --}}
-                                <li x-show="!readList.includes('{{ $notifId }}')" class="relative border-bottom bg-yellow-50">
-                                    <a class="dropdown-item py-3" href="#">
-                                        <div class="d-flex align-items-start">
-                                            <div class="text-warning me-3 fs-4"><i class="bi bi-exclamation-triangle"></i></div>
-                                            <div>
-                                                <div class="fw-bold">Info Data: {{ $dataName }}</div>
-                                                <div class="text-muted" style="font-size: 12px;">Status:
-                                                    {{ $notif->status ?? 'Menunggu/Tidak terdefinisi' }}</div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <button @click.prevent="markRead('{{ $notifId }}')"
-                                        class="absolute top-3 right-3 text-gray-400 hover:text-green-500 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"><i
-                                            class="bi bi-check2"></i></button>
-                                </li>
-                            @endif
-
-                        @elseif($role === 'pegawai')
-                            <li x-show="!readList.includes('{{ $notifId }}')" x-transition.opacity.duration.300ms
-                                class="relative border-bottom hover:bg-gray-50 transition">
-                                <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="{{ $adminRoute }}">
-                                    <div class="d-flex align-items-start">
-                                        <div class="text-primary me-3 fs-4"><i class="bi bi-file-earmark-check-fill"></i></div>
-                                        <div style="line-height: 1.4;">
-                                            <div class="fw-bold text-dark" style="font-size: 14px;">Verifikasi Pending</div>
-                                            <div class="text-muted mt-1" style="font-size: 12px;">Ada entry
-                                                <strong>{{ $dataName }}</strong> baru (Pasien: {{ $notif->nama }}) butuh verifikasi.
-                                            </div>
-                                            <div class="text-secondary mt-2 fw-semibold" style="font-size: 10px;">Masuk:
-                                                {{ Carbon::parse($notif->time)->diffForHumans() }}</div>
-                                        </div>
+                    @if($notif->status === 'rejected')
+                        <li x-show="!readList.includes('{{ $notifId }}')" x-transition.opacity.duration.300ms
+                            class="relative border-bottom bg-red-50 hover:bg-red-100 transition">
+                            <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="{{ $editRoute }}">
+                                <div class="d-flex align-items-start">
+                                    <div class="text-danger me-3 fs-4"><i class="bi bi-x-circle-fill"></i></div>
+                                    <div style="line-height: 1.4;">
+                                        <div class="fw-bold text-dark" style="font-size: 14px;">{{ $dataName }} Perlu Revisi</div>
+                                        <div class="text-muted mt-1" style="font-size: 12px;">Pasien
+                                            <strong>{{ $notif->nama }}</strong> ditolak.<br><span class="text-danger">Catatan:
+                                                {{ Str::limit($notif->note, 45) }}</span></div>
+                                        <div class="text-secondary mt-2 fw-semibold" style="font-size: 10px;">
+                                            {{ Carbon::parse($notif->time)->diffForHumans() }}</div>
                                     </div>
-                                </a>
-                                <button @click.prevent="markRead('{{ $notifId }}')"
-                                    class="absolute top-3 right-3 text-gray-400 hover:text-green-500 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"
-                                    title="Tandai sudah dibaca"><i class="bi bi-check2"></i></button>
-                            </li>
-
-                        @else
-                            {{-- Jika login dengan role admin/lainnya atau data tidak terfilter --}}
-                            <li x-show="!readList.includes('{{ $notifId }}')" class="relative border-bottom bg-yellow-50">
-                                <a class="dropdown-item py-3" href="#">
-                                    <div class="d-flex align-items-start">
-                                        <div class="text-warning me-3 fs-4"><i class="bi bi-exclamation-triangle"></i></div>
-                                        <div>
-                                            <div class="fw-bold">Data Tidak Terfilter (Role: {{ $role }})</div>
-                                            <div class="text-muted" style="font-size: 12px;">Status:
-                                                {{ $notif->status ?? 'Tidak ada status' }}</div>
-                                        </div>
-                                    </div>
-                                </a>
-                                <button @click.prevent="markRead('{{ $notifId }}')"
-                                    class="absolute top-3 right-3 text-gray-400 hover:text-green-500 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"><i
-                                        class="bi bi-check2"></i></button>
-                            </li>
-                        @endif
-
-                    @empty
-                        @if(!$isNearDeadline && ($role !== 'pegawai' || !isset($totalPending) || $totalPending === 0))
-                            <li>
-                                <div class="p-4 text-center text-muted" style="font-size: 13px;">
-                                    <i class="bi bi-bell-slash fs-2 d-block mb-2 text-gray-300"></i>
-                                    Tidak ada aktivitas baru dalam beberapa waktu terakhir.
                                 </div>
-                            </li>
-                        @endif
-                    @endforelse
-        
-                    {{-- Tampilan Kosong (AlpineJS) --}}
-                    <li x-show="totalNotif === 0" style="display: none;">
+                            </a>
+                            <button @click.prevent="markRead('{{ $notifId }}')"
+                                class="absolute top-3 right-3 text-gray-400 hover:text-green-500 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"
+                                title="Tandai sudah dibaca"><i class="bi bi-check2"></i></button>
+                        </li>
+                    @elseif($notif->status === 'approved')
+                        <li x-show="!readList.includes('{{ $notifId }}')" x-transition.opacity.duration.300ms
+                            class="relative border-bottom hover:bg-gray-50 transition">
+                            <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="#">
+                                <div class="d-flex align-items-start">
+                                    <div class="text-green-500 me-3 fs-4"><i class="bi bi-check-circle-fill"></i></div>
+                                    <div style="line-height: 1.4;">
+                                        <div class="fw-bold text-dark" style="font-size: 14px;">Approved</div>
+                                        <div class="text-muted mt-1" style="font-size: 12px;">{{ $dataName }} atas nama
+                                            <strong>{{ $notif->nama }}</strong> disetujui.</div>
+                                        <div class="text-secondary mt-2 fw-semibold" style="font-size: 10px;">
+                                            {{ Carbon::parse($notif->time)->diffForHumans() }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                            <button @click.prevent="markRead('{{ $notifId }}')"
+                                class="absolute top-3 right-3 text-gray-400 hover:text-green-500 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"
+                                title="Tandai sudah dibaca"><i class="bi bi-check2"></i></button>
+                        </li>
+                    @else
+                        {{-- Jika ada notifikasi masuk ke petugas tapi statusnya bukan rejected/approved --}}
+                        <li x-show="!readList.includes('{{ $notifId }}')" class="relative border-bottom bg-yellow-50">
+                            <a class="dropdown-item py-3" href="#">
+                                <div class="d-flex align-items-start">
+                                    <div class="text-warning me-3 fs-4"><i class="bi bi-exclamation-triangle"></i></div>
+                                    <div>
+                                        <div class="fw-bold">Info Data: {{ $dataName }}</div>
+                                        <div class="text-muted" style="font-size: 12px;">Status:
+                                            {{ $notif->status ?? 'Menunggu/Tidak terdefinisi' }}</div>
+                                    </div>
+                                </div>
+                            </a>
+                            <button @click.prevent="markRead('{{ $notifId }}')"
+                                class="absolute top-3 right-3 text-gray-400 hover:text-green-500 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"><i
+                                    class="bi bi-check2"></i></button>
+                        </li>
+                    @endif
+
+                @elseif($role === 'pegawai')
+                    <li x-show="!readList.includes('{{ $notifId }}')" x-transition.opacity.duration.300ms
+                        class="relative border-bottom hover:bg-gray-50 transition">
+                        <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="{{ $adminRoute }}">
+                            <div class="d-flex align-items-start">
+                                <div class="text-primary me-3 fs-4"><i class="bi bi-file-earmark-check-fill"></i></div>
+                                <div style="line-height: 1.4;">
+                                    <div class="fw-bold text-dark" style="font-size: 14px;">Verifikasi Pending</div>
+                                    <div class="text-muted mt-1" style="font-size: 12px;">Ada entry
+                                        <strong>{{ $dataName }}</strong> baru (Pasien: {{ $notif->nama }}) butuh verifikasi.
+                                    </div>
+                                    <div class="text-secondary mt-2 fw-semibold" style="font-size: 10px;">Masuk:
+                                        {{ Carbon::parse($notif->time)->diffForHumans() }}</div>
+                                </div>
+                            </div>
+                        </a>
+                        <button @click.prevent="markRead('{{ $notifId }}')"
+                            class="absolute top-3 right-3 text-gray-400 hover:text-green-500 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"
+                            title="Tandai sudah dibaca"><i class="bi bi-check2"></i></button>
+                    </li>
+
+                @else
+                    {{-- Jika login dengan role admin/lainnya atau data tidak terfilter --}}
+                    <li x-show="!readList.includes('{{ $notifId }}')" class="relative border-bottom bg-yellow-50">
+                        <a class="dropdown-item py-3" href="#">
+                            <div class="d-flex align-items-start">
+                                <div class="text-warning me-3 fs-4"><i class="bi bi-exclamation-triangle"></i></div>
+                                <div>
+                                    <div class="fw-bold">Data Tidak Terfilter (Role: {{ $role }})</div>
+                                    <div class="text-muted" style="font-size: 12px;">Status:
+                                        {{ $notif->status ?? 'Tidak ada status' }}</div>
+                                </div>
+                            </div>
+                        </a>
+                        <button @click.prevent="markRead('{{ $notifId }}')"
+                            class="absolute top-3 right-3 text-gray-400 hover:text-green-500 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"><i
+                                class="bi bi-check2"></i></button>
+                    </li>
+                @endif
+
+            @empty
+                @if(!$isNearDeadline && ($role !== 'pegawai' || !isset($totalPending) || $totalPending === 0) && ($role !== 'admin' || !isset($jumlahPendingAdmin) || $jumlahPendingAdmin === 0))
+                    <li>
                         <div class="p-4 text-center text-muted" style="font-size: 13px;">
-                            <i class="bi bi-check2-circle fs-2 d-block mb-2 text-green-400"></i>
-                            Semua notifikasi sudah dibaca.
+                            <i class="bi bi-bell-slash fs-2 d-block mb-2 text-gray-300"></i>
+                            Tidak ada aktivitas baru dalam beberapa waktu terakhir.
                         </div>
                     </li>
+                @endif
+            @endforelse
+
+            {{-- Tampilan Kosong Jika Semua Dicetang (AlpineJS) --}}
+            <li x-show="totalNotif === 0" style="display: none;">
+                <div class="p-4 text-center text-muted" style="font-size: 13px;">
+                    <i class="bi bi-check2-circle fs-2 d-block mb-2 text-green-400"></i>
+                    Semua notifikasi sudah dibaca.
                 </div>
-        
-                <li class="bg-white">
-                    <button @click.prevent="markAll()" x-show="totalNotif > 0"
-                        class="w-full text-center text-green-600 py-3 small fw-bold hover:bg-gray-100 transition rounded-b-xl border-0 bg-transparent">
-                        <i class="bi bi-check-all fs-6"></i> Tandai semua sudah dibaca
-                    </button>
-                </li>
-            </ul>
-        
-            {{-- POP-UP KIRI BAWAH LAYAR (TOAST) ESTETIK UNTUK DEADLINE LAPORAN --}}
-            @if($isNearDeadline)
-                <div x-show="!readList.includes('deadline-notif-v2')"
-                    x-transition:enter="transition ease-out duration-700 transform"
-                    x-transition:enter-start="opacity-0 -translate-x-12" x-transition:enter-end="opacity-100 translate-x-0"
-                    x-transition:leave="transition ease-in duration-300 transform"
-                    x-transition:leave-start="opacity-100 translate-x-0" x-transition:leave-end="opacity-0 -translate-x-12"
-                    class="fixed bottom-8 left-8 z-[9999] w-[340px] bg-white rounded-2xl shadow-2xl border-l-4 border-blue-500 overflow-hidden"
-                    style="display: none;">
-
-                    <div class="p-4 flex gap-4 relative">
-                        <div
-                            class="flex-shrink-0 bg-blue-100 text-blue-600 rounded-full w-12 h-12 flex items-center justify-center shadow-inner">
-                            <i class="bi bi-calendar-check-fill fs-4"></i>
-                        </div>
-
-                        <div class="flex-1">
-                            <h6 class="fw-bold mb-1 text-gray-800" style="font-size: 15px;">Waktunya Laporan!</h6>
-                            <p class="text-gray-500 mb-3 leading-snug" style="font-size: 12px;">
-                                Mengingatkan, hari ini tanggal <b>{{ date('j M') }}</b>. Pastikan rekapitulasi laporan bulanan
-                                diselesaikan maksimal tanggal 5.
-                            </p>
-                            <button @click.prevent="markRead('deadline-notif-v2')"
-                                class="text-xs fw-bold text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg transition shadow-sm">
-                                Oke, Mengerti
-                            </button>
-                        </div>
-
-                        <button @click.prevent="markRead('deadline-notif-v2')"
-                            class="text-gray-300 hover:text-red-500 absolute top-2 right-2 transition">
-                            <i class="bi bi-x-lg"></i>
-                        </button>
-                    </div>
-                </div>
-            @endif
+            </li>
         </div>
+
+        <li class="bg-white">
+            <button @click.prevent="markAll()" x-show="totalNotif > 0"
+                class="w-full text-center text-green-600 py-3 small fw-bold hover:bg-gray-100 transition rounded-b-xl border-0 bg-transparent">
+                <i class="bi bi-check-all fs-6"></i> Tandai semua sudah dibaca
+            </button>
+        </li>
+    </ul>
+
+    {{-- POP-UP KIRI BAWAH LAYAR (TOAST) ESTETIK UNTUK DEADLINE LAPORAN --}}
+    @if($isNearDeadline)
+        <div x-show="!readList.includes('deadline-notif-v2')"
+            x-transition:enter="transition ease-out duration-700 transform"
+            x-transition:enter-start="opacity-0 -translate-x-12" x-transition:enter-end="opacity-100 translate-x-0"
+            x-transition:leave="transition ease-in duration-300 transform"
+            x-transition:leave-start="opacity-100 translate-x-0" x-transition:leave-end="opacity-0 -translate-x-12"
+            class="fixed bottom-8 left-8 z-[9999] w-[340px] bg-white rounded-2xl shadow-2xl border-l-4 border-blue-500 overflow-hidden"
+            style="display: none;">
+
+            <div class="p-4 flex gap-4 relative">
+                <div
+                    class="flex-shrink-0 bg-blue-100 text-blue-600 rounded-full w-12 h-12 flex items-center justify-center shadow-inner">
+                    <i class="bi bi-calendar-check-fill fs-4"></i>
+                </div>
+
+                <div class="flex-1">
+                    <h6 class="fw-bold mb-1 text-gray-800" style="font-size: 15px;">Waktunya Laporan!</h6>
+                    <p class="text-gray-500 mb-3 leading-snug" style="font-size: 12px;">
+                        Mengingatkan, hari ini tanggal <b>{{ date('j M') }}</b>. Pastikan rekapitulasi laporan bulanan
+                        diselesaikan maksimal tanggal 5.
+                    </p>
+                    <button @click.prevent="markRead('deadline-notif-v2')"
+                        class="text-xs fw-bold text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg transition shadow-sm">
+                        Oke, Mengerti
+                    </button>
+                </div>
+
+                <button @click.prevent="markRead('deadline-notif-v2')"
+                    class="text-gray-300 hover:text-red-500 absolute top-2 right-2 transition">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+    @endif
+</div>
 
         {{-- ================= FITUR PROFIL DROPDOWN ================= --}}
         <div class="relative border-l pl-4 border-gray-200">
         @php
-            $fotoProfil = null;
-            $user = Auth::user();
+$fotoProfil = null;
+$user = Auth::user();
 
-            if (Auth::check()) {
-                // Cek jika role adalah pegawai
-                if ($user->role_name === 'pegawai') {
-                    $profil = \App\Models\PegawaiDinkes::where('user_id', $user->id)->first();
-                    if ($profil) {
-                        $fotoProfil = $profil->foto;
-                    }
-                }
-                // Tambahkan pengecekan untuk role petugas
-                elseif ($user->role_name === 'petugas') {
-                    $profil = \App\Models\Petugas::where('user_id', $user->id)->first();
-                    if ($profil) {
-                        $fotoProfil = $profil->foto;
-                    }
-                }
-            }
+if (Auth::check()) {
+    // Cek jika role adalah pegawai
+    if ($user->role_name === 'pegawai') {
+        $profil = \App\Models\PegawaiDinkes::where('user_id', $user->id)->first();
+        if ($profil) {
+            $fotoProfil = $profil->foto;
+        }
+    }
+    // Tambahkan pengecekan untuk role petugas
+    elseif ($user->role_name === 'petugas') {
+        $profil = \App\Models\Petugas::where('user_id', $user->id)->first();
+        if ($profil) {
+            $fotoProfil = $profil->foto;
+        }
+    }
+}
         @endphp
         
             <button id="profileBtn" class="flex items-center gap-2 focus:outline-none hover:opacity-80 transition">

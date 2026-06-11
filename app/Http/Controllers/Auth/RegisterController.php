@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AktivasiAkunPetugas;
 
 class RegisterController extends Controller
 {
@@ -35,27 +37,32 @@ class RegisterController extends Controller
             'jenis_kelamin' => $request->jenis_kelamin,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role_name' => 'pegawai', // default role
-            'status_aktif' => 1, // 👈 WAJIB (menunggu verifikasi admin)
+            'role_name' => 'petugas', // default role
+            
+            // 👇 UBAH KE 0 (0 = Menunggu verifikasi admin, 1 = Aktif)
+            'status_aktif' => 0, 
         ]);
 
-        // Login otomatis
-        Auth::login($user);
+        \App\Models\Petugas::create([
+            'user_id'      => $user->id,              // Sambungkan ID pengguna
+            'nama_pegawai' => $user->Nama_Lengkap,    // Copy nama
+            'nip'          => $user->nip,     
+            'jabatan'      => 'Belum diisi', 
+            'bidang'       => 'Belum diisi',
+            'alamat'       => '-',
+            'telepon'      => '-',        // Copy NIP
+            // Kolom lain (puskesmas_id, jabatan, dll) akan otomatis null/kosong
+        ]);
 
-// Arahkan sesuai role
-        switch ($user->role_name) {
-            case 'admin':
-                return redirect()->route('admin.dashboard');
-            case 'petugas':
-                return redirect()->route('petugas.dashboard');
-            case 'operator':
-                return redirect()->route('dashboard.operator');
-            case 'pegawai':
-                return redirect()->route('pengguna.dashboard');
-            default:
-                Auth::logout();
-                $request->session()->flash('success', 'Register berhasil! Silahkan Login.');
-                return redirect('/login');
-        }
+        // =========================================================
+        // FITUR AUTO-LOGIN DIHAPUS AGAR TIDAK LANGSUNG MASUK
+        // =========================================================
+        // Auth::login($user);
+        // switch ($user->role_name) { ... } (Blok switch case dihapus)
+
+        // =========================================================
+        // REDIRECT KE HALAMAN LOGIN DENGAN PESAN SUKSES
+        // =========================================================
+        return redirect()->route('login')->with('success', 'Registrasi berhasil! Akun Anda sedang menunggu verifikasi oleh Admin.');
     }
 }

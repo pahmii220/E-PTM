@@ -15,15 +15,27 @@
                 {{-- KONTENER TOMBOL DAN FILTER --}}
                 <div class="d-flex gap-2 align-items-center">
                     {{-- TOMBOL CETAK --}}
-                    <a href="{{ route('pengguna.verifikasi.print.faktor', ['status' => $status ?? 'pending']) }}"
+                    <a href="{{ route('pengguna.verifikasi.print.faktor', ['status' => $status ?? 'pending', 'puskesmas_id' => request('puskesmas_id')]) }}"
                         class="btn btn-outline-primary btn-sm rounded-pill shadow-sm" target="_blank">
                         <i class="bi bi-printer"></i> Cetak
                     </a>
 
-                    {{-- FILTER STATUS --}}
-                    <form method="GET" action="{{ route('pengguna.verifikasi.faktor') }}">
+                    {{-- FILTER PUSKESMAS & STATUS --}}
+                    <form method="GET" action="{{ route('pengguna.verifikasi.faktor') }}" class="d-flex gap-2">
+                        {{-- Filter Puskesmas --}}
+                        <select name="puskesmas_id" class="form-select form-select-sm rounded-pill shadow-sm border-0"
+                            onchange="this.form.submit()" style="min-width: 160px;">
+                            <option value="all">Semua Puskesmas</option>
+                            @foreach($puskesmasList ?? [] as $p)
+                                <option value="{{ $p->id }}" {{ request('puskesmas_id') == $p->id ? 'selected' : '' }}>
+                                    {{ $p->nama_puskesmas }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        {{-- Filter Status --}}
                         <select name="status" class="form-select form-select-sm rounded-pill shadow-sm border-0"
-                            onchange="this.form.submit()" style="width: 140px;">
+                            onchange="this.form.submit()" style="min-width: 130px;">
                             <option value="pending" {{ ($status ?? 'pending') == 'pending' ? 'selected' : '' }}>Tertunda
                             </option>
                             <option value="approved" {{ ($status ?? '') == 'approved' ? 'selected' : '' }}>Diterima</option>
@@ -35,7 +47,7 @@
             </div>
         </div>
 
-        {{-- TABLE (Sama seperti sebelumnya) --}}
+        {{-- TABLE --}}
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
             <div class="table-responsive p-3">
                 <table id="petugasTable" class="table table-hover align-middle mb-0" style="width:100%">
@@ -52,7 +64,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($data as $row)
+                        @foreach($data as $row)
                             @php
                                 $dataArray = [
                                     "nama" => optional($row->pasien)->nama_lengkap ?? '-',
@@ -77,8 +89,9 @@
                                 </td>
                                 <td>{{ optional($row->puskesmas)->nama_puskesmas ?? '-' }}</td>
                                 <td>
-                                    <span
-                                        class="status-badge status-{{ $row->status_verifikasi }}">{{ ucfirst($row->status_verifikasi) }}</span>
+                                    <span class="status-badge status-{{ $row->status_verifikasi }}">
+                                        {{ ucfirst($row->status_verifikasi) }}
+                                    </span>
                                 </td>
                                 <td class="text-end pe-4">
                                     @if ($row->status_verifikasi === 'pending')
@@ -97,25 +110,14 @@
                                     @endif
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td class="text-center py-5 text-muted">Tidak ada data</td>
-                                <td class="d-none"></td>
-                                <td class="d-none"></td>
-                                <td class="d-none"></td>
-                                <td class="d-none"></td>
-                                <td class="d-none"></td>
-                                <td class="d-none"></td>
-                                <td class="d-none"></td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    {{-- MODAL TETAP DI SINI --}}
+    {{-- MODAL VERIFIKASI --}}
     <div class="modal fade" id="verifyModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <form id="verifyForm" method="POST" action="{{ route('pengguna.verifikasi.process') }}">
@@ -144,6 +146,33 @@
             </form>
         </div>
     </div>
+
+    <style>
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background-color: #eef2f7;
+            color: #475569;
+        }
+
+        .status-approved {
+            background-color: #e6f6ef;
+            color: #047857;
+        }
+
+        .status-rejected {
+            background-color: #fdecec;
+            color: #b91c1c;
+        }
+    </style>
 
     @push('scripts')
         <script>

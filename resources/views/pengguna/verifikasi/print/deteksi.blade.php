@@ -239,7 +239,7 @@
             </tbody>
         </table>
 
-        {{-- BAGIAN TANDA TANGAN & QR CODE (Telah disinkronkan) --}}
+        {{-- BAGIAN TANDA TANGAN & QR CODE --}}
         <div class="ttd">
             <div class="block">
                 <br>
@@ -247,15 +247,12 @@
                 <div>TANGGAL: {{ now()->format('d-m-Y') }}</div>
 
                 @if(auth()->check() && auth()->user()->role_name === 'pegawai')
-                    {{-- ======================================================= --}}
                     {{-- 1. TAMPILAN KHUSUS PEGAWAI (HARDCODE & TANPA QR CODE) --}}
-                    {{-- ======================================================= --}}
                     <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
                         KEPALA BIDANG P2PTM
                     </div>
 
                     <div class="qr-container">
-                        {{-- Ruang kosong pengganti QR Code agar tata letak presisi --}}
                         <div style="height: 85px;"></div>
                     </div>
 
@@ -267,21 +264,31 @@
                     </div>
 
                 @else
-                    {{-- ======================================================= --}}
-                    {{-- 2. TAMPILAN DINAMIS ADMIN/KEPALA (DARI DB & ADA QR CODE)--}}
-                    {{-- ======================================================= --}}
+                    {{-- 2. TAMPILAN DINAMIS ADMIN/KEPALA DENGAN QR CODE VERIFIKASI --}}
                     <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
                         {{ $kepalaAktif->jabatan ?? 'KEPALA BIDANG P2PTM' }}
                     </div>
 
+                    {{-- INI BAGIAN YANG DIUBAH --}}
                     <div class="qr-container">
-                        {{-- Logika status dokumen (opsional: bisa dihapus jika semua laporan admin pasti ada QR) --}}
                         @if(!empty($qrToken))
-                            {!! QrCode::size(85)->generate($qrToken) !!}
+                            @php
+                                $bulanAngka = (int) request('bulan', now()->month);
+                                $tahun = request('tahun', now()->year);
+                                $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
+                                $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
+
+                                // Ambil nama dan NIP untuk dikirim ke QR Code
+                                $namaPejabat = $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah';
+                                $nipPejabat = $kepalaAktif->nip ?? '1973062022006041016';
+                            @endphp
+
+                            {!! QrCode::size(85)->generate(url('/verifikasi-laporan?judul=Laporan%20Deteksi%20Dini%20PTM&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah) . '&nama_kepala=' . urlencode($namaPejabat) . '&nip=' . urlencode($nipPejabat))) !!}
                         @else
                             <div style="height: 85px;"></div>
                         @endif
                     </div>
+                    {{-- AKHIR BAGIAN YANG DIUBAH --}}
 
                     <div class="name" style="margin-top: 0;">
                         {{ $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah' }}

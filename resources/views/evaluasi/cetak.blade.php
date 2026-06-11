@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Laporan Peserta Pemeriksaan</title>
+    <title>Laporan Hasil Evaluasi Sistem SUS</title>
     <style>
         /* ====== SETTING CETAK ====== */
         @page {
@@ -56,23 +56,53 @@
         table.grid {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
+            font-size: 13px;
             table-layout: fixed;
-            margin-top: 10px;
+            margin-top: 15px;
+            margin-bottom: 20px;
         }
 
         table.grid th,
         table.grid td {
             border: 1px solid #111;
-            padding: 4px 6px;
+            padding: 8px 10px;
+            /* Padding disesuaikan agar tidak terlalu rapat */
             vertical-align: middle;
             word-wrap: break-word;
         }
 
         table.grid th {
-            background: #eee;
+            background: #e2e2e2;
+            /* Warna header disamakan dengan referensi gambar */
             font-weight: 700;
-            text-align: center;
+            text-align: left;
+            /* Rata kiri sesuai gambar */
+        }
+
+        table.grid td {
+            text-align: left;
+            /* Rata kiri sesuai gambar */
+        }
+
+        /* Memberikan warna belang-belang pada baris tabel (opsional tapi bagus) */
+        table.grid tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* ====== REKAP BOX ====== */
+        .rekap-box {
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        .rekap-box table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .rekap-box td {
+            padding: 3px 5px;
+            vertical-align: top;
         }
 
         /* ====== NO PRINT ====== */
@@ -83,7 +113,7 @@
 
         @media print {
             .no-print {
-                display: none;
+                display: none !important;
             }
         }
 
@@ -117,14 +147,16 @@
     </style>
 </head>
 
-<body>
+<body onload="window.print();">
     <div class="container">
 
         {{-- TOMBOL ACTION --}}
         <div class="no-print">
-            <button onclick="window.print()" style="padding:8px 12px; margin-right:6px;">Print</button>
-            <a href="javascript:history.back()"
-                style="padding:8px 12px; background:#eee; text-decoration:none; color:#000;">Kembali</a>
+            <button onclick="window.print()"
+                style="padding:8px 12px; margin-right:6px; background:#198754; color:#fff; border:none; border-radius:4px; cursor:pointer;">Cetak
+                Laporan</button>
+            <a href="{{ route('pengguna.evaluasi.report') }}"
+                style="padding:8px 12px; background:#eee; text-decoration:none; color:#000; border-radius:4px;">Kembali</a>
         </div>
 
         {{-- KOP SURAT --}}
@@ -142,53 +174,76 @@
         <hr class="top">
 
         {{-- JUDUL --}}
-        <div style="text-align:center;margin-bottom:10px;">
-            <h3 style="margin:0;font-size:15px;letter-spacing:0.6px;">LAPORAN PESERTA</h3>
+        <div style="text-align:center;margin-bottom:20px;">
+            <h3 style="margin:0;font-size:15px;letter-spacing:0.6px;">LAPORAN HASIL EVALUASI SISTEM</h3>
         </div>
 
-        {{-- INFO BULAN --}}
-        <div style="font-size: 13px; font-weight: bold; margin-bottom: 5px;">
-            Bulan:
-            {{ \Carbon\Carbon::create()->month((int) request('bulan', now()->month))->locale('id')->translatedFormat('F') }}
-            {{ request('tahun', now()->year) }}
+        {{-- RINGKASAN HASIL EVALUASI (TOTAL KESELURUHAN) --}}
+        <div class="rekap-box">
+            <table>
+                <tr>
+                    <td style="width: 25%;"><strong>Tanggal Cetak</strong></td>
+                    <td style="width: 2%;">:</td>
+                    <td>{{ now()->setTimezone('Asia/Makassar')->translatedFormat('d F Y - H:i') }} WITA</td>
+                </tr>
+                <tr>
+                    <td><strong>Total Pegawai (Keseluruhan)</strong></td>
+                    <td>:</td>
+                    <td>{{ $totalResponden }} Orang</td>
+                </tr>
+                <tr>
+                    <td><strong>Rata-rata Skor SUS (Keseluruhan)</strong></td>
+                    <td>:</td>
+                    <td><strong>{{ $rataRataSkor }} / 100</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Tingkat Penerimaan Sistem</strong></td>
+                    <td>:</td>
+                    <td><strong>{{ $predikat }}</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Kesimpulan</strong></td>
+                    <td>:</td>
+                    <td><em>{{ $keterangan }}</em></td>
+                </tr>
+            </table>
         </div>
 
-        {{-- TABEL DATA --}}
+        {{-- PENGELOMPOKKAN DATA PER BULAN (OTOMATIS DARI BLADE) --}}
+        @php
+            // Mengelompokkan data berdasarkan Bulan dan Tahun dari kolom created_at
+            $rekapPerBulan = $semuaData->groupBy(function ($item) {
+                return \Carbon\Carbon::parse($item->created_at)->locale('id')->translatedFormat('F Y');
+            });
+        @endphp
+
+        {{-- TABEL REKAPITULASI BULANAN --}}
         <table class="grid">
             <thead>
                 <tr>
-                    <th style="width:40px">No</th>
-                    <th>No. RM</th>
-                    <th>Tanggal Lahir</th>
-                    <th>Nama Peserta</th>
-                    <th>Puskesmas</th>
-                    <th>Kontak</th>
-                    <th>Alamat</th>
+                    <th style="width: 10%;">Bulan</th>
+                    <th style="width: 15%;">Jumlah Responden</th>
+                    <th style="width: 15%;">Rata-rata nilai</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($items as $i => $row)
+                @forelse($rekapPerBulan as $bulan => $dataBulan)
                     <tr>
-                        <td style="text-align:center">{{ $i + 1 }}</td>
-                        <td>{{ $row->no_rekam_medis ?? '-' }}</td>
-                        <td style="text-align:center">
-                            {{ $row->tanggal_lahir ? \Carbon\Carbon::parse($row->tanggal_lahir)->format('d-m-Y') : '-' }}
-                        </td>
-                        <td>{{ $row->nama_lengkap ?? '-' }}</td>
-                        <td>{{ $row->puskesmas->nama_puskesmas ?? ($row->nama_puskesmas ?? '-') }}</td>
-                        <td>{{ $row->kontak ?? '-' }}</td>
-                        <td>{{ $row->alamat ?? '-' }}</td>
+                        <td style="font-weight: 500;">{{ $bulan }}</td>
+                        <td>{{ $dataBulan->count() }}</td>
+                        {{-- Mengambil rata-rata skor SUS di bulan tersebut, dibulatkan 2 desimal --}}
+                        <td>{{ round($dataBulan->avg('skor_sus'), 2) }}</td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="3" style="text-align:center; padding: 15px;">Belum ada data tanggapan hasil evaluasi.
+                        </td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
 
-        {{-- TOTAL --}}
-        <div style="margin-top:6px; font-size:12px; font-weight:700;">
-            Jumlah keseluruhan peserta sebanyak = {{ $items->count() }} orang
-        </div>
-
-        {{-- BLOK TTD & QR (Telah disinkronkan) --}}
+        {{-- BLOK TTD & QR --}}
         <div class="ttd">
             <div class="block">
                 <br>
@@ -196,15 +251,12 @@
                 <div>TANGGAL: {{ now()->format('d-m-Y') }}</div>
 
                 @if(auth()->check() && auth()->user()->role_name === 'pegawai')
-                    {{-- ======================================================= --}}
-                    {{-- 1. TAMPILAN KHUSUS PEGAWAI (HARDCODE & TANPA QR CODE) --}}
-                    {{-- ======================================================= --}}
+                    {{-- 1. TAMPILAN KHUSUS PEGAWAI --}}
                     <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
                         KEPALA BIDANG P2PTM
                     </div>
 
                     <div class="qr-container">
-                        {{-- Ruang kosong pengganti QR Code agar tata letak tetap presisi --}}
                         <div style="height: 85px;"></div>
                     </div>
 
@@ -216,9 +268,7 @@
                     </div>
 
                 @else
-                    {{-- ======================================================= --}}
-                    {{-- 2. TAMPILAN DINAMIS ADMIN/KEPALA (DARI DB & ADA QR CODE)--}}
-                    {{-- ======================================================= --}}
+                    {{-- 2. TAMPILAN DINAMIS ADMIN/KEPALA --}}
                     <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
                         {{ $kepalaAktif->jabatan ?? 'KEPALA BIDANG P2PTM' }}
                     </div>
@@ -226,15 +276,9 @@
                     <div class="qr-container">
                         @if(!empty($qrToken))
                             @php
-                                $bulanAngka = (int) request('bulan', now()->month);
-                                $tahun = request('tahun', now()->year);
-                                $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
-
-                                // Tambahkan ->setTimezone('Asia/Makassar') untuk WITA
                                 $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i'); 
                             @endphp
-
-                            {!! QrCode::size(100)->generate(url('/verifikasi-laporan?judul=Laporan%20Peserta%20PTM&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah))) !!}
+                            {!! QrCode::size(100)->generate(url('/verifikasi-laporan?judul=Laporan%20Evaluasi%20Sistem&tanggal_sah=' . urlencode($tanggalSah))) !!}
                         @else
                             <div style="height: 85px;"></div>
                         @endif

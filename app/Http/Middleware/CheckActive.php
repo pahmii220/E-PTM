@@ -26,10 +26,7 @@ class CheckActive
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return redirect('/login')
-                ->withErrors([
-                    'Akun Anda telah dinonaktifkan oleh administrator.'
-                ]);
+           return redirect()->route('login')->with('error', 'Akun Anda sedang dalam proses peninjauan. Silakan menunggu Admin Dinas Kesehatan mengaktifkan akun Anda.');
         }
 
         return $next($request);

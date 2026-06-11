@@ -254,7 +254,21 @@
 
                     <div class="qr-container" style="margin: 10px 0;">
                         @if(isset($qrToken))
-                            {!! QrCode::size(85)->generate($qrToken) !!}
+                            @php
+                                // Karena ini rekap keseluruhan, periode bisa kita buat "Data Keseluruhan" atau "Hingga saat ini"
+                                // atau jika controller mengirim bulan/tahun, kita bisa tangkap juga.
+                                $periode = request('bulan') && request('tahun')
+                                    ? \Carbon\Carbon::create()->month((int) request('bulan'))->format('F') . ' ' . request('tahun')
+                                    : 'Data Keseluruhan PTM';
+
+                                $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
+
+                                $namaPejabat = $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah';
+                                $nipPejabat = $kepalaAktif->nip ?? '1973062022006041016';
+                            @endphp
+
+                            {{-- Judul disesuaikan menjadi: Laporan Kelompok Usia --}}
+                            {!! QrCode::size(85)->generate(url('/verifikasi-laporan?judul=Laporan%20Kelompok%20Usia%20PTM&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah) . '&nama_kepala=' . urlencode($namaPejabat) . '&nip=' . urlencode($nipPejabat))) !!}
                         @else
                             <div style="height: 85px;"></div>
                         @endif

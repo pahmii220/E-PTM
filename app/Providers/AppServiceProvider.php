@@ -3,7 +3,10 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-
+use Illuminate\Support\Facades\View;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;   // Tambahkan ini
+use Illuminate\Support\Facades\Auth;
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -18,12 +21,29 @@ class AppServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      */
 public function boot()
-{
-    // Tambahkan baris ini
-    config(['image.driver' => 'gd']);
+    {
+        // Gunakan View::composer agar variabel tersedia di layouts/master.blade.php
+        View::composer('layouts.master', function ($view) {
+            $jumlahPendingAdmin = 0;
+            $role = null;
 
-    
-}
+            if (Auth::check()) {
+                $user = Auth::user();
+                $role = $user->role_name;
 
+                // Hanya hitung jika yang login adalah admin
+                if ($role === 'admin') {
+                    $jumlahPendingAdmin = DB::table('pengguna')
+                                            ->where('role_name', 'petugas')
+                                            ->where('status_aktif', 0)
+                                            ->count();
+                }
+            }
+
+            // Kirim variabel ke view
+            $view->with('jumlahPendingAdmin', $jumlahPendingAdmin);
+            $view->with('role', $role);
+        });
+    }
 
 }

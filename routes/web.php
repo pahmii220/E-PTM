@@ -7,6 +7,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\KepalaP2ptmController;
 use App\Http\Controllers\LaporanKepalaController;
 use App\Http\Controllers\AdminPejabatController;
+use App\Http\Controllers\EvaluasiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -255,7 +256,7 @@ Route::post(
 
 /*
 |--------------------------------------------------------------------------
-| PETUGAS
+| PETUGAS & PENGUKURAN PTM (Bisa diakses Petugas & Admin)
 |--------------------------------------------------------------------------
 */
 Route::prefix('petugas')
@@ -263,8 +264,8 @@ Route::prefix('petugas')
     ->middleware([
         'auth',
         'active',
-        'role:petugas,admin',
-        CheckPetugasProfile::class, // ✅ LANGSUNG CLASS
+        'role:petugas,admin', // Admin diizinkan masuk untuk cek data
+        CheckPetugasProfile::class, // Middleware cerdas yang sudah kita update
     ])
     ->group(function () {
 
@@ -277,20 +278,22 @@ Route::prefix('petugas')
     Route::resource('kegiatan', KegiatanPTMController::class);
     Route::resource('tindak_lanjut', TindakLanjutPTMController::class)
         ->except(['create','show']);
-        
 
     Route::get(
         'tindak_lanjut/create/{deteksi_dini_id}',
         [TindakLanjutPTMController::class, 'create']
     )->name('tindak_lanjut.create');
 
-Route::get('/profil', [PetugasProfileController::class, 'edit'])
-    ->name('profil');
+    // ==========================================
+    // PROFIL & PENGATURAN
+    // ==========================================
+    Route::get('/profil', [PetugasProfileController::class, 'edit'])
+        ->name('profil');
 
-Route::post('/profil', [PetugasProfileController::class, 'update'])
-    ->name('profil.update');
+    Route::post('/profil', [PetugasProfileController::class, 'update'])
+        ->name('profil.update');
 
-        Route::get('/pengaturan-akun', 
+    Route::get('/pengaturan-akun', 
         [\App\Http\Controllers\Petugas\PengaturanAkunController::class, 'index']
     )->name('pengaturan');
 
@@ -307,7 +310,7 @@ Route::post('/profil', [PetugasProfileController::class, 'update'])
 
 /*
 |--------------------------------------------------------------------------
-| PENGGUNA (DINAS KESEHATAN)
+| PENGGUNA  / PEGAWAI (DINAS KESEHATAN)
 |--------------------------------------------------------------------------
 */
 Route::prefix('pengguna')
@@ -391,8 +394,18 @@ Route::get(
             [VerifikasiController::class, 'massVerify']
         )->name('pasien.mass');
 
+        // Route Akses untuk Pegawai (Mengisi Survei)
+    Route::get('/evaluasi-aplikasi', [EvaluasiController::class, 'tampilkanForm'])->name('evaluasi.form');
+    Route::post('/evaluasi-aplikasi/simpan', [EvaluasiController::class, 'simpanJawaban'])->name('evaluasi.simpan');
+
+    Route::get('/evaluasi-laporan', [EvaluasiController::class, 'laporanEvaluasi'])->name('evaluasi.report');
+
+        Route::get('/evaluasi-laporan/cetak', [EvaluasiController::class, 'cetakLaporan'])->name('evaluasi.cetak');
 
 });
+
+
+
 
 
 
@@ -438,16 +451,16 @@ Route::middleware(['auth', 'active', 'role:kepala_p2ptm'])->prefix('kepala-p2ptm
         Route::get('/eksekutif/cetak-skrining', [LaporanKepalaController::class, 'cetakSkrining'])->name('eksekutif.cetak_skrining');
 
         Route::get('/kegiatan/print', [LaporanKepalaController::class, 'cetakKegiatan'])->name('kepala.kegiatan.print');
+
     });
 
-/*
-|--------------------------------------------------------------------------
-| VERIFIKASI PUBLIK (SCAN QR CODE)
-|--------------------------------------------------------------------------
-| Route ini diletakkan di luar middleware auth, agar siapa saja yang 
-| scan barcode lewat HP bisa melihat status keabsahan dokumen.
-*/
-Route::get('/verifikasi-dokumen/{token}', [KepalaP2ptmController::class, 'verifikasiPublik'])->name('verifikasi.publik');
-
-
 });
+
+// Letakkan berjejer seperti ini di bagian paling luar/bawah routes/web.php:
+
+Route::get('/cek-token/{token}', function($token) {
+    return "BERHASIL! Route jalan. Token Anda adalah: " . $token;
+});
+
+// Tambahkan ini di bagian bawah web.php
+Route::get('/verifikasi-laporan', [App\Http\Controllers\KepalaP2ptmController::class, 'verifikasiLaporan'])->name('verifikasi.laporan');

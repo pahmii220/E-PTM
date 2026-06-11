@@ -114,17 +114,17 @@
                                     <span class="input-group-text bg-white border-end-0 text-muted"><i
                                             class="bi bi-credit-card-2-front"></i></span>
                                     <input type="text" name="nip" class="form-control border-start-0 ps-0"
-                                        value="{{ old('nip', $petugas->nip ?? '') }}" placeholder="Masukkan NIP (Jika ada)">
+                                        value="{{ old('nip', $petugas->nip ?? Auth::user()->nip ?? '') }}" placeholder="Masukkan NIP (Jika ada)">
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold text-dark">Nama Pegawai <span
+                                <label class="form-label fw-semibold text-dark">Nama Lengkap <span
                                         class="text-danger">*</span></label>
                                 <div class="input-group input-group-flat shadow-sm rounded-3">
                                     <span class="input-group-text bg-white border-end-0 text-muted"><i
                                             class="bi bi-person"></i></span>
                                     <input type="text" name="nama_pegawai" class="form-control border-start-0 ps-0"
-                                        value="{{ old('nama_pegawai', $petugas->nama_pegawai ?? '') }}"
+                                        value="{{ old('nama_pegawai', $petugas->nama_pegawai ?? Auth::user()->Nama_Lengkap ?? '') }}"
                                         placeholder="Contoh: Siti Aminah, S.Kep" required>
                                 </div>
                             </div>
@@ -186,7 +186,7 @@
                                             class="bi bi-briefcase"></i></span>
                                     <input type="text" name="jabatan" class="form-control border-start-0 ps-0"
                                         value="{{ old('jabatan', $petugas->jabatan ?? '') }}"
-                                        placeholder="Contoh: Petugas / Perawat">
+                                        placeholder="Contoh: Petugas / PJ Program PTM">
                                 </div>
                             </div>
                             <div class="col-md-6">

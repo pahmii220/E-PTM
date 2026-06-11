@@ -259,7 +259,23 @@
 
             <div class="qr-container" style="margin: 10px 0;">
                 @if(isset($qrToken))
-                    {!! QrCode::size(85)->generate($qrToken) !!}
+                    @php
+                        // Judul Laporan
+                        $judul = 'Laporan Kegiatan PTM';
+
+                        // Menentukan periode (opsional: bisa ambil dari request jika ada filter bulan/tahun)
+                        $periode = (request('bulan') && request('tahun'))
+                            ? \Carbon\Carbon::create()->month((int) request('bulan'))->format('F') . ' ' . request('tahun')
+                            : 'Data Kegiatan ' . now()->year;
+
+                        $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
+
+                        // Identitas Kepala
+                        $namaPejabat = $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah';
+                        $nipPejabat = $kepalaAktif->nip ?? '1973062022006041016';
+                    @endphp
+
+                    {!! QrCode::size(85)->generate(url('/verifikasi-laporan?judul=' . urlencode($judul) . '&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah) . '&nama_kepala=' . urlencode($namaPejabat) . '&nip=' . urlencode($nipPejabat))) !!}
                 @else
                     <div style="height: 85px;"></div>
                 @endif

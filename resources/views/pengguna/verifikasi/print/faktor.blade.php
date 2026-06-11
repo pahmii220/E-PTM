@@ -214,8 +214,20 @@
                     </div>
 
                     <div class="qr-container">
-                        {{-- Ruang kosong pengganti QR Code agar posisi seimbang --}}
-                        <div style="height: 85px;"></div>
+                        @if(!empty($qrToken))
+                            @php
+        $bulanAngka = (int) request('bulan', now()->month);
+        $tahun = request('tahun', now()->year);
+        $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
+
+        $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i'); 
+                            @endphp
+
+                            {{-- KUNCI PERBAIKANNYA ADA DI BARIS INI (Memakai url(), bukan $qrToken) --}}
+                            {!! QrCode::size(85)->generate(url('/verifikasi-laporan?judul=Laporan%20Faktor%20Risiko%20PTM&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah))) !!}
+                        @else
+                            <div style="height: 85px;"></div>
+                        @endif
                     </div>
 
                     <div class="name" style="margin-top: 0;">
@@ -226,27 +238,36 @@
                     </div>
 
                 @else
-                    {{-- ======================================================= --}}
-                    {{-- 2. TAMPILAN DINAMIS ADMIN/KEPALA (DARI DB & ADA QR CODE)--}}
-                    {{-- ======================================================= --}}
-                    <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
-                        {{ $kepalaAktif->jabatan ?? 'KEPALA BIDANG P2PTM' }}
-                    </div>
+                        {{-- ======================================================= --}}
+                        {{-- 2. TAMPILAN DINAMIS ADMIN/KEPALA (DARI DB & ADA QR CODE)--}}
+                        {{-- ======================================================= --}}
+                        <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
+                            {{ $kepalaAktif->jabatan ?? 'KEPALA BIDANG P2PTM' }}
+                        </div>
 
                     <div class="qr-container">
                         @if(!empty($qrToken))
-                            {!! QrCode::size(85)->generate($qrToken) !!}
+                            @php
+                                $bulanAngka = (int) request('bulan', now()->month);
+                                $tahun = request('tahun', now()->year);
+                                $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
+
+                                $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i'); 
+                            @endphp
+
+                            {{-- INI YANG PENTING: Gunakan URL, bukan $qrToken --}}
+                            {!! QrCode::size(85)->generate(url('/verifikasi-laporan?judul=Laporan%20Faktor%20Risiko%20PTM&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah))) !!}
                         @else
                             <div style="height: 85px;"></div>
                         @endif
                     </div>
 
-                    <div class="name" style="margin-top: 0;">
-                        {{ $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah' }}
-                    </div>
-                    <div style="margin-top:4px;">
-                        NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}
-                    </div>
+                        <div class="name" style="margin-top: 0;">
+                            {{ $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah' }}
+                        </div>
+                        <div style="margin-top:4px;">
+                            NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}
+                        </div>
                 @endif
 
             </div>

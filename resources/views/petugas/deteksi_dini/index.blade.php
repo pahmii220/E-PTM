@@ -103,12 +103,12 @@
                                 {{-- HASIL --}}
                                 <td>
                                     @php
-                                        $color = match ($d->hasil_skrining) {
-                                            'Normal' => 'success',
-                                            'Risiko Tinggi' => 'danger',
-                                            'Dicurigai PTM' => 'warning',
-                                            default => 'secondary'
-                                        };
+    $color = match ($d->hasil_skrining) {
+        'Normal' => 'success',
+        'Risiko Tinggi' => 'danger',
+        'Dicurigai PTM' => 'warning',
+        default => 'secondary'
+    };
                                     @endphp
                                     <span class="badge bg-{{ $color }}">{{ $d->hasil_skrining }}</span>
                                 </td>
@@ -242,6 +242,16 @@
             const table = $('#deteksiTable').DataTable({
                 responsive: true,
                 order: [[2, 'desc']],
+
+                // TAMBAHKAN KODE INI:
+                "drawCallback": function (settings) {
+                    var api = this.api();
+                    // Mengupdate kolom ke-0 (No) setiap kali tabel digambar ulang
+                    api.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell, i) {
+                        cell.innerHTML = i + 1;
+                    });
+                },
+
                 language: {
                     search: "Cari:",
                     lengthMenu: "Tampilkan _MENU_ data",

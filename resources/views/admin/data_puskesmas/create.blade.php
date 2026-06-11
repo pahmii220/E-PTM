@@ -61,25 +61,50 @@
 
                     </div>
 
-                    {{-- WILAYAH --}}
+                    {{-- WILAYAH (SUDAH DIUBAH MENJADI DROPDOWN) --}}
                     <h6 class="fw-semibold mb-3 text-success">Wilayah</h6>
                     <div class="row g-4 mb-4">
 
                         <div class="col-md-6">
                             <label class="form-label fw-medium">
-                                Kabupaten <span class="text-danger">*</span>
+                                Kabupaten / Kota <span class="text-danger">*</span>
                             </label>
-                            <input type="text" name="nama_kabupaten" class="form-control rounded-3"
-                                placeholder="Nama kabupaten" value="{{ old('nama_kabupaten') }}" required>
+                            <select name="nama_kabupaten" class="form-select rounded-3" required>
+                                <option value="">-- Pilih Kabupaten / Kota --</option>
+                                <option value="Kota Banjarmasin" {{ old('nama_kabupaten') == 'Kota Banjarmasin' ? 'selected' : '' }}>Kota Banjarmasin</option>
+                                <option value="Kota Banjarbaru" {{ old('nama_kabupaten') == 'Kota Banjarbaru' ? 'selected' : '' }}>Kota Banjarbaru</option>
+                                <option value="Kabupaten Banjar" {{ old('nama_kabupaten') == 'Kabupaten Banjar' ? 'selected' : '' }}>Kabupaten Banjar</option>
+                                <option value="Kabupaten Barito Kuala" {{ old('nama_kabupaten') == 'Kabupaten Barito Kuala' ? 'selected' : '' }}>Kabupaten Barito Kuala</option>
+                                <option value="Kabupaten Tapin" {{ old('nama_kabupaten') == 'Kabupaten Tapin' ? 'selected' : '' }}>Kabupaten Tapin</option>
+                                <option value="Kabupaten Hulu Sungai Selatan" {{ old('nama_kabupaten') == 'Kabupaten Hulu Sungai Selatan' ? 'selected' : '' }}>Kabupaten Hulu Sungai Selatan</option>
+                                <option value="Kabupaten Hulu Sungai Tengah" {{ old('nama_kabupaten') == 'Kabupaten Hulu Sungai Tengah' ? 'selected' : '' }}>Kabupaten Hulu Sungai Tengah</option>
+                                <option value="Kabupaten Hulu Sungai Utara" {{ old('nama_kabupaten') == 'Kabupaten Hulu Sungai Utara' ? 'selected' : '' }}>Kabupaten Hulu Sungai Utara</option>
+                                <option value="Kabupaten Tabalong" {{ old('nama_kabupaten') == 'Kabupaten Tabalong' ? 'selected' : '' }}>Kabupaten Tabalong</option>
+                                <option value="Kabupaten Tanah Laut" {{ old('nama_kabupaten') == 'Kabupaten Tanah Laut' ? 'selected' : '' }}>Kabupaten Tanah Laut</option>
+                                <option value="Kabupaten Tanah Bumbu" {{ old('nama_kabupaten') == 'Kabupaten Tanah Bumbu' ? 'selected' : '' }}>Kabupaten Tanah Bumbu</option>
+                                <option value="Kabupaten Kotabaru" {{ old('nama_kabupaten') == 'Kabupaten Kotabaru' ? 'selected' : '' }}>Kabupaten Kotabaru</option>
+                                <option value="Kabupaten Balangan" {{ old('nama_kabupaten') == 'Kabupaten Balangan' ? 'selected' : '' }}>Kabupaten Balangan</option>
+                            </select>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium">
-                                Kecamatan <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" name="kecamatan" class="form-control rounded-3" placeholder="Nama kecamatan"
-                                value="{{ old('kecamatan') }}" required>
-                        </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium">
+                                    Kecamatan <span class="text-danger">*</span>
+                                </label>
+                                <select name="kecamatan" class="form-select rounded-3" required>
+                                    <option value="">-- Pilih Kecamatan --</option>
+                                    <option value="Banjarmasin Utara" {{ old('kecamatan') == 'Banjarmasin Utara' ? 'selected' : '' }}>Banjarmasin
+                                        Utara</option>
+                                    <option value="Banjarmasin Selatan" {{ old('kecamatan') == 'Banjarmasin Selatan' ? 'selected' : '' }}>Banjarmasin
+                                        Selatan</option>
+                                    <option value="Banjarmasin Tengah" {{ old('kecamatan') == 'Banjarmasin Tengah' ? 'selected' : '' }}>Banjarmasin
+                                        Tengah</option>
+                                    <option value="Banjarmasin Timur" {{ old('kecamatan') == 'Banjarmasin Timur' ? 'selected' : '' }}>Banjarmasin
+                                        Timur</option>
+                                    <option value="Banjarmasin Barat" {{ old('kecamatan') == 'Banjarmasin Barat' ? 'selected' : '' }}>Banjarmasin
+                                        Barat</option>
+                                </select>
+                            </div>
 
                     </div>
 
@@ -88,14 +113,14 @@
                     <div class="row g-4 mb-4">
 
                         <div class="col-md-12">
-                            <label class="form-label fw-medium">Alamat</label>
+                            <label class="form-label fw-medium">Alamat Lengkap</label>
                             <textarea name="alamat" rows="2" class="form-control rounded-3"
-                                placeholder="Alamat lengkap puskesmas">{{ old('alamat') }}</textarea>
+                                placeholder="">{{ old('alamat') }}</textarea>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label fw-medium">Kode Pos</label>
-                            <input type="text" name="kode_pos" class="form-control rounded-3" placeholder="Kode pos"
+                            <input type="text" name="kode_pos" class="form-control rounded-3" placeholder="Contoh: 70238"
                                 value="{{ old('kode_pos') }}">
                         </div>
 
@@ -129,6 +154,12 @@
     <style>
         body {
             background-color: #f8fafc;
+        }
+
+        /* Tambahan styling agar dropdown terlihat lebih rapi */
+        .form-select:focus {
+            border-color: #10b981;
+            box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.25);
         }
     </style>
 @endsection

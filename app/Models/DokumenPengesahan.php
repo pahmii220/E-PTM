@@ -20,7 +20,8 @@ class DokumenPengesahan extends Model
         'kepala_p2ptm_id',
         'kode_validasi_qr',
         'status',
-        'tanggal_pengesahan'
+        'tanggal_pengesahan',
+        'token'
     ];
 
     /**

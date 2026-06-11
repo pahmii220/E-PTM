@@ -88,6 +88,7 @@ class User extends Authenticatable
         return $this->hasOne(KepalaP2ptm::class, 'pengguna_id');
     }
 
+
     // Cek Kelengkapan Profil Pegawai Dinkes
     public function profilDinkesLengkap(): bool
     {

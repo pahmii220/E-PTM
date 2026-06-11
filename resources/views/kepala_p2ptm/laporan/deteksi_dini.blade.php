@@ -104,7 +104,7 @@
 
                                     @if(str_contains($status, 'normal'))
                                         <span class="badge rounded-pill bg-success-subtle text-success">
-                                            {{ $row->hasil_skrining }}
+                                            {{ $row->hasil_skrining }}  
                                         </span>
                                     @elseif(str_contains($status, 'dicurigai'))
                                         {{-- Warna Kuning (Warning) --}}

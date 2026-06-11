@@ -35,10 +35,14 @@ public function login(Request $request)
     }
 
     // 🔒 BLOKIR JIKA NONAKTIF
-    if ($user->status_aktif == 0) {
-        return back()->with('error', 'Akun Anda telah dinonaktifkan. Hubungi admin.');
+if ($user->status_aktif == 0) {
+        // Cek menggunakan relasi yang sudah ada
+        if ($user->petugas && !empty($user->petugas->puskesmas_id)) {
+             return back()->with('error', 'Akun Anda telah dinonaktifkan oleh Admin. Silakan hubungi Admin Dinas Kesehatan.');
+        } 
+        
+        return back()->with('error', 'Akun Anda sedang dalam proses peninjauan. Mohon menunggu Admin Dinas Kesehatan memverifikasi pendaftaran Anda.');
     }
-
     // 🔐 proses login
     if (Auth::attempt(
         ['Username' => $request->Username, 'password' => $request->password],

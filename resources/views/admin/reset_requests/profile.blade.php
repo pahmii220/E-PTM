@@ -52,7 +52,7 @@
                     </tr>
                     <tr>
                         <th>Akun Dibuat</th>
-                        <td>{{ $user->dibuat_pada->format('d M Y') }}</td>
+                        <td>{{ $user->dibuat_pada ? \Carbon\Carbon::parse($user->dibuat_pada)->format('d M Y') : '-' }}</td>
                     </tr>
                 </table>
             </div>
@@ -150,14 +150,14 @@
                             </span>
                         </td>
                     </tr>
-                    <tr>
-                        <th>Tanggal Permintaan</th>
-                        <td>{{ $reset->dibuat_pada->format('d M Y H:i') }}</td>
-                    </tr>
-                    <tr>
-                        <th>Reset Terakhir</th>
-                        <td>{{ $reset->approved_at ? $reset->approved_at->format('d M Y H:i') : '-' }}</td>
-                    </tr>
+                <tr>
+                    <th>Tanggal Permintaan</th>
+                    <td>{{ $reset->dibuat_pada ? \Carbon\Carbon::parse($reset->dibuat_pada)->format('d M Y H:i') : '-' }}</td>
+                </tr>
+                <tr>
+                    <th>Reset Terakhir</th>
+                    <td>{{ $reset->approved_at ? \Carbon\Carbon::parse($reset->approved_at)->format('d M Y H:i') : '-' }}</td>
+                </tr>
                 </table>
             </div>
         </div>

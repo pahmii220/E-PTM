@@ -108,7 +108,7 @@ class PetugasController extends Controller
     /**
      * UPDATE PETUGAS (PROFIL & HAK AKSES)
      */
-public function update(Request $request, $id)
+    public function update(Request $request, $id)
     {
         $petugas = Petugas::with('user')->findOrFail($id);
 
@@ -127,6 +127,9 @@ public function update(Request $request, $id)
             $oldRole = $petugas->user->role_name;
             $newRole = $request->role_name;
             
+            // Pengecekan status_aktif sebelum diubah
+            $statusAktifLama = $petugas->user->status_aktif;
+            
             // Pengecekan status_aktif (karena hidden input sudah dihapus, jika tidak diceklis = 0)
             $status_aktif = $request->has('status_aktif') ? 1 : 0;
 
@@ -135,6 +138,16 @@ public function update(Request $request, $id)
                 'role_name'    => $newRole,
                 'status_aktif' => $status_aktif,
             ]);
+
+            // 🔥 LOGIKA EMAIL: Kirim email jika status berubah dari TIDAK AKTIF (0) menjadi AKTIF (1)
+            if ($statusAktifLama == 0 && $status_aktif == 1) {
+                try {
+                    \Illuminate\Support\Facades\Mail::to($petugas->user->email)
+                        ->send(new \App\Mail\AktivasiAkunPetugas($petugas->user));
+                } catch (\Exception $e) {
+                    // Abaikan jika SMTP gagal/belum dikonfigurasi agar tidak mengganggu proses update data
+                }
+            }
 
             // 🔥 TAMBAHAN BARU: Jika akun dinonaktifkan, hapus sesi loginnya secara paksa
             if ($status_aktif === 0) {

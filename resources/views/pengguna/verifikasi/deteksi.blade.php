@@ -12,15 +12,27 @@
                     <small class="text-muted">Kelola persetujuan data deteksi dini dari petugas</small>
                 </div>
                 <div class="d-flex gap-2 align-items-center">
-                    <a href="{{ route('pengguna.verifikasi.print.deteksi', ['status' => $status ?? 'pending']) }}"
+                    <a href="{{ route('pengguna.verifikasi.print.deteksi', ['status' => $status ?? 'pending', 'puskesmas_id' => request('puskesmas_id')]) }}"
                         class="btn btn-outline-primary btn-sm rounded-pill shadow-sm" target="_blank">
                         <i class="bi bi-printer"></i> Cetak
                     </a>
 
-                    {{-- FILTER STATUS --}}
-                    <form method="GET" action="{{ route('pengguna.verifikasi.deteksi') }}">
+                    {{-- FILTER PUSKESMAS & STATUS --}}
+                    <form method="GET" action="{{ route('pengguna.verifikasi.deteksi') }}" class="d-flex gap-2">
+                        {{-- Filter Puskesmas --}}
+                        <select name="puskesmas_id" class="form-select form-select-sm rounded-pill shadow-sm border-0"
+                            onchange="this.form.submit()" style="min-width: 160px;">
+                            <option value="all">Semua Puskesmas</option>
+                            @foreach($puskesmasList ?? [] as $p)
+                                <option value="{{ $p->id }}" {{ request('puskesmas_id') == $p->id ? 'selected' : '' }}>
+                                    {{ $p->nama_puskesmas }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        {{-- Filter Status --}}
                         <select name="status" class="form-select form-select-sm rounded-pill shadow-sm border-0"
-                            onchange="this.form.submit()" style="width: 140px;">
+                            onchange="this.form.submit()" style="min-width: 130px;">
                             <option value="pending" {{ ($status ?? 'pending') == 'pending' ? 'selected' : '' }}>Tertunda
                             </option>
                             <option value="approved" {{ ($status ?? '') == 'approved' ? 'selected' : '' }}>Diterima</option>
@@ -49,7 +61,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($data as $row)
+                        @foreach($data as $row)
                             @php
                                 $dataArray = [
                                     "nama" => optional($row->pasien)->nama_lengkap ?? '-',
@@ -88,18 +100,7 @@
                                     @endif
                                 </td>
                             </tr>
-                        @empty
-                            <tr>
-                                <td class="text-center py-5 text-muted">Tidak ada data</td>
-                                <td class="d-none"></td>
-                                <td class="d-none"></td>
-                                <td class="d-none"></td>
-                                <td class="d-none"></td>
-                                <td class="d-none"></td>
-                                <td class="d-none"></td>
-                                <td class="d-none"></td>
-                            </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -135,6 +136,33 @@
             </form>
         </div>
     </div>
+
+    <style>
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background-color: #eef2f7;
+            color: #475569;
+        }
+
+        .status-approved {
+            background-color: #e6f6ef;
+            color: #047857;
+        }
+
+        .status-rejected {
+            background-color: #fdecec;
+            color: #b91c1c;
+        }
+    </style>
 
     @push('scripts')
         <script>

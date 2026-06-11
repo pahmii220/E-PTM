@@ -68,11 +68,11 @@
                         x-data="{ pegawaiOpen: {{ request()->routeIs('admin.data_petugas.*', 'admin.pegawai.*', 'admin.data_puskesmas.*', 'admin.pejabat.*', 'admin.reset.*') ? 'true' : 'false' }} }">
                         <button @click="pegawaiOpen = !pegawaiOpen"
                             class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
-                            <span class="flex items-center gap-3"><i class="bi bi-folder2-open text-lg"></i> Data
-                                Master</span>
+                            <span class="flex items-center gap-3"><i class="bi bi-folder2-open text-lg"></i> Data Master</span>
                             <i :class="pegawaiOpen ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
                         </button>
                         <ul x-show="pegawaiOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden">
+
                             <li>
                                 <a href="{{ route('admin.data_petugas.index') }}"
                                     class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('admin.data_petugas.*') ? 'bg-green-500 text-white' : '' }}">
@@ -106,10 +106,71 @@
                         </ul>
                     </li>
 
+                    <li
+                        x-data="{ pemeriksaanOpen: {{ request()->routeIs('petugas.pasien.*', 'petugas.faktor_resiko.*', 'petugas.deteksi_dini.*', 'petugas.tindak_lanjut.*') ? 'true' : 'false' }} }">
+                        <button @click="pemeriksaanOpen = !pemeriksaanOpen"
+                            class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
+                            <span class="flex items-center gap-3"><i class="bi bi-clipboard-pulse text-lg"></i> Pemeriksaan
+                                PTM</span>
+                            <i :class="pemeriksaanOpen ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
+                        </button>
+                        <ul x-show="pemeriksaanOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden">
+                            <li>
+                                <a href="{{ route('petugas.pasien.index') }}"
+                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('petugas.pasien.*') ? 'bg-green-500 text-white' : '' }}">
+                                    <i class="bi bi-person-lines-fill me-2"></i> Data Peserta
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('petugas.faktor_resiko.index') }}"
+                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('petugas.faktor_resiko.*') ? 'bg-green-500 text-white' : '' }}">
+                                    <i class="bi bi-activity me-2"></i> Faktor Risiko
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('petugas.deteksi_dini.index') }}"
+                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('petugas.deteksi_dini.*') ? 'bg-green-500 text-white' : '' }}">
+                                    <i class="bi bi-clipboard-check me-2"></i> Deteksi Dini PTM
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('petugas.tindak_lanjut.index') }}"
+                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('petugas.tindak_lanjut.*') ? 'bg-green-500 text-white' : '' }}">
+                                    <i class="bi bi-clipboard-plus me-2"></i> Tindak Lanjut PTM
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li x-data="{ kegiatanOpen: {{ request()->routeIs('petugas.kegiatan.*') ? 'true' : 'false' }} }">
+                        <button @click="kegiatanOpen = !kegiatanOpen"
+                            class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
+                            <span class="flex items-center gap-3"><i class="bi bi-calendar-event text-lg"></i> Kegiatan
+                                PTM</span>
+                            <i :class="kegiatanOpen ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
+                        </button>
+                        <ul x-show="kegiatanOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden">
+                            <li>
+                                <a href="{{ route('petugas.kegiatan.index') }}"
+                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('petugas.kegiatan.*') ? 'bg-green-500 text-white' : '' }}">
+                                    <i class="bi bi-calendar-event me-2"></i> Data Kegiatan PTM
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                     <li>
                         <a href="{{ route('admin.laporan.index') }}"
                             class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 {{ request()->routeIs('admin.laporan.*') ? 'bg-green-600 text-white' : '' }}">
-                            <i class="bi bi-file-earmark-bar-graph text-lg"></i><span>Laporan</span>
+                            <i class="bi bi-file-earmark-bar-graph text-lg"></i> <span>Laporan</span>
+                        </a>
+                    </li>
+
+                    {{-- MENU BARU: EVALUASI SISTEM (SUS) --}}
+                    <li>
+                        <a href="{{ route('pengguna.evaluasi.report') }}"
+                            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 {{ request()->routeIs('evaluasi.*') ? 'bg-green-600 text-white' : '' }}">
+                            <i class="bi bi-patch-check text-lg"></i> <span> Hasil Evaluasi</span>
                         </a>
                     </li>
                 @endif
@@ -118,7 +179,7 @@
                 {{-- ========================================================== --}}
                 {{-- ROLE: PETUGAS PUSKESMAS (Atau Admin yang punya akses) --}}
                 {{-- ========================================================== --}}
-                @if(in_array(Auth::user()->role_name, ['admin', 'petugas']))
+                @if(in_array(Auth::user()->role_name, ['petugas']))
                     <li
                         x-data="{ pemeriksaanOpen: {{ request()->routeIs('petugas.pasien.*', 'petugas.faktor_resiko.*', 'petugas.deteksi_dini.*', 'petugas.tindak_lanjut.*') ? 'true' : 'false' }} }">
                         <button @click="pemeriksaanOpen = !pemeriksaanOpen"
@@ -178,11 +239,11 @@
                 {{-- ROLE: PEGAWAI DINKES --}}
                 {{-- ========================================================== --}}
                 @if(Auth::user()->role_name === 'pegawai')
+                    {{-- MENU VERIFIKASI DATA --}}
                     <li x-data="{ verifikasiOpen: {{ request()->routeIs('pengguna.verifikasi.*') ? 'true' : 'false' }} }">
                         <button @click="verifikasiOpen = !verifikasiOpen"
                             class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
-                            <span class="flex items-center gap-3"><i class="bi bi-check-square text-lg"></i> Verifikasi
-                                Data</span>
+                            <span class="flex items-center gap-3"><i class="bi bi-check-square text-lg"></i> Verifikasi Data</span>
                             <i :class="verifikasiOpen ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
                         </button>
                         <ul x-show="verifikasiOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden">
@@ -207,12 +268,12 @@
                         </ul>
                     </li>
 
+                    {{-- MENU REKAP LAPORAN --}}
                     <li
                         x-data="{ rekapOpen: {{ request()->routeIs('pengguna.rekap.*', 'pengguna.laporan.status_ptm', 'pengguna.laporan.kelompok_usia', 'pengguna.laporan.kegiatan') ? 'true' : 'false' }} }">
                         <button @click="rekapOpen = !rekapOpen"
                             class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
-                            <span class="flex items-center gap-3"><i class="bi bi-bar-chart-fill text-lg"></i> Rekap
-                                Laporan</span>
+                            <span class="flex items-center gap-3"><i class="bi bi-bar-chart-fill text-lg"></i> Rekap Laporan</span>
                             <i :class="rekapOpen ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
                         </button>
                         <ul x-show="rekapOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden">
@@ -241,6 +302,15 @@
                                 </a>
                             </li>
                         </ul>
+                    </li>
+
+                    {{-- MENU BARU: EVALUASI SISTEM (SUS) --}}
+                    <li>
+                        <a href="{{ route('pengguna.evaluasi.form') }}"
+                            class="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 {{ request()->routeIs('evaluasi.form') ? 'bg-green-600 text-white' : '' }}">
+                            <i class="bi bi-ui-checks text-lg"></i>
+                            <span>Evaluasi Sistem</span>
+                        </a>
                     </li>
                 @endif
 

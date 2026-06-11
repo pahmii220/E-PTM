@@ -26,6 +26,13 @@
                     <form method="POST" action="{{ route('login') }}">
                         @csrf
 
+                        @if(session('error'))
+                            <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-3 p-3 text-sm">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                {{ session('error') }}
+                            </div>
+                        @endif
+
                         <!-- Username -->
                         <div class="form-floating mb-3">
                             <input type="text" name="Username"
@@ -77,7 +84,7 @@
                         </button>
                     </form>
                 </div>
-                
+
                 <div class="card-footer text-center bg-transparent border-0">
                     <small class="text-muted">
                         Belum punya akun?
