@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 
 use App\Models\Pasien;
-use App\Models\Rujukan;
 use App\Models\DeteksiDiniPTM;
 use App\Models\FaktorResikoPtM;
 
@@ -24,7 +23,7 @@ class DashboardController extends Controller
         }
 
         /* =====================
-            DEFAULT VALUE
+            DEFAULT VALUE & INITIALIZATION
         ====================== */
         $totalPasien   = 0;
         $totalDeteksi  = 0;
@@ -41,17 +40,74 @@ class DashboardController extends Controller
         $dailyTotals  = collect();
 
         // Analitik Kegiatan & Faktor Risiko
-        $kegiatanLabels = collect();
-        $kegiatanTotals = collect();
-        $faktorLabels   = collect(['Merokok', 'Alkohol', 'Kurang Aktivitas Fisik']);
-        $faktorTotals   = collect([0, 0, 0]);
+        $kegiatanLabels  = collect();
+        $kegiatanTotals  = collect();
+        $kegiatanPeserta = collect();
+        $faktorLabels    = collect(['Merokok', 'Alkohol', 'Kurang Aktivitas Fisik']);
+        $faktorTotals    = collect([0, 0, 0]);
 
         // Insight
-        $topFaktor    = '-';
+        $topFaktor = '-';
+
+        // Tracking Data (Inisialisasi awal agar aman dari undefined)
+        $trackingData  = collect();
+        $trackPending  = 0;
+        $trackApproved = 0;
+        $trackRevisi   = 0;
 
         try {
             // Ambil data petugas yang sedang login untuk filter wilayah kerja Puskesmas
             $petugas = Auth::user()->petugas;
+
+            // ==========================================
+            // KODE TRACKING DATA VERIFIKASI (MENGGABUNGKAN PASIEN, DETEKSI DINI, DAN FAKTOR RISIKO)
+            // ==========================================
+            if (class_exists(DeteksiDiniPTM::class) && class_exists(Pasien::class) && class_exists(\App\Models\FaktorResikoPTM::class)) {
+                $queryPasien = Pasien::query();
+                $queryDeteksi = DeteksiDiniPTM::with(['pasien']);
+                $queryFaktor = \App\Models\FaktorResikoPTM::with(['pasien']);
+
+                if ($petugas && $petugas->puskesmas_id) {
+                    $queryPasien->where('puskesmas_id', $petugas->puskesmas_id);
+                    $queryDeteksi->where('puskesmas_id', $petugas->puskesmas_id);
+                    $queryFaktor->where('puskesmas_id', $petugas->puskesmas_id);
+                }
+
+                $pasienTrack = $queryPasien->orderBy('dibuat_pada', 'desc')->take(5)->get();
+                $deteksiTrack = $queryDeteksi->orderBy('dibuat_pada', 'desc')->take(5)->get();
+                $faktorTrack = $queryFaktor->orderBy('dibuat_pada', 'desc')->take(5)->get();
+
+                // Gabungkan semua data pelacakan
+                $trackingData = collect()
+                    ->concat($pasienTrack)
+                    ->concat($deteksiTrack)
+                    ->concat($faktorTrack)
+                    ->sortByDesc('dibuat_pada')
+                    ->take(5);
+
+                // Hitung total pending, approved, dan rejected secara akumulatif
+                $queryCountPasien = Pasien::query();
+                $queryCountDeteksi = DeteksiDiniPTM::query();
+                $queryCountFaktor = \App\Models\FaktorResikoPTM::query();
+
+                if ($petugas && $petugas->puskesmas_id) {
+                    $queryCountPasien->where('puskesmas_id', $petugas->puskesmas_id);
+                    $queryCountDeteksi->where('puskesmas_id', $petugas->puskesmas_id);
+                    $queryCountFaktor->where('puskesmas_id', $petugas->puskesmas_id);
+                }
+
+                $trackPending = (clone $queryCountPasien)->where('status_verifikasi', 'pending')->count()
+                              + (clone $queryCountDeteksi)->where('status_verifikasi', 'pending')->count()
+                              + (clone $queryCountFaktor)->where('status_verifikasi', 'pending')->count();
+
+                $trackApproved = (clone $queryCountPasien)->where('status_verifikasi', 'approved')->count()
+                               + (clone $queryCountDeteksi)->where('status_verifikasi', 'approved')->count()
+                               + (clone $queryCountFaktor)->where('status_verifikasi', 'approved')->count();
+
+                $trackRevisi = (clone $queryCountPasien)->where('status_verifikasi', 'rejected')->count()
+                             + (clone $queryCountDeteksi)->where('status_verifikasi', 'rejected')->count()
+                             + (clone $queryCountFaktor)->where('status_verifikasi', 'rejected')->count();
+            }
 
             /* =====================
                PASIEN
@@ -135,14 +191,17 @@ class DashboardController extends Controller
                 );
             }
 
-       $tableKegiatan = 'kegiatan'; // Sesuaikan jika namanya beda
+            /* =====================
+               ANALITIK KEGIATAN
+            ====================== */
+            $tableKegiatan = 'kegiatan'; 
             
             if (Schema::hasTable($tableKegiatan)) {
                 $queryK = DB::table($tableKegiatan)
                     ->select(
                         'jenis_kegiatan', 
                         DB::raw('COUNT(*) as total'),
-                        DB::raw('SUM(jumlah_peserta) as total_peserta') // Tambahan SUM peserta
+                        DB::raw('SUM(jumlah_peserta) as total_peserta') 
                     )
                     ->groupBy('jenis_kegiatan');
 
@@ -153,7 +212,7 @@ class DashboardController extends Controller
                 $kegiatanData = $queryK->get();
                 $kegiatanLabels  = $kegiatanData->pluck('jenis_kegiatan')->toArray();
                 $kegiatanTotals  = $kegiatanData->pluck('total')->toArray();
-                $kegiatanPeserta = $kegiatanData->pluck('total_peserta')->toArray(); // Variabel baru
+                $kegiatanPeserta = $kegiatanData->pluck('total_peserta')->toArray(); 
             }
 
             /* =====================
@@ -179,8 +238,10 @@ class DashboardController extends Controller
         } catch (\Throwable $e) {
             Log::warning('Dashboard Petugas Error: ' . $e->getMessage());
         }
-return view('petugas.dashboard', compact(
-            // Statistik
+        
+        // SATU-SATUNYA RETURN VIEW YANG DIEKSEKUSI DI AKHIR FUNGSI
+        return view('petugas.dashboard', compact(
+            // Statistik Utama
             'totalPasien',
             'totalDeteksi',
             'totalFaktor',
@@ -198,14 +259,20 @@ return view('petugas.dashboard', compact(
             // Analitik Kegiatan
             'kegiatanLabels',
             'kegiatanTotals',
-            'kegiatanPeserta', // <--- Tambahkan ini di sini
+            'kegiatanPeserta', 
 
             // Analitik Faktor
             'faktorLabels',
             'faktorTotals',
 
             // Insight
-            'topFaktor'
+            'topFaktor',
+            
+            // Tracking Verifikasi Baru
+            'trackingData', 
+            'trackPending', 
+            'trackApproved', 
+            'trackRevisi'
         ));
     }
 }

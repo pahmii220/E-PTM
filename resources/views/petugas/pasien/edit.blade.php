@@ -37,42 +37,14 @@
 
                     <div class="row g-3">
 
-                        {{-- NAMA --}}
+                        {{-- NIK (BARU) --}}
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">
-                                Nama Lengkap <span class="text-danger">*</span>
+                                NIK (Nomor Induk Kependudukan) <span class="text-danger">*</span>
                             </label>
-                            <input type="text" name="nama_lengkap"
-                                class="form-control rounded-3 @error('nama_lengkap') is-invalid @enderror"
-                                value="{{ old('nama_lengkap', $pasien->nama_lengkap) }}" required>
-                            @error('nama_lengkap')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        {{-- PUSKESMAS --}}
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">
-                                Puskesmas <span class="text-danger">*</span>
-                            </label>
-
-                            @if(auth()->user()->role_name === 'admin')
-                                <select name="puskesmas_id"
-                                    class="form-select rounded-3 @error('puskesmas_id') is-invalid @enderror" required>
-                                    <option value="">-- Pilih Puskesmas --</option>
-                                    @foreach($puskesmas as $pkm)
-                                        <option value="{{ $pkm->id }}" {{ old('puskesmas_id', $pasien->puskesmas_id) == $pkm->id ? 'selected' : '' }}>
-                                            {{ $pkm->nama_puskesmas }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            @else
-                                <input type="text" class="form-control rounded-3 bg-light"
-                                    value="{{ auth()->user()->petugas->puskesmas->nama_puskesmas }}" readonly>
-                                <input type="hidden" name="puskesmas_id" value="{{ auth()->user()->petugas->puskesmas_id }}">
-                            @endif
-
-                            @error('puskesmas_id')
+                            <input type="text" name="nik" class="form-control rounded-3 @error('nik') is-invalid @enderror"
+                                value="{{ old('nik', $pasien->nik) }}" minlength="16" maxlength="16" required>
+                            @error('nik')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -90,13 +62,26 @@
                             @enderror
                         </div>
 
+                        {{-- NAMA --}}
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Nama Lengkap <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="nama_lengkap"
+                                class="form-control rounded-3 @error('nama_lengkap') is-invalid @enderror"
+                                value="{{ old('nama_lengkap', $pasien->nama_lengkap) }}" required>
+                            @error('nama_lengkap')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         {{-- JENIS KELAMIN --}}
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">
                                 Jenis Kelamin <span class="text-danger">*</span>
                             </label>
-                            <select name="jenis_kelamin"
-                                class="form-select rounded-3 @error('jenis_kelamin') is-invalid @enderror" required>
+                            <select name="jenis_kelamin" class="form-select rounded-3 @error('jenis_kelamin') is-invalid @enderror"
+                                required>
                                 <option value="">-- Pilih --</option>
                                 <option value="Laki-laki" {{ old('jenis_kelamin', $pasien->jenis_kelamin) == 'Laki-laki' ? 'selected' : '' }}>
                                     Laki-laki
@@ -110,6 +95,19 @@
                             @enderror
                         </div>
 
+                        {{-- TEMPAT LAHIR (BARU) --}}
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Tempat Lahir <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="tempat_lahir"
+                                class="form-control rounded-3 @error('tempat_lahir') is-invalid @enderror"
+                                value="{{ old('tempat_lahir', $pasien->tempat_lahir) }}" required>
+                            @error('tempat_lahir')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         {{-- TANGGAL LAHIR --}}
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">
@@ -117,9 +115,20 @@
                             </label>
                             <input type="date" name="tanggal_lahir"
                                 class="form-control rounded-3 @error('tanggal_lahir') is-invalid @enderror"
-                                value="{{ old('tanggal_lahir', optional($pasien->tanggal_lahir)->format('Y-m-d')) }}"
-                                required>
+                                value="{{ old('tanggal_lahir', optional($pasien->tanggal_lahir)->format('Y-m-d')) }}" required>
                             @error('tanggal_lahir')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        {{-- PEKERJAAN (BARU) --}}
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Pekerjaan <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="pekerjaan" class="form-control rounded-3 @error('pekerjaan') is-invalid @enderror"
+                                value="{{ old('pekerjaan', $pasien->pekerjaan) }}" required>
+                            @error('pekerjaan')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -129,10 +138,62 @@
                             <label class="form-label fw-semibold">
                                 Nomor Kontak / HP <span class="text-danger">*</span>
                             </label>
-                            <input type="text" name="kontak"
-                                class="form-control rounded-3 @error('kontak') is-invalid @enderror"
+                            <input type="text" name="kontak" class="form-control rounded-3 @error('kontak') is-invalid @enderror"
                                 value="{{ old('kontak', $pasien->kontak) }}" required>
                             @error('kontak')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        {{-- KECAMATAN (DROPDOWN BARU) --}}
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Kecamatan <span class="text-danger">*</span>
+                            </label>
+                            <select name="kecamatan" class="form-select rounded-3 @error('kecamatan') is-invalid @enderror" required>
+                                <option value="">-- Pilih Kecamatan --</option>
+                                @php
+                                    $daftarKecamatan = [
+                                        'Banjarmasin Barat',
+                                        'Banjarmasin Selatan',
+                                        'Banjarmasin Tengah',
+                                        'Banjarmasin Timur',
+                                        'Banjarmasin Utara'
+                                    ];
+                                @endphp
+                                @foreach($daftarKecamatan as $kec)
+                                    <option value="{{ $kec }}" {{ old('kecamatan', $pasien->kecamatan) == $kec ? 'selected' : '' }}>
+                                        {{ $kec }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('kecamatan')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        {{-- PUSKESMAS --}}
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Puskesmas <span class="text-danger">*</span>
+                            </label>
+
+                            @if(auth()->user()->role_name === 'admin')
+                                <select name="puskesmas_id" class="form-select rounded-3 @error('puskesmas_id') is-invalid @enderror" required>
+                                    <option value="">-- Pilih Puskesmas --</option>
+                                    @foreach($puskesmas as $pkm)
+                                        <option value="{{ $pkm->id }}" {{ old('puskesmas_id', $pasien->puskesmas_id) == $pkm->id ? 'selected' : '' }}>
+                                            {{ $pkm->nama_puskesmas }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            @else
+                                <input type="text" class="form-control rounded-3 bg-light"
+                                    value="{{ auth()->user()->petugas->puskesmas->nama_puskesmas ?? '-' }}" readonly>
+                                <input type="hidden" name="puskesmas_id" value="{{ auth()->user()->petugas->puskesmas_id }}">
+                            @endif
+
+                            @error('puskesmas_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -140,10 +201,9 @@
                         {{-- ALAMAT --}}
                         <div class="col-12">
                             <label class="form-label fw-semibold">
-                                Alamat <span class="text-danger">*</span>
+                                Alamat Lengkap <span class="text-danger">*</span>
                             </label>
-                            <textarea name="alamat" rows="3"
-                                class="form-control rounded-3 @error('alamat') is-invalid @enderror"
+                            <textarea name="alamat" rows="3" class="form-control rounded-3 @error('alamat') is-invalid @enderror"
                                 required>{{ old('alamat', $pasien->alamat) }}</textarea>
                             @error('alamat')
                                 <div class="invalid-feedback">{{ $message }}</div>

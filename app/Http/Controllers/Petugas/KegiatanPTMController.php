@@ -56,8 +56,10 @@ class KegiatanPTMController extends Controller
             'lokasi' => 'required|string|max:255',
             'jumlah_peserta' => 'nullable|integer',
             'keterangan' => 'nullable|string',
+            
         ]);
 
+      $puskesmasId = \App\Models\Petugas::where('user_id', $user->id)->value('puskesmas_id');
         Kegiatan::create([
             'nama_kegiatan' => $request->nama_kegiatan,
             'jenis_kegiatan' => $request->jenis_kegiatan,
@@ -65,7 +67,7 @@ class KegiatanPTMController extends Controller
             'lokasi' => $request->lokasi,
             'jumlah_peserta' => $request->jumlah_peserta,
             'keterangan' => $request->keterangan,
-            'puskesmas_id' => $user->puskesmas_id,
+            'puskesmas_id' => $puskesmasId
         ]);
 
         return redirect()

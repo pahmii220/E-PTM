@@ -342,6 +342,7 @@ Route::prefix('pengguna')
     Route::get('/verifikasi/print/deteksi', [VerifikasiController::class,'printDeteksi'])->name('verifikasi.print.deteksi');
     Route::get('/verifikasi/print/pasien', [VerifikasiController::class,'printPasien'])->name('verifikasi.print.pasien');
     Route::get('/verifikasi/print/faktor', [VerifikasiController::class,'printFaktor'])->name('verifikasi.print.faktor');
+    
 Route::get('/rekap-puskesmas',
     [RekapPuskesmasController::class, 'index'])
     ->name('rekap.puskesmas');
@@ -401,6 +402,7 @@ Route::get(
     Route::get('/evaluasi-laporan', [EvaluasiController::class, 'laporanEvaluasi'])->name('evaluasi.report');
 
         Route::get('/evaluasi-laporan/cetak', [EvaluasiController::class, 'cetakLaporan'])->name('evaluasi.cetak');
+        
 
 });
 

@@ -41,14 +41,6 @@
                     </select>
                 </div>
 
-                {{-- STATUS --}}
-                <div class="col-md-3">
-                    <select id="filterStatus" class="form-select">
-                        <option value="">Semua Status</option>
-                        <option value="Sudah">Sudah</option>
-                        <option value="Belum">Belum</option>
-                    </select>
-                </div>
 
                 {{-- SEARCH --}}
                 <div class="col-md-6">
@@ -71,7 +63,6 @@
                         <th>Tgl Pemeriksaan</th>
                         <th>Jenis Tindak Lanjut</th>
                         <th>Tgl Tindak Lanjut</th>
-                        <th>Status</th>
                         <th>Catatan</th>
                         <th>Aksi</th>
                     </tr>
@@ -109,11 +100,6 @@
                                 : '-' }}
                         </td>
 
-                        <td>
-                            <span class="badge bg-{{ $t->status_tindak_lanjut === 'sudah' ? 'success' : 'warning' }}">
-                                {{ ucfirst($t->status_tindak_lanjut) }}
-                            </span>
-                        </td>
 
                         <td class="text-start">
                             {{ $t->catatan_petugas ?? '-' }}

@@ -196,15 +196,15 @@
                                 </a>
                             </li>
                             <li>
-                                <a href="{{ route('petugas.faktor_resiko.index') }}"
-                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('petugas.faktor_resiko.*') ? 'bg-green-500 text-white' : '' }}">
-                                    <i class="bi bi-activity me-2"></i> Faktor Risiko
-                                </a>
-                            </li>
-                            <li>
                                 <a href="{{ route('petugas.deteksi_dini.index') }}"
                                     class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('petugas.deteksi_dini.*') ? 'bg-green-500 text-white' : '' }}">
                                     <i class="bi bi-clipboard-check me-2"></i> Deteksi Dini PTM
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('petugas.faktor_resiko.index') }}"
+                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('petugas.faktor_resiko.*') ? 'bg-green-500 text-white' : '' }}">
+                                    <i class="bi bi-activity me-2"></i> Faktor Risiko
                                 </a>
                             </li>
                             <li>
@@ -268,9 +268,9 @@
                         </ul>
                     </li>
 
+
                     {{-- MENU REKAP LAPORAN --}}
-                    <li
-                        x-data="{ rekapOpen: {{ request()->routeIs('pengguna.rekap.*', 'pengguna.laporan.status_ptm', 'pengguna.laporan.kelompok_usia', 'pengguna.laporan.kegiatan') ? 'true' : 'false' }} }">
+                    <li x-data="{ rekapOpen: {{ (request()->routeIs('pengguna.rekap.*') || request()->routeIs('pengguna.laporan.status_ptm') || request()->routeIs('pengguna.laporan.kelompok_usia') || request()->routeIs('pengguna.laporan.kegiatan')) ? 'true' : 'false' }} }">
                         <button @click="rekapOpen = !rekapOpen"
                             class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
                             <span class="flex items-center gap-3"><i class="bi bi-bar-chart-fill text-lg"></i> Rekap Laporan</span>

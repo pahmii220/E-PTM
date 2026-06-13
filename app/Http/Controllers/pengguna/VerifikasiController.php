@@ -55,24 +55,30 @@ public function process(Request $request)
             return $item;
         });
 
-        // NOTIFIKASI
-        // NOTIFIKASI
+               // NOTIFIKASI
         if (!empty($verifiedItem->petugas_id)) {
-            $petugas = \App\Models\Petugas::find($verifiedItem->petugas_id);
+            $petugasUser = null;
+
+            if ($verifiedItem instanceof \App\Models\FaktorResikoPTM) {
+                // Untuk FaktorResikoPTM, petugas_id langsung merujuk ke users.id
+                $petugasUser = User::find($verifiedItem->petugas_id);
+            } else {
+                // Untuk model lain (seperti DeteksiDiniPTM), petugas_id merujuk ke petugas.id
+                $petugas = \App\Models\Petugas::find($verifiedItem->petugas_id);
+                if ($petugas && $petugas->user_id) {
+                    $petugasUser = User::find($petugas->user_id);
+                }
+            }
             
-            if ($petugas && $petugas->user_id) {
-                $petugasUser = User::find($petugas->user_id);
-                
-                if ($petugasUser && $petugasUser->email) {
-                    // Cek aksi apa yang dilakukan
-                    if ($request->action === 'reject') {
-                        \Illuminate\Support\Facades\Notification::send($petugasUser, new \App\Notifications\DataPtmDitolakNotification($verifiedItem));
-                        Log::info("LOG-EMAIL: Notifikasi REJECT terkirim ke " . $petugasUser->email);
-                    } 
-                    elseif ($request->action === 'approve') {
-                        \Illuminate\Support\Facades\Notification::send($petugasUser, new \App\Notifications\DataPtmDisetujuiNotification($verifiedItem));
-                        Log::info("LOG-EMAIL: Notifikasi APPROVE terkirim ke " . $petugasUser->email);
-                    }
+            if ($petugasUser && $petugasUser->email) {
+                // Cek aksi apa yang dilakukan
+                if ($request->action === 'reject') {
+                    \Illuminate\Support\Facades\Notification::send($petugasUser, new \App\Notifications\DataPtmDitolakNotification($verifiedItem));
+                    Log::info("LOG-EMAIL: Notifikasi REJECT terkirim ke " . $petugasUser->email);
+                } 
+                elseif ($request->action === 'approve') {
+                    \Illuminate\Support\Facades\Notification::send($petugasUser, new \App\Notifications\DataPtmDisetujuiNotification($verifiedItem));
+                    Log::info("LOG-EMAIL: Notifikasi APPROVE terkirim ke " . $petugasUser->email);
                 }
             }
         }
@@ -163,6 +169,11 @@ public function process(Request $request)
             $query->where('puskesmas_id', $puskesmasId);
         }
 
+        // Filter berdasarkan Pasien ID jika disediakan di URL
+        if ($request->filled('pasien_id')) {
+            $query->where('pasien_id', $request->pasien_id);
+        }
+
         $data = $query->paginate(20)->appends($request->query());
         $puskesmasList = \App\Models\Puskesmas::all();
 
@@ -190,6 +201,11 @@ public function process(Request $request)
         // Filter Puskesmas
         if ($puskesmasId !== 'all') {
             $query->where('puskesmas_id', $puskesmasId);
+        }
+
+        // Filter berdasarkan Pasien ID jika disediakan di URL
+        if ($request->filled('pasien_id')) {
+            $query->where('pasien_id', $request->pasien_id);
         }
 
         $data = $query->paginate(20)->appends($request->query());

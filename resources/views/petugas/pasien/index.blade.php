@@ -50,7 +50,8 @@
                     @endif
 
                     <div class="col-md-3">
-                        <input type="text" id="customSearch" class="form-control" placeholder="Cari nama / alamat / RM">
+                        <input type="text" id="customSearch" class="form-control"
+                            placeholder="Cari nama / alamat / NIK / RM">
                     </div>
                 </div>
             </div>
@@ -70,11 +71,12 @@
                     <thead class="bg-success text-white">
                         <tr>
                             <th>No</th>
-                            <th>Nama</th>
+                            <th>Identitas Peserta</th>
                             <th>No RM</th>
-                            <th>Tgl Lahir</th>
+                            <th>TTL</th>
                             <th>JK</th>
-                            <th>Alamat</th>
+                            <th>Pekerjaan</th>
+                            <th>Alamat & Kec</th>
                             <th>Kontak</th>
                             <th>Puskesmas</th>
                             <th style="min-width: 140px;">Status Verifikasi</th>
@@ -86,9 +88,20 @@
                         @foreach($pasien as $i => $p)
                             <tr>
                                 <td>{{ $i + 1 }}</td>
-                                <td class="text-start fw-semibold">{{ $p->nama_lengkap }}</td>
+
+                                {{-- NAMA & NIK --}}
+                                <td class="text-start">
+                                    <div class="fw-bold text-dark">{{ $p->nama_lengkap }}</div>
+                                    <div class="text-muted" style="font-size: 12px;">NIK: {{ $p->nik ?? '-' }}</div>
+                                </td>
+
                                 <td>{{ $p->no_rekam_medis }}</td>
-                                <td>{{ \Carbon\Carbon::parse($p->tanggal_lahir)->format('d-m-Y') }}</td>
+
+                                {{-- TEMPAT TANGGAL LAHIR --}}
+                                <td>
+                                    {{ $p->tempat_lahir ?? '-' }},<br>
+                                    {{ \Carbon\Carbon::parse($p->tanggal_lahir)->format('d-m-Y') }}
+                                </td>
 
                                 <td>
                                     <span class="badge bg-{{ $p->jenis_kelamin === 'Laki-laki' ? 'primary' : 'pink' }}">
@@ -96,7 +109,17 @@
                                     </span>
                                 </td>
 
-                                <td class="text-start">{{ Str::limit($p->alamat, 40) }}</td>
+                                {{-- PEKERJAAN --}}
+                                <td>{{ $p->pekerjaan ?? '-' }}</td>
+
+                                {{-- ALAMAT & KECAMATAN --}}
+                                <td class="text-start">
+                                    {{ Str::limit($p->alamat, 30) }}<br>
+                                    <span class="text-muted fw-semibold" style="font-size: 11px;">
+                                        Kec. {{ $p->kecamatan ?? '-' }}
+                                    </span>
+                                </td>
+
                                 <td>{{ $p->kontak }}</td>
                                 <td>{{ $p->puskesmas->nama_puskesmas ?? '-' }}</td>
 
@@ -109,7 +132,8 @@
                                         </span>
                                         @if($p->diverifikasi_pada)
                                             <div class="text-muted mt-1" style="font-size: 11px;">
-                                                Proses: {{ \Carbon\Carbon::parse($p->dibuat_pada)->diffForHumans(\Carbon\Carbon::parse($p->diverifikasi_pada), true) }}
+                                                Proses:
+                                                {{ \Carbon\Carbon::parse($p->dibuat_pada)->diffForHumans(\Carbon\Carbon::parse($p->diverifikasi_pada), true) }}
                                             </div>
                                         @endif
 
@@ -120,26 +144,28 @@
 
                                         @if($p->catatan_verifikasi)
                                             <div class="mt-2">
-                                                {{-- Tombol untuk memunculkan Pop-up --}}
-                                                <button type="button" class="btn btn-outline-danger rounded-pill" style="font-size: 10px; padding: 2px 10px;"
-                                                    data-bs-toggle="modal" data-bs-target="#noteModal{{ $p->id }}">
+                                                <button type="button" class="btn btn-outline-danger rounded-pill"
+                                                    style="font-size: 10px; padding: 2px 10px;" data-bs-toggle="modal"
+                                                    data-bs-target="#noteModal{{ $p->id }}">
                                                     <i class="bi bi-eye"></i> Lihat Catatan
                                                 </button>
                                             </div>
 
-                                            {{-- Modal / Pop-up Box (Tampil hanya saat tombol diklik) --}}
-                                            <div class="modal fade" id="noteModal{{ $p->id }}" tabindex="-1" aria-labelledby="noteModalLabel{{ $p->id }}"
-                                                aria-hidden="true">
+                                            {{-- Modal / Pop-up Box --}}
+                                            <div class="modal fade" id="noteModal{{ $p->id }}" tabindex="-1"
+                                                aria-labelledby="noteModalLabel{{ $p->id }}" aria-hidden="true">
                                                 <div class="modal-dialog modal-dialog-centered">
                                                     <div class="modal-content border-0 shadow">
                                                         <div class="modal-header bg-danger text-white border-0">
                                                             <h5 class="modal-title fs-6 fw-bold" id="noteModalLabel{{ $p->id }}">
-                                                                <i class="bi bi-exclamation-triangle-fill me-2"></i> Catatan Revisi Admin
+                                                                <i class="bi bi-exclamation-triangle-fill me-2"></i> Catatan Revisi
+                                                                Admin
                                                             </h5>
-                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                                                                aria-label="Close"></button>
+                                                            <button type="button" class="btn-close btn-close-white"
+                                                                data-bs-dismiss="modal" aria-label="Close"></button>
                                                         </div>
-                                                        <div class="modal-body text-start p-4 text-dark" style="white-space: normal; line-height: 1.6;">
+                                                        <div class="modal-body text-start p-4 text-dark"
+                                                            style="white-space: normal; line-height: 1.6;">
                                                             <div class="mb-2 text-muted" style="font-size: 12px;">
                                                                 Pesan untuk data pasien: <strong>{{ $p->nama_lengkap }}</strong>
                                                             </div>
@@ -148,8 +174,10 @@
                                                             </div>
                                                         </div>
                                                         <div class="modal-footer border-0 bg-light">
-                                                            <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal">Tutup</button>
-                                                            <a href="{{ route('petugas.pasien.edit', $p->id) }}" class="btn btn-danger btn-sm px-4">
+                                                            <button type="button" class="btn btn-secondary btn-sm px-4"
+                                                                data-bs-dismiss="modal">Tutup</button>
+                                                            <a href="{{ route('petugas.pasien.edit', $p->id) }}"
+                                                                class="btn btn-danger btn-sm px-4">
                                                                 <i class="bi bi-pencil-square"></i> Perbaiki Data
                                                             </a>
                                                         </div>
@@ -213,10 +241,8 @@
                 responsive: true,
                 order: [[1, 'asc']],
 
-                // TAMBAHKAN KODE INI:
                 "drawCallback": function (settings) {
                     var api = this.api();
-                    // Mengupdate kolom ke-0 (No) setiap kali tabel digambar ulang
                     api.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell, i) {
                         cell.innerHTML = i + 1;
                     });
@@ -231,22 +257,23 @@
                 }
             });
 
-            // ✅ FILTER JENIS KELAMIN
+            // ✅ PERUBAHAN INDEX KOLOM UNTUK FILTER (Karena ada tambahan kolom baru)
+
+            // Kolom JK sekarang berada di index 4 (tetap)
             $('#filterGender').on('change', function () {
                 table.column(4).search(this.value).draw();
             });
 
-            // ✅ FILTER STATUS
+            // Kolom Status sekarang bergeser ke index 9
             $('#filterStatus').on('change', function () {
-                // Kita menggunakan Regex pencarian yang tidak ketat untuk menangkap text di dalam badge
-                table.column(8).search(this.value).draw();
+                table.column(9).search(this.value).draw();
                 updatePrintUrl();
             });
 
-            // ✅ FILTER PUSKESMAS (HANYA JIKA ADA)
+            // Kolom Puskesmas sekarang bergeser ke index 8
             if ($('#filterPuskesmas').length) {
                 $('#filterPuskesmas').on('change', function () {
-                    table.column(7).search(this.value).draw();
+                    table.column(8).search(this.value).draw();
                     updatePrintUrl();
                 });
             }
@@ -272,8 +299,6 @@
                     'href',
                     basePrintUrl + (params.toString() ? '?' + params.toString() : '')
                 );
-
-
             }
 
         });

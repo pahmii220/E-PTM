@@ -15,14 +15,18 @@ class Pasien extends Model
     const UPDATED_AT = 'diubah_pada';
     protected $table = 'pasien';
 
-    protected $fillable = [
-        'puskesmas_id',
-        'nama_lengkap',
-        'no_rekam_medis',
-        'tanggal_lahir',
-        'jenis_kelamin',
-        'alamat',
-        'kontak',
+   protected $fillable = [
+    'puskesmas_id',
+    'nik',              // Tambahan baru
+    'nama_lengkap',
+    'no_rekam_medis',
+    'tempat_lahir',     // Tambahan baru
+    'tanggal_lahir',
+    'jenis_kelamin',
+    'pekerjaan',        // Tambahan baru
+    'alamat',
+    'kecamatan',        // Tambahan baru
+    'kontak',
 
             // 🔥 WAJIB DITAMBAHKAN
     'status_verifikasi',

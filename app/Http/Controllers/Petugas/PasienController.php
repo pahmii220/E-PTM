@@ -51,43 +51,53 @@ class PasienController extends Controller
 }
 
 
-    /**
+/**
      * Simpan data pasien baru
      */
-public function store(Request $request)
-{
-    $user = Auth::user();
+    public function store(Request $request)
+    {
+        $user = Auth::user();
 
-    if ($user->role_name === 'pegawai') {
-        abort(403);
+        if ($user->role_name === 'pegawai') {
+            abort(403);
+        }
+
+        // TAMBAHKAN VALIDASI UNTUK 4 FIELD BARU
+        $request->validate([
+            'nik'            => 'required|string|size:16|unique:pasien', // Harus 16 digit & unik
+            'nama_lengkap'   => 'required|string|max:100',
+            'no_rekam_medis' => 'required|string|max:50|unique:pasien',
+            'tempat_lahir'   => 'required|string|max:100',
+            'tanggal_lahir'  => 'required|date',
+            'jenis_kelamin'  => 'required|in:Laki-laki,Perempuan',
+            'pekerjaan'      => 'required|string|max:100',
+            'alamat'         => 'required|string',
+            'kecamatan'      => 'required|string|max:100',
+            'kontak'         => 'required|string|max:20',
+            'puskesmas_id'   => $user->role_name === 'admin' ? 'required|exists:puskesmas,id' : '',
+        ]);
+
+        $pasienBaru = Pasien::create([
+            'puskesmas_id'      => $user->role_name === 'admin' ? $request->puskesmas_id : $user->petugas->puskesmas_id,
+            'nik'               => $request->nik,
+            'nama_lengkap'      => $request->nama_lengkap,
+            'no_rekam_medis'    => $request->no_rekam_medis,
+            'tempat_lahir'      => $request->tempat_lahir,
+            'tanggal_lahir'     => $request->tanggal_lahir,
+            'jenis_kelamin'     => $request->jenis_kelamin,
+            'pekerjaan'         => $request->pekerjaan,
+            'alamat'            => $request->alamat,
+            'kecamatan'         => $request->kecamatan,
+            'kontak'            => $request->kontak,
+            'created_by'        => $user->id,
+            'status_ptm'        => $request->status_ptm ?? null, // Tambahkan fallback null jika kosong
+            'status_verifikasi' => 'pending',
+        ]); 
+
+        return redirect()
+            ->route('petugas.deteksi_dini.create', ['pasien_id' => $pasienBaru->id])
+            ->with('success', 'Data Pasien tersimpan. Silakan lanjut isi form Deteksi Dini berikut.');
     }
-
-    $request->validate([
-        'nama_lengkap'   => 'required|string|max:100',
-        'no_rekam_medis' => 'required|string|max:50|unique:pasien',
-        'tanggal_lahir'  => 'required|date',
-        'jenis_kelamin'  => 'required|in:Laki-laki,Perempuan',
-        'alamat'         => 'required|string',
-        'kontak'         => 'required|string|max:20',
-        'puskesmas_id'   => $user->role_name === 'admin' ? 'required|exists:puskesmas,id' : '',
-    ]);
-
-   $pasienBaru = Pasien::create([
-        'puskesmas_id' => $user->role_name === 'admin' ? $request->puskesmas_id : $user->petugas->puskesmas_id,
-        'nama_lengkap'   => $request->nama_lengkap,
-        'no_rekam_medis' => $request->no_rekam_medis,
-        'tanggal_lahir'  => $request->tanggal_lahir,
-        'jenis_kelamin'  => $request->jenis_kelamin,
-        'alamat'         => $request->alamat,
-        'kontak'         => $request->kontak,
-        'created_by'     => $user->id,
-        'status_ptm'     => $request->status_ptm,
-        'status_verifikasi' => 'pending',
-    ]); 
-return redirect()
-        ->route('petugas.deteksi_dini.create', ['pasien_id' => $pasienBaru->id])
-        ->with('success', 'Data Pasien tersimpan. Silakan lanjut isi form Deteksi Dini berikut.');
-}
 
 
     /**
@@ -142,39 +152,45 @@ public function edit($id)
                 ->with('error', 'Data sudah disetujui dan tidak dapat diubah.');
         }
 
+        // TAMBAHKAN VALIDASI UNTUK 4 FIELD BARU SAAT UPDATE
         $request->validate([
+            'nik'            => 'required|string|size:16|unique:pasien,nik,' . $id, // Abaikan NIK lama milik ID ini
             'nama_lengkap'   => 'required|string|max:100',
             'no_rekam_medis' => 'required|string|max:50|unique:pasien,no_rekam_medis,' . $id,
-            'tanggal_lahir' => 'nullable|date',
+            'tempat_lahir'   => 'required|string|max:100',
+            'tanggal_lahir'  => 'nullable|date',
             'jenis_kelamin'  => 'required|in:Laki-laki,Perempuan',
+            'pekerjaan'      => 'required|string|max:100',
             'alamat'         => 'required|string',
+            'kecamatan'      => 'required|string|max:100',
             'kontak'         => 'required|string|max:20',
         ]);
 
         $updateData = $request->only([
+            'nik',
             'nama_lengkap',
             'no_rekam_medis',
+            'tempat_lahir',
             'tanggal_lahir',
             'jenis_kelamin',
+            'pekerjaan',
             'alamat',
+            'kecamatan',
             'kontak',
         ]);
 
-
-    // 🔒 Bandingkan dengan data lama
-if ($request->tanggal_lahir !== optional($pasien->tanggal_lahir)->format('Y-m-d')) {
-    $updateData['tanggal_lahir'] = $request->tanggal_lahir;
-}
+        // 🔒 Bandingkan dengan data lama untuk format tanggal
+        if ($request->tanggal_lahir !== optional($pasien->tanggal_lahir)->format('Y-m-d')) {
+            $updateData['tanggal_lahir'] = $request->tanggal_lahir;
+        }
 
         // 🔁 jika sebelumnya rejected → reset ke pending
         if ($pasien->status_verifikasi === 'rejected') {
-    $updateData['status_verifikasi'] = 'pending';
-    $updateData['catatan_verifikasi'] = null;
-    $updateData['diverifikasi_oleh'] = null;
-    $updateData['diverifikasi_pada'] = null;
-}
-
-
+            $updateData['status_verifikasi'] = 'pending';
+            $updateData['catatan_verifikasi'] = null;
+            $updateData['diverifikasi_oleh'] = null;
+            $updateData['diverifikasi_pada']   = null;
+        }
 
         $pasien->update($updateData);
 

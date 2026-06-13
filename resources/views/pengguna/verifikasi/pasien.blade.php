@@ -51,7 +51,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th class="ps-4">No</th>
-                                <th>Nama Lengkap</th>
+                                <th>Identitas Peserta</th>
                                 <th>No RM</th>
                                 <th>Kontak</th>
                                 <th>Puskesmas</th>
@@ -73,11 +73,16 @@
                                         }
                                     }
 
+                                    // 🚀 DATA JSON DIPERBARUI DENGAN FIELD BARU
                                     $dataArray = [
                                         "nama" => $row->nama_lengkap ?? '-',
+                                        "nik" => $row->nik ?? '-',
                                         "rm" => $row->no_rekam_medis ?? '-',
+                                        "tempat_lahir" => $row->tempat_lahir ?? '-',
                                         "tgl_lahir" => $tglLahirFormatted,
                                         "jk" => $row->jenis_kelamin ?? '-',
+                                        "pekerjaan" => $row->pekerjaan ?? '-',
+                                        "kecamatan" => $row->kecamatan ?? '-',
                                         "alamat" => $row->alamat ?? '-',
                                         "kontak" => $row->kontak ?? '-',
                                         "puskesmas" => optional($row->puskesmas)->nama_puskesmas ?? '-'
@@ -89,11 +94,12 @@
                                 <tr>
                                     <td class="ps-4">{{ $loop->iteration }}</td>
 
-                                    {{-- Kolom QR Code diletakkan di dalam
-                                <tr> agar tidak merusak tabel --}}
+                                    {{-- Kolom Nama digabung NIK --}}
+                                    <td class="text-start">
+                                        <div class="fw-semibold text-dark">{{ $row->nama_lengkap }}</div>
+                                        <div class="text-muted" style="font-size: 11px;">NIK: {{ $row->nik ?? '-' }}</div>
+                                    </td>
 
-
-                                    <td class="fw-semibold text-dark">{{ $row->nama_lengkap }}</td>
                                     <td>{{ $row->no_rekam_medis }}</td>
                                     <td>{{ $row->kontak }}</td>
                                     <td class="text-secondary fw-medium">{{ optional($row->puskesmas)->nama_puskesmas ?? '-' }}
@@ -154,7 +160,7 @@
                             <input type="hidden" name="action" id="modal_action">
                             <input type="hidden" name="status" id="modal_status">
 
-                            {{-- KOTAK DATA PESERTA --}}
+                            {{-- KOTAK DATA PESERTA DIPERBARUI --}}
                             <div class="bg-white p-4 rounded-4 shadow-sm border mb-4">
                                 <h6 class="fw-bold text-success border-bottom pb-2 mb-3">Rincian Identitas Dasar</h6>
                                 <div class="row g-3">
@@ -164,34 +170,50 @@
                                             readonly>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="text-muted small fw-bold mb-1">Nomor Rekam Medis / NIK</label>
+                                        <label class="text-muted small fw-bold mb-1">NIK (Nomor Induk Kependudukan)</label>
+                                        <input type="text" id="disp_nik" class="form-control bg-light text-dark fw-bold"
+                                            readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="text-muted small fw-bold mb-1">Nomor Rekam Medis</label>
                                         <input type="text" id="disp_rm" class="form-control bg-light text-dark fw-semibold"
                                             readonly>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="text-muted small fw-bold mb-1">Tanggal Lahir</label>
-                                        <input type="text" id="disp_tgl_lahir"
-                                            class="form-control bg-light text-dark fw-semibold" readonly>
+                                        <label class="text-muted small fw-bold mb-1">Tempat, Tanggal Lahir</label>
+                                        <input type="text" id="disp_ttl" class="form-control bg-light text-dark fw-semibold"
+                                            readonly>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="text-muted small fw-bold mb-1">Jenis Kelamin</label>
                                         <input type="text" id="disp_jk" class="form-control bg-light text-dark fw-semibold"
                                             readonly>
                                     </div>
-                                    <div class="col-12">
-                                        <label class="text-muted small fw-bold mb-1">Alamat Domisili</label>
-                                        <textarea id="disp_alamat" rows="2"
-                                            class="form-control bg-light text-dark fw-semibold" readonly></textarea>
+                                    <div class="col-md-6">
+                                        <label class="text-muted small fw-bold mb-1">Pekerjaan</label>
+                                        <input type="text" id="disp_pekerjaan"
+                                            class="form-control bg-light text-dark fw-semibold" readonly>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="text-muted small fw-bold mb-1">Kecamatan</label>
+                                        <input type="text" id="disp_kecamatan"
+                                            class="form-control bg-light text-dark fw-semibold" readonly>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="text-muted small fw-bold mb-1">Nomor HP / Kontak</label>
                                         <input type="text" id="disp_kontak"
                                             class="form-control bg-light text-dark fw-semibold" readonly>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-12">
+                                        <label class="text-muted small fw-bold mb-1">Alamat Domisili</label>
+                                        <textarea id="disp_alamat" rows="2"
+                                            class="form-control bg-light text-dark fw-semibold" readonly></textarea>
+                                    </div>
+                                    <div class="col-12">
                                         <label class="text-muted small fw-bold mb-1">Puskesmas Perujuk</label>
                                         <input type="text" id="disp_puskesmas"
-                                            class="form-control bg-light text-dark fw-semibold" readonly>
+                                            class="form-control border-success text-success fw-bold bg-success bg-opacity-10"
+                                            readonly>
                                     </div>
                                 </div>
                             </div>
@@ -213,11 +235,11 @@
                                         ini.</small>
                                 </div>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ route('pengguna.verifikasi.faktor') }}"
+                                    <a href="{{ route('pengguna.verifikasi.faktor') }}" id="link_faktor"
                                         class="btn btn-sm btn-outline-warning rounded-pill fw-bold px-3">
                                         <i class="bi bi-activity"></i> Faktor Risiko
                                     </a>
-                                    <a href="{{ route('pengguna.verifikasi.deteksi') }}"
+                                    <a href="{{ route('pengguna.verifikasi.deteksi') }}" id="link_deteksi"
                                         class="btn btn-sm btn-outline-info rounded-pill fw-bold px-3">
                                         <i class="bi bi-heart-pulse"></i> Deteksi Dini
                                     </a>
@@ -260,14 +282,21 @@
                                 document.getElementById('modal_action').value = action;
                                 document.getElementById('modal_status').value = (action === 'approve') ? 'approved' : 'rejected';
 
-                                // Masukkan Data ke Input Field
+                                // Set href tombol secara dinamis dengan parameter pasien_id & status pending
+                                document.getElementById('link_faktor').href = "{{ route('pengguna.verifikasi.faktor') }}?pasien_id=" + id + "&status=pending";
+                                document.getElementById('link_deteksi').href = "{{ route('pengguna.verifikasi.deteksi') }}?pasien_id=" + id + "&status=pending";
+
+                                // 🚀 MASUKKAN DATA BARU KE INPUT FIELD MODAL
                                 document.getElementById('disp_nama').value = dataPasien.nama || '-';
+                                document.getElementById('disp_nik').value = dataPasien.nik || '-';
                                 document.getElementById('disp_rm').value = dataPasien.rm || '-';
-                                document.getElementById('disp_tgl_lahir').value = dataPasien.tgl_lahir || '-';
+                                document.getElementById('disp_ttl').value = (dataPasien.tempat_lahir || '-') + ', ' + (dataPasien.tgl_lahir || '-');
 
                                 let jk = dataPasien.jk;
                                 document.getElementById('disp_jk').value = (jk === 'L' || jk === 'Laki-laki') ? 'Laki-laki' : ((jk === 'P' || jk === 'Perempuan') ? 'Perempuan' : jk);
 
+                                document.getElementById('disp_pekerjaan').value = dataPasien.pekerjaan || '-';
+                                document.getElementById('disp_kecamatan').value = dataPasien.kecamatan || '-';
                                 document.getElementById('disp_alamat').value = dataPasien.alamat;
                                 document.getElementById('disp_kontak').value = dataPasien.kontak;
                                 document.getElementById('disp_puskesmas').value = dataPasien.puskesmas;
@@ -278,12 +307,12 @@
 
                                 if (action === 'approve') {
                                     noteInput.value = 'Data identitas valid dan disetujui.';
-                                    submitBtn.textContent = 'Setujui';
+                                    submitBtn.textContent = 'Setujui Data';
                                     submitBtn.className = 'btn btn-success px-4 fw-bold rounded-pill shadow-sm';
                                 } else {
                                     noteInput.value = '';
                                     noteInput.placeholder = 'Mohon perbaiki penulisan nama/NIK/Alamat...';
-                                    submitBtn.textContent = 'Tolak';
+                                    submitBtn.textContent = 'Tolak & Minta Revisi';
                                     submitBtn.className = 'btn btn-danger px-4 fw-bold rounded-pill shadow-sm';
                                 }
                             } catch (e) {
