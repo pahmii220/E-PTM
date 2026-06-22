@@ -32,12 +32,18 @@ class DashboardController extends Controller
         $totalPeserta  = 0;
 
         // Grafik Tren
-        $monthLabels  = collect();
-        $monthTotals  = collect();
-        $weeklyLabels = collect();
-        $weeklyTotals = collect();
-        $dailyLabels  = collect();
-        $dailyTotals  = collect();
+        $monthLabels   = collect();
+        $monthPasien   = collect();
+        $monthDeteksi  = collect();
+        $monthFaktor   = collect();
+        $weeklyLabels  = collect();
+        $weeklyPasien  = collect();
+        $weeklyDeteksi = collect();
+        $weeklyFaktor  = collect();
+        $dailyLabels   = collect();
+        $dailyPasien   = collect();
+        $dailyDeteksi  = collect();
+        $dailyFaktor   = collect();
 
         // Analitik Kegiatan & Faktor Risiko
         $kegiatanLabels  = collect();
@@ -113,7 +119,11 @@ class DashboardController extends Controller
                PASIEN
             ====================== */
             if (class_exists(Pasien::class)) {
-                $totalPasien  = Pasien::count();
+                $queryPasienCount = Pasien::query();
+                if ($petugas && $petugas->puskesmas_id) {
+                    $queryPasienCount->where('puskesmas_id', $petugas->puskesmas_id);
+                }
+                $totalPasien  = $queryPasienCount->count();
                 $totalPeserta = $totalPasien;
             }
 
@@ -121,10 +131,18 @@ class DashboardController extends Controller
                DETEKSI DINI
             ====================== */
             if (class_exists(DeteksiDiniPTM::class)) {
-                $totalDeteksi = DeteksiDiniPTM::count();
+                $queryDeteksiCount = DeteksiDiniPTM::query();
+                if ($petugas && $petugas->puskesmas_id) {
+                    $queryDeteksiCount->where('puskesmas_id', $petugas->puskesmas_id);
+                }
+                $totalDeteksi = $queryDeteksiCount->count();
 
                 if (Schema::hasColumn('deteksi_dini_ptm', 'hasil_skrining')) {
-                    $highRiskCount = DeteksiDiniPTM::where('hasil_skrining', 'Risiko Tinggi')->count();
+                    $queryHighRisk = DeteksiDiniPTM::where('hasil_skrining', 'Risiko Tinggi');
+                    if ($petugas && $petugas->puskesmas_id) {
+                        $queryHighRisk->where('puskesmas_id', $petugas->puskesmas_id);
+                    }
+                    $highRiskCount = $queryHighRisk->count();
                 }
             }
 
@@ -141,55 +159,99 @@ class DashboardController extends Controller
             }
 
             if (Schema::hasTable($tableFaktor)) {
-                $totalFaktor = DB::table($tableFaktor)->count();
+                $queryFaktorCount = DB::table($tableFaktor);
+                if ($petugas && $petugas->puskesmas_id && Schema::hasColumn($tableFaktor, 'puskesmas_id')) {
+                    $queryFaktorCount->where('puskesmas_id', $petugas->puskesmas_id);
+                }
+                $totalFaktor = $queryFaktorCount->count();
             }
 
             /* =====================
-               TREN BULANAN
+               TREN BULANAN, MINGGUAN, HARIAN (3 DATASET)
             ====================== */
             $year = now()->year;
 
-            if (class_exists(Pasien::class)) {
-                $monthlyData = Pasien::select(
-                        DB::raw('MONTH(dibuat_pada) as bulan'),
-                        DB::raw('COUNT(*) as total')
-                    )
-                    ->whereYear('dibuat_pada', $year)
-                    ->groupBy('bulan')
-                    ->orderBy('bulan')
-                    ->get();
+            // --- 1. Bulanan ---
+            $monthLabels = collect(range(1, 12))->map(function ($m) {
+                return Carbon::create()->month($m)->translatedFormat('F');
+            });
 
-                $monthLabels = collect(range(1, 12))->map(function ($m) {
-                    return Carbon::create()->month($m)->translatedFormat('F');
-                });
+            // Pasien Bulanan
+            $monthlyPasienData = Pasien::select(DB::raw('MONTH(dibuat_pada) as bulan'), DB::raw('COUNT(*) as total'))
+                ->whereYear('dibuat_pada', $year)
+                ->when($petugas && $petugas->puskesmas_id, function($q) use ($petugas) {
+                    $q->where('puskesmas_id', $petugas->puskesmas_id);
+                })
+                ->groupBy('bulan')->get();
+            $monthPasien = collect(range(1, 12))->map(function ($m) use ($monthlyPasienData) {
+                return $monthlyPasienData->firstWhere('bulan', $m)->total ?? 0;
+            });
 
-                $monthTotals = collect(range(1, 12))->map(function ($m) use ($monthlyData) {
-                    return $monthlyData->firstWhere('bulan', $m)->total ?? 0;
-                });
+            // Deteksi Dini Bulanan
+            $monthlyDeteksiData = DeteksiDiniPTM::select(DB::raw('MONTH(dibuat_pada) as bulan'), DB::raw('COUNT(*) as total'))
+                ->whereYear('dibuat_pada', $year)
+                ->when($petugas && $petugas->puskesmas_id, function($q) use ($petugas) {
+                    $q->where('puskesmas_id', $petugas->puskesmas_id);
+                })
+                ->groupBy('bulan')->get();
+            $monthDeteksi = collect(range(1, 12))->map(function ($m) use ($monthlyDeteksiData) {
+                return $monthlyDeteksiData->firstWhere('bulan', $m)->total ?? 0;
+            });
+
+            // Faktor Risiko Bulanan
+            $monthlyFaktorData = \App\Models\FaktorResikoPTM::select(DB::raw('MONTH(dibuat_pada) as bulan'), DB::raw('COUNT(*) as total'))
+                ->whereYear('dibuat_pada', $year)
+                ->when($petugas && $petugas->puskesmas_id, function($q) use ($petugas) {
+                    $q->where('puskesmas_id', $petugas->puskesmas_id);
+                })
+                ->groupBy('bulan')->get();
+            $monthFaktor = collect(range(1, 12))->map(function ($m) use ($monthlyFaktorData) {
+                return $monthlyFaktorData->firstWhere('bulan', $m)->total ?? 0;
+            });
+
+            // --- 2. Mingguan ---
+            $weeklyLabels = collect();
+            for ($i = 6; $i >= 0; $i--) {
+                $date = Carbon::today()->subDays($i);
+                $weeklyLabels->push($date->translatedFormat('D'));
+
+                // Pasien
+                $qWPasien = Pasien::whereDate('dibuat_pada', $date);
+                if ($petugas && $petugas->puskesmas_id) $qWPasien->where('puskesmas_id', $petugas->puskesmas_id);
+                $weeklyPasien->push($qWPasien->count());
+
+                // Deteksi Dini
+                $qWDeteksi = DeteksiDiniPTM::whereDate('dibuat_pada', $date);
+                if ($petugas && $petugas->puskesmas_id) $qWDeteksi->where('puskesmas_id', $petugas->puskesmas_id);
+                $weeklyDeteksi->push($qWDeteksi->count());
+
+                // Faktor Risiko
+                $qWFaktor = \App\Models\FaktorResikoPTM::whereDate('dibuat_pada', $date);
+                if ($petugas && $petugas->puskesmas_id) $qWFaktor->where('puskesmas_id', $petugas->puskesmas_id);
+                $weeklyFaktor->push($qWFaktor->count());
             }
 
-            /* =====================
-               DATA MINGGUAN
-            ====================== */
-            if (class_exists(Pasien::class)) {
-                for ($i = 6; $i >= 0; $i--) {
-                    $date = Carbon::today()->subDays($i);
-                    $weeklyLabels->push($date->translatedFormat('D'));
-                    $weeklyTotals->push(Pasien::whereDate('dibuat_pada', $date)->count());
-                }
-            }
-
-            /* =====================
-               DATA HARIAN
-            ====================== */
+            // --- 3. Harian ---
+            $dailyLabels = collect();
             for ($i = 0; $i < 24; $i++) {
                 $dailyLabels->push(sprintf('%02d:00', $i));
-                $dailyTotals->push(
-                    Pasien::whereDate('dibuat_pada', today())
-                        ->whereRaw('HOUR(dibuat_pada) = ?', [$i])
-                        ->count()
-                );
+
+                // Pasien
+                $qDPasien = Pasien::whereDate('dibuat_pada', today())->whereRaw('HOUR(dibuat_pada) = ?', [$i]);
+                if ($petugas && $petugas->puskesmas_id) $qDPasien->where('puskesmas_id', $petugas->puskesmas_id);
+                $dailyPasien->push($qDPasien->count());
+
+                // Deteksi Dini
+                $qDDeteksi = DeteksiDiniPTM::whereDate('dibuat_pada', today())->whereRaw('HOUR(dibuat_pada) = ?', [$i]);
+                if ($petugas && $petugas->puskesmas_id) $qDDeteksi->where('puskesmas_id', $petugas->puskesmas_id);
+                $dailyDeteksi->push($qDDeteksi->count());
+
+                // Faktor Risiko
+                $qDFaktor = \App\Models\FaktorResikoPTM::whereDate('dibuat_pada', today())->whereRaw('HOUR(dibuat_pada) = ?', [$i]);
+                if ($petugas && $petugas->puskesmas_id) $qDFaktor->where('puskesmas_id', $petugas->puskesmas_id);
+                $dailyFaktor->push($qDFaktor->count());
             }
+
 
             /* =====================
                ANALITIK KEGIATAN
@@ -250,11 +312,17 @@ class DashboardController extends Controller
 
             // Grafik Tren
             'monthLabels',
-            'monthTotals',
+            'monthPasien',
+            'monthDeteksi',
+            'monthFaktor',
             'weeklyLabels',
-            'weeklyTotals',
+            'weeklyPasien',
+            'weeklyDeteksi',
+            'weeklyFaktor',
             'dailyLabels',
-            'dailyTotals',
+            'dailyPasien',
+            'dailyDeteksi',
+            'dailyFaktor',
 
             // Analitik Kegiatan
             'kegiatanLabels',

@@ -100,6 +100,14 @@ class Puskesmas extends Model
         return implode(', ', $parts);
     }
 
+    public function getShortPrefixAttribute(): string
+    {
+        // Ekstrak angka dari kode_puskesmas (contoh: PKM-002 -> 002)
+        preg_match('/\d+/', $this->kode_puskesmas, $matches);
+        $number = !empty($matches) ? $matches[0] : $this->id;
+        return 'Pk-' . $number;
+    }
+
     public function deteksiDiniPTM()
 {
     // Sesuaikan 'puskesmas_id' dengan nama foreign key di tabel deteksi_dini_p_t_m

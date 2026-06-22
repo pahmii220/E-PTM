@@ -29,7 +29,7 @@ public function toMail($notifiable)
         $namaPasien = $this->data->pasien->nama_lengkap ?? 'Tidak diketahui';
 
         return (new MailMessage)
-                    ->subject('Antrean Verifikasi PTM: Kunjungan Pasien Baru')
+                    ->subject('[PTM Dinkes] Data Baru Masuk - Mohon Verifikasi')
                     ->greeting('Halo, Tim Dinas Kesehatan')
                     ->line('Terdapat Entri Data Baru (meliputi Data Pasien, Deteksi Dini, dan Faktor Risiko) telah selesai diinput oleh Petugas Puskesmas.')
                     ->line('Nama Pasien: ' . $namaPasien)

@@ -102,7 +102,7 @@ public function store(Request $request)
         try {
             $faktorBaru->load('pasien'); // Memuat relasi agar nama pasien bisa dibaca
             
-            $usersDinkes = User::whereIn('role_name', ['admin', 'pegawai'])->get();
+            $usersDinkes = User::where('role_name', 'pegawai')->get();
             
             if ($usersDinkes->isNotEmpty()) {
                 Notification::send($usersDinkes, new DataPtmBaruNotification($faktorBaru));

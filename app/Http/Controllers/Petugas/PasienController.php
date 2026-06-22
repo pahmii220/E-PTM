@@ -62,6 +62,27 @@ class PasienController extends Controller
             abort(403);
         }
 
+        // Otomatis tambahkan prefiks kode Puskesmas pendek ke no_rekam_medis jika belum ada
+        $puskesmasId = $user->role_name === 'admin' ? $request->puskesmas_id : $user->petugas->puskesmas_id;
+        $puskesmas = \App\Models\Puskesmas::find($puskesmasId);
+        if ($puskesmas && $request->filled('no_rekam_medis')) {
+            $prefix = $puskesmas->short_prefix . '/';
+            $oldPrefix = $puskesmas->kode_puskesmas . '/';
+            $rawNo = $request->no_rekam_medis;
+
+            if (str_starts_with(strtolower($rawNo), strtolower($oldPrefix))) {
+                $rawNo = substr($rawNo, strlen($oldPrefix));
+            }
+
+            if (str_starts_with(strtolower($rawNo), strtolower($prefix))) {
+                $rawNo = substr($rawNo, strlen($prefix));
+            }
+
+            $request->merge([
+                'no_rekam_medis' => $prefix . $rawNo
+            ]);
+        }
+
         // TAMBAHKAN VALIDASI UNTUK 4 FIELD BARU
         $request->validate([
             'nik'            => 'required|string|size:16|unique:pasien', // Harus 16 digit & unik
@@ -150,6 +171,27 @@ public function edit($id)
             return redirect()
                 ->route('petugas.pasien.index')
                 ->with('error', 'Data sudah disetujui dan tidak dapat diubah.');
+        }
+
+        // Otomatis tambahkan/sesuaikan prefiks kode Puskesmas pendek ke no_rekam_medis jika belum ada
+        $puskesmasId = $user->role_name === 'admin' ? ($request->puskesmas_id ?? $pasien->puskesmas_id) : $user->petugas->puskesmas_id;
+        $puskesmas = \App\Models\Puskesmas::find($puskesmasId);
+        if ($puskesmas && $request->filled('no_rekam_medis')) {
+            $prefix = $puskesmas->short_prefix . '/';
+            $oldPrefix = $puskesmas->kode_puskesmas . '/';
+            $rawNo = $request->no_rekam_medis;
+
+            if (str_starts_with(strtolower($rawNo), strtolower($oldPrefix))) {
+                $rawNo = substr($rawNo, strlen($oldPrefix));
+            }
+
+            if (str_starts_with(strtolower($rawNo), strtolower($prefix))) {
+                $rawNo = substr($rawNo, strlen($prefix));
+            }
+
+            $request->merge([
+                'no_rekam_medis' => $prefix . $rawNo
+            ]);
         }
 
         // TAMBAHKAN VALIDASI UNTUK 4 FIELD BARU SAAT UPDATE

@@ -16,11 +16,19 @@ class KegiatanPTMController extends Controller
     public function index()
     {
         $user = Auth::user();
+        
+        $puskesmasId = \App\Models\Petugas::where('user_id', $user->id)->value('puskesmas_id');
 
-        $kegiatan = Kegiatan::latest()->paginate(20);
+        $query = Kegiatan::query();
+        if ($puskesmasId) {
+            $query->where('puskesmas_id', $puskesmasId);
+        }
+
+        $kegiatan = $query->latest()->get();
 
         return view('petugas.kegiatan.index', compact('kegiatan'));
     }
+
 
 
     /**

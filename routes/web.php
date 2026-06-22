@@ -55,6 +55,8 @@ use App\Http\Controllers\Pengguna\VerifikasiController;
 use App\Http\Controllers\Pengguna\RekapPuskesmasController;
 use App\Http\Controllers\Pengguna\PegawaiDinkesController;
 use App\Http\Controllers\Pengguna\LaporanStatusPTMController;
+use App\Http\Controllers\Pengguna\RekapLaporanController;
+
 
 
 /*
@@ -167,6 +169,9 @@ Route::prefix('admin')
 
     Route::get('/dashboard', [AdminDashboardController::class,'index'])
         ->name('dashboard');
+
+    Route::get('/dashboard/print', [KepalaP2ptmController::class, 'printStatistik'])
+        ->name('dashboard.print');
 
     // Petugas
     Route::get('data_petugas/print', [PetugasController::class,'print'])
@@ -343,9 +348,14 @@ Route::prefix('pengguna')
     Route::get('/verifikasi/print/pasien', [VerifikasiController::class,'printPasien'])->name('verifikasi.print.pasien');
     Route::get('/verifikasi/print/faktor', [VerifikasiController::class,'printFaktor'])->name('verifikasi.print.faktor');
     
+Route::get('/rekap-laporan',
+    [RekapLaporanController::class, 'index'])
+    ->name('rekap.index');
+
 Route::get('/rekap-puskesmas',
     [RekapPuskesmasController::class, 'index'])
     ->name('rekap.puskesmas');
+
 
 Route::get('/rekap-puskesmas/print',
     [RekapPuskesmasController::class, 'print'])
@@ -415,6 +425,8 @@ Route::middleware(['auth', 'active', 'role:kepala_p2ptm'])->prefix('kepala-p2ptm
     
     // 1. Dashboard Utama (Tetap menggunakan controller lama)
     Route::get('/dashboard', [KepalaP2ptmController::class, 'dashboard'])->name('kepala.dashboard');
+    Route::get('/dashboard/print', [KepalaP2ptmController::class, 'printStatistik'])->name('kepala.dashboard.print');
+
     
     // ====================================================================
     // GROUP LAPORAN KEPALA P2PTM

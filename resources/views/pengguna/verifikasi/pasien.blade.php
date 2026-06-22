@@ -29,6 +29,24 @@
                             @endforeach
                         </select>
 
+                         {{-- Filter Bulan --}}
+    <select name="bulan"
+        class="form-select form-select-sm rounded-pill shadow-sm"
+        onchange="this.form.submit()"
+        style="min-width: 140px;">
+        <option value="all">Semua Bulan</option>
+        @foreach([
+            1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',
+            5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',
+            9=>'September',10=>'Oktober',11=>'November',12=>'Desember'
+        ] as $key => $nama)
+            <option value="{{ $key }}"
+                {{ request('bulan') == $key ? 'selected' : '' }}>
+                {{ $nama }}
+            </option>
+        @endforeach
+    </select>
+
                         {{-- Filter Status --}}
                         <select name="status" class="form-select form-select-sm rounded-pill shadow-sm"
                             onchange="this.form.submit()" style="min-width: 130px;">

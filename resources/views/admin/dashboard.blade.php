@@ -114,10 +114,13 @@
                         <div class="card shadow-sm h-100 border-0 rounded-2xl">
                             <div class="card-body p-4">
                                 <div class="d-flex justify-content-between align-items-center mb-4 border-b pb-3 border-gray-100">
-                                        <div class="flex items-center gap-2">
+                                    <div class="flex items-center gap-2">
                                         <div class="bg-blue-100 text-blue-600 p-2 rounded-lg"><i class="bi bi-hospital"></i></div>
-                                        <h5 class="mb-0 fw-bold text-gray-800">Pasien Terdaftar per Puskesmas</h5>
+                                        <h5 class="mb-0 fw-bold text-gray-800">Peserta Terdaftar per Puskesmas</h5>
                                     </div>
+                                    <a href="{{ route('admin.dashboard.print') }}" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm flex items-center gap-1.5 font-semibold text-xs border-gray-200 text-gray-600 hover:bg-gray-50">
+                                        <i class="bi bi-printer"></i> Cetak
+                                    </a>
                                 </div>
         {{-- Chart Vertical Grouped --}}
     <div style="height: 320px; width: 100%;">

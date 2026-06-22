@@ -39,6 +39,9 @@
                                     Nomor Rekam Medis <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" name="no_rekam_medis" class="form-control rounded-3" placeholder="Contoh: RM-001" required>
+                                <small class="text-muted" style="font-size: 11px;">
+                                    Sistem akan otomatis menambahkan prefiks Puskesmas (contoh: <code>Pk-002/RM-001</code>).
+                                </small>
                             </div>
 
                             {{-- NAMA --}}

@@ -68,7 +68,7 @@
                         x-data="{ pegawaiOpen: {{ request()->routeIs('admin.data_petugas.*', 'admin.pegawai.*', 'admin.data_puskesmas.*', 'admin.pejabat.*', 'admin.reset.*') ? 'true' : 'false' }} }">
                         <button @click="pegawaiOpen = !pegawaiOpen"
                             class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
-                            <span class="flex items-center gap-3"><i class="bi bi-folder2-open text-lg"></i> Data Master</span>
+                            <span class="flex items-center gap-3"><i class="bi bi-folder2-open text-lg"></i> Manajemen Pengguna</span>
                             <i :class="pegawaiOpen ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
                         </button>
                         <ul x-show="pegawaiOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden">
@@ -269,40 +269,15 @@
                     </li>
 
 
-                    {{-- MENU REKAP LAPORAN --}}
-                    <li x-data="{ rekapOpen: {{ (request()->routeIs('pengguna.rekap.*') || request()->routeIs('pengguna.laporan.status_ptm') || request()->routeIs('pengguna.laporan.kelompok_usia') || request()->routeIs('pengguna.laporan.kegiatan')) ? 'true' : 'false' }} }">
-                        <button @click="rekapOpen = !rekapOpen"
-                            class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
-                            <span class="flex items-center gap-3"><i class="bi bi-bar-chart-fill text-lg"></i> Rekap Laporan</span>
-                            <i :class="rekapOpen ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
-                        </button>
-                        <ul x-show="rekapOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden">
-                            <li>
-                                <a href="{{ route('pengguna.rekap.puskesmas') }}"
-                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('pengguna.rekap.puskesmas*') ? 'bg-green-500 text-white' : '' }}">
-                                    <i class="bi bi-building me-2"></i> Rekap Puskesmas
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('pengguna.laporan.status_ptm') }}"
-                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('pengguna.laporan.status_ptm') ? 'bg-green-500 text-white' : '' }}">
-                                    <i class="bi bi-heart-pulse me-2"></i> Rekap Skrining PTM
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('pengguna.laporan.kelompok_usia') }}"
-                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('pengguna.laporan.kelompok_usia') ? 'bg-green-500 text-white' : '' }}">
-                                    <i class="bi bi-person-lines-fill me-2"></i> PTM Kelompok Usia
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ route('pengguna.laporan.kegiatan') }}"
-                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('pengguna.laporan.kegiatan') ? 'bg-green-500 text-white' : '' }}">
-                                    <i class="bi bi-calendar-event me-2"></i> Laporan Kegiatan PTM
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
+                        {{-- MENU REKAP LAPORAN --}}
+                        <li>
+                            <a href="{{ route('pengguna.rekap.index') }}"
+                                class="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 {{ request()->routeIs('pengguna.rekap.index') ? 'bg-green-600 text-white' : '' }}">
+                                <i class="bi bi-bar-chart-fill text-lg"></i>
+                                <span>Rekap Laporan</span>
+                            </a>
+                        </li>
+
 
                     {{-- MENU BARU: EVALUASI SISTEM (SUS) --}}
                     <li>

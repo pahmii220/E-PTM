@@ -88,7 +88,7 @@
                 <div class="card-footer text-center bg-transparent border-0">
                     <small class="text-muted">
                         Belum punya akun?
-                        <a href="{{ route('register') }}" class="text-decoration-none text-success fw-semibold">Daftar</a>
+                        <a href="{{ route('register') }}" class="text-decoration-none text-success fw-semibold">Registrasi</a>
                     </small>
                 </div>
             </div>

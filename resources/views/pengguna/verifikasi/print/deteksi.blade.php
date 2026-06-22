@@ -264,38 +264,43 @@
                     </div>
 
                 @else
-                    {{-- 2. TAMPILAN DINAMIS ADMIN/KEPALA DENGAN QR CODE VERIFIKASI --}}
-                    <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
-                        {{ $kepalaAktif->jabatan ?? 'KEPALA BIDANG P2PTM' }}
-                    </div>
+                                {{-- 2. TAMPILAN DINAMIS ADMIN/KEPALA DENGAN QR CODE VERIFIKASI --}}
+                                <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
+                                    {{ $kepalaAktif->jabatan ?? 'KEPALA BIDANG P2PTM' }}
+                                </div>
 
-                    {{-- INI BAGIAN YANG DIUBAH --}}
-                    <div class="qr-container">
-                        @if(!empty($qrToken))
-                            @php
-                                $bulanAngka = (int) request('bulan', now()->month);
-                                $tahun = request('tahun', now()->year);
-                                $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
-                                $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
+                                <div style="font-size:7px;">
+                                    Dokumen ini telah disahkan secara elektronik
+                                </div>
 
-                                // Ambil nama dan NIP untuk dikirim ke QR Code
-                                $namaPejabat = $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah';
-                                $nipPejabat = $kepalaAktif->nip ?? '1973062022006041016';
-                            @endphp
 
-                            {!! QrCode::size(85)->generate(url('/verifikasi-laporan?judul=Laporan%20Deteksi%20Dini%20PTM&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah) . '&nama_kepala=' . urlencode($namaPejabat) . '&nip=' . urlencode($nipPejabat))) !!}
-                        @else
-                            <div style="height: 85px;"></div>
-                        @endif
-                    </div>
-                    {{-- AKHIR BAGIAN YANG DIUBAH --}}
+                                {{-- INI BAGIAN YANG DIUBAH --}}
+                                <div class="qr-container">
+                                    @if(!empty($qrToken))
+                                        @php
+                    $bulanAngka = (int) request('bulan', now()->month);
+                    $tahun = request('tahun', now()->year);
+                    $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
+                    $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
 
-                    <div class="name" style="margin-top: 0;">
-                        {{ $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah' }}
-                    </div>
-                    <div style="margin-top:4px;">
-                        NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}
-                    </div>
+                    // Ambil nama dan NIP untuk dikirim ke QR Code
+                    $namaPejabat = $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah';
+                    $nipPejabat = $kepalaAktif->nip ?? '1973062022006041016';
+                                        @endphp
+
+                                        {!! QrCode::size(85)->generate(url('/verifikasi-laporan?judul=Laporan%20Deteksi%20Dini%20PTM&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah) . '&nama_kepala=' . urlencode($namaPejabat) . '&nip=' . urlencode($nipPejabat))) !!}
+                                    @else
+                                        <div style="height: 85px;"></div>
+                                    @endif
+                                </div>
+                                {{-- AKHIR BAGIAN YANG DIUBAH --}}
+
+                                <div class="name" style="margin-top: 0;">
+                                    {{ $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah' }}
+                                </div>
+                                <div style="margin-top:4px;">
+                                    NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}
+                                </div>
                 @endif
 
             </div>

@@ -57,6 +57,9 @@
                             <input type="text" name="no_rekam_medis"
                                 class="form-control rounded-3 @error('no_rekam_medis') is-invalid @enderror"
                                 value="{{ old('no_rekam_medis', $pasien->no_rekam_medis) }}" required>
+                            <small class="text-muted" style="font-size: 11px;">
+                                Nomor rekam medis menyertakan kode Puskesmas sebagai prefiks unik (contoh: <code>Pk-002/RM-001</code>).
+                            </small>
                             @error('no_rekam_medis')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

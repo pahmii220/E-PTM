@@ -216,36 +216,40 @@
                     </div>
 
                 @else
-                    {{-- ======================================================= --}}
-                    {{-- 2. TAMPILAN DINAMIS ADMIN/KEPALA (DARI DB & ADA QR CODE)--}}
-                    {{-- ======================================================= --}}
-                    <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
-                        {{ $kepalaAktif->jabatan ?? 'KEPALA BIDANG P2PTM' }}
-                    </div>
+                                {{-- ======================================================= --}}
+                                {{-- 2. TAMPILAN DINAMIS ADMIN/KEPALA (DARI DB & ADA QR CODE)--}}
+                                {{-- ======================================================= --}}
+                                <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
+                                    {{ $kepalaAktif->jabatan ?? 'KEPALA BIDANG P2PTM' }}
+                                </div>
 
-                    <div class="qr-container">
-                        @if(!empty($qrToken))
-                            @php
-                                $bulanAngka = (int) request('bulan', now()->month);
-                                $tahun = request('tahun', now()->year);
-                                $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
+                                <div style="font-size:7px;">
+                                    Dokumen ini telah disahkan secara elektronik
+                                </div>
 
-                                // Tambahkan ->setTimezone('Asia/Makassar') untuk WITA
-                                $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i'); 
-                            @endphp
+                                <div class="qr-container">
+                                    @if(!empty($qrToken))
+                                        @php
+                    $bulanAngka = (int) request('bulan', now()->month);
+                    $tahun = request('tahun', now()->year);
+                    $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
 
-                            {!! QrCode::size(100)->generate(url('/verifikasi-laporan?judul=Laporan%20Peserta%20PTM&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah))) !!}
-                        @else
-                            <div style="height: 85px;"></div>
-                        @endif
-                    </div>
+                    // Tambahkan ->setTimezone('Asia/Makassar') untuk WITA
+                    $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i'); 
+                                        @endphp
 
-                    <div class="name" style="margin-top: 0;">
-                        {{ $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah' }}
-                    </div>
-                    <div style="margin-top:4px;">
-                        NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}
-                    </div>
+                                        {!! QrCode::size(100)->generate(url('/verifikasi-laporan?judul=Laporan%20Peserta%20PTM&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah))) !!}
+                                    @else
+                                        <div style="height: 85px;"></div>
+                                    @endif
+                                </div>
+
+                                <div class="name" style="margin-top: 0;">
+                                    {{ $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah' }}
+                                </div>
+                                <div style="margin-top:4px;">
+                                    NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}
+                                </div>
                 @endif
 
             </div>

@@ -54,7 +54,7 @@
                     {{-- UBAH ROUTE CETAK KE DETEKSI DINI --}}
                     <a href="{{ route('kepala.laporan.deteksi_dini.cetak', ['bulan' => request('bulan', date('m')), 'tahun' => request('tahun', date('Y'))]) }}"
                         class="btn btn-outline-dark btn-sm rounded-pill shadow-sm px-4" target="_blank">
-                        <i class="bi bi-printer"></i> Cetak Laporan
+                        <i class="bi bi-printer"></i> Cetak & Sahkan Laporan
                     </a>
                 </div>
             </div>
@@ -98,8 +98,8 @@
 
                                 <td>
                                     @php
-                                        // Ambil teks dari database dan ubah ke huruf kecil untuk pengecekan
-                                        $status = strtolower($row->hasil_skrining ?? '');
+    // Ambil teks dari database dan ubah ke huruf kecil untuk pengecekan
+    $status = strtolower($row->hasil_skrining ?? '');
                                     @endphp
 
                                     @if(str_contains($status, 'normal'))

@@ -131,12 +131,13 @@
                 </div>
 
             </div>
-            {{-- ================= ROW: GRAFIK TREN & TRACKING ================= --}}
+
+            {{-- ================= ROW: GRAFIK TREN & FAKTOR RISIKO ================= --}}
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-10">
 
                 {{-- KIRI: GRAFIK TREN PTM (Mengambil 2/3 Lebar Layar) --}}
                 <div class="xl:col-span-2 bg-white rounded-3xl shadow-sm hover:shadow-md ring-1 ring-black/5 p-6 md:p-8 transition-all duration-300 animate-fade-in-up"
-                    style="animation-delay: 0.5s;">
+                    style="animation-delay: 0.6s;">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                         <div>
                             <h4 class="text-xl font-bold text-slate-800">Tren Kasus Penyakit Tidak Menular</h4>
@@ -160,124 +161,8 @@
                     </div>
                 </div>
 
-                {{-- KANAN: TRACKING VERIFIKASI (Mengambil 1/3 Lebar Layar) --}}
-                <div class="xl:col-span-1 bg-white rounded-3xl shadow-sm hover:shadow-md ring-1 ring-black/5 p-6 md:p-8 transition-all duration-300 animate-fade-in-up flex flex-col"
-                    style="animation-delay: 0.6s;">
-                    <div class="mb-5">
-                        <h4 class="text-xl font-bold text-slate-800">Tracking Verifikasi</h4>
-                        <p class="text-sm text-slate-500 mt-1">Status data terbaru</p>
-                    </div>
-
-                    {{-- Mini Stat Pills --}}
-                    <div class="flex flex-wrap gap-1.5 mb-6 pb-4 border-b border-slate-100">
-                        <div
-                            class="flex-shrink-0 px-2 py-1 rounded-lg bg-amber-50 text-amber-700 text-[11px] font-semibold ring-1 ring-amber-200">
-                            <i class="bi bi-hourglass-split"></i> {{ $trackPending ?? 0 }} Pending
-                        </div>
-                        <div
-                            class="flex-shrink-0 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[11px] font-semibold ring-1 ring-emerald-200">
-                            <i class="bi bi-check-circle-fill"></i> {{ $trackApproved ?? 0 }} Disetujui
-                        </div>
-                        <div
-                            class="flex-shrink-0 px-2 py-1 rounded-lg bg-rose-50 text-rose-700 text-[11px] font-semibold ring-1 ring-rose-200">
-                            <i class="bi bi-x-circle-fill"></i> {{ $trackRevisi ?? 0 }} Ditolak
-                        </div>
-                    </div>
-
-                    {{-- Daftar Riwayat (Vertical List) --}}
-                    <div class="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar" style="max-height: 290px;">
-                        @forelse($trackingData ?? [] as $track)
-                            <div
-                                class="group relative pl-4 border-l-2 @if($track->status_verifikasi === 'pending') border-amber-400 @elseif($track->status_verifikasi === 'approved') border-emerald-400 @else border-rose-400 @endif hover:bg-slate-50 p-3 rounded-r-xl transition-colors">
-
-                                <div class="flex justify-between items-start mb-1 gap-2">
-                                    <h5 class="text-sm font-bold text-slate-800 truncate"
-                                        title="{{ $track instanceof \App\Models\Pasien ? $track->nama_lengkap : (optional($track->pasien)->nama_lengkap ?? 'Anonim') }}">
-                                        {{ $track instanceof \App\Models\Pasien ? $track->nama_lengkap : (optional($track->pasien)->nama_lengkap ?? 'Anonim') }}
-                                    </h5>
-
-                                    {{-- Status Badge --}}
-                                    @if($track->status_verifikasi === 'pending')
-                                        <span
-                                            class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-700 whitespace-nowrap">
-                                            TERTUNDA
-                                        </span>
-                                    @elseif($track->status_verifikasi === 'approved')
-                                        <span
-                                            class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 whitespace-nowrap">
-                                            SELESAI
-                                        </span>
-                                    @else
-                                        <span
-                                            class="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-700 whitespace-nowrap">
-                                            REVISI
-                                        </span>
-                                    @endif
-                                </div>
-
-                                <div class="flex justify-between items-center text-xs text-slate-500 mt-2">
-                                    <span class="font-mono">#PTM-{{ str_pad($track->id, 5, '0', STR_PAD_LEFT) }}</span>
-
-                                    {{-- Waktu Proses --}}
-                                    @if($track->status_verifikasi === 'pending')
-                                        <span class="text-amber-600 font-medium">
-                                            <i class="bi bi-stopwatch"></i>
-                                            {{ \Carbon\Carbon::parse($track->dibuat_pada)->locale('id')->diffForHumans(null, true) }}
-                                        </span>
-                                    @else
-                                        @php
-                                            $start = \Carbon\Carbon::parse($track->dibuat_pada);
-                                            $end = \Carbon\Carbon::parse($track->diverifikasi_pada ?? $track->diubah_pada);
-                                        @endphp
-                                        <span class="text-emerald-600 font-medium">
-                                            <i class="bi bi-clock-history"></i>
-                                            {{ $start->locale('id')->diffForHumans($end, true) }}
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
-                        @empty
-                            <div class="text-center p-6 bg-slate-50 rounded-xl border border-slate-100">
-                                <i class="bi bi-inbox text-2xl text-slate-300 mb-2 block"></i>
-                                <p class="text-xs text-slate-500 font-medium">Belum ada data pengajuan</p>
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
-
-            </div>
-
-            {{-- ================= GRAFIK ANALITIK (GRID 2) ================= --}}
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-
-                {{-- KIRI: Grafik Kegiatan & Peserta --}}
-                <div class="bg-white rounded-3xl shadow-sm hover:shadow-md ring-1 ring-black/5 p-6 md:p-8 transition-all duration-300 flex flex-col animate-fade-in-up"
-                    style="animation-delay: 0.6s;">
-                    <div class="mb-6">
-                        <h4 class="text-xl font-bold text-slate-800">Kehadiran Peserta Kegiatan PTM</h4>
-                        <p class="text-sm text-slate-500 mt-1">Distribusi jumlah kehadiran peserta per jenis kegiatan</p>
-                    </div>
-
-                    {{-- Kanvas Chart --}}
-                    <div class="relative w-full h-[250px] flex justify-center items-center">
-                        @if(!empty($kegiatanPeserta) && collect($kegiatanPeserta)->sum() > 0)
-                            <canvas id="kegiatanChart"></canvas>
-                        @else
-                            <div class="text-center bg-slate-50 rounded-2xl p-8 border border-slate-100 w-full">
-                                <div
-                                    class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white shadow-sm mb-4">
-                                    <i class="bi bi-clipboard-x text-3xl text-slate-300"></i>
-                                </div>
-                                <p class="text-slate-500 font-medium">Belum ada data kehadiran kegiatan di Puskesmas Anda</p>
-                            </div>
-                        @endif
-                    </div>
-
-
-                </div>
-
                 {{-- KANAN: Grafik Faktor Risiko --}}
-                <div class="bg-white rounded-3xl shadow-sm hover:shadow-md ring-1 ring-black/5 p-6 md:p-8 transition-all duration-300 flex flex-col animate-fade-in-up"
+                <div class="xl:col-span-1 bg-white rounded-3xl shadow-sm hover:shadow-md ring-1 ring-black/5 p-6 md:p-8 transition-all duration-300 flex flex-col animate-fade-in-up"
                     style="animation-delay: 0.7s;">
                     <div class="mb-6">
                         <h4 class="text-xl font-bold text-slate-800">Distribusi Faktor Risiko</h4>
@@ -378,48 +263,84 @@
             Chart.defaults.plugins.tooltip.displayColors = false;
 
             const chartData = {
-                monthly: { labels: {!! json_encode($monthLabels ?? []) !!}, data: {!! json_encode($monthTotals ?? []) !!} },
-                weekly: { labels: {!! json_encode($weeklyLabels ?? []) !!}, data: {!! json_encode($weeklyTotals ?? []) !!} },
-                daily: { labels: {!! json_encode($dailyLabels ?? []) !!}, data: {!! json_encode($dailyTotals ?? []) !!} }
+                monthly: {
+                    labels: {!! json_encode($monthLabels ?? []) !!},
+                    pasien: {!! json_encode($monthPasien ?? []) !!},
+                    deteksi: {!! json_encode($monthDeteksi ?? []) !!},
+                    faktor: {!! json_encode($monthFaktor ?? []) !!}
+                },
+                weekly: {
+                    labels: {!! json_encode($weeklyLabels ?? []) !!},
+                    pasien: {!! json_encode($weeklyPasien ?? []) !!},
+                    deteksi: {!! json_encode($weeklyDeteksi ?? []) !!},
+                    faktor: {!! json_encode($weeklyFaktor ?? []) !!}
+                },
+                daily: {
+                    labels: {!! json_encode($dailyLabels ?? []) !!},
+                    pasien: {!! json_encode($dailyPasien ?? []) !!},
+                    deteksi: {!! json_encode($dailyDeteksi ?? []) !!},
+                    faktor: {!! json_encode($dailyFaktor ?? []) !!}
+                }
             };
 
             // =========================
-            // 1. GRAFIK TREN PTM (Smooth Area Chart)
+            // 1. GRAFIK TREN PTM (Grouped Bar Chart - Aesthetic)
             // =========================
             const trendCtx = document.getElementById('trendChart');
             if (trendCtx) {
                 const ctx = trendCtx.getContext('2d');
 
-                // Gradien warna untuk area di bawah garis
-                let gradientFill = ctx.createLinearGradient(0, 0, 0, 350);
-                gradientFill.addColorStop(0, 'rgba(99, 102, 241, 0.4)'); // Indigo transparan (atas)
-                gradientFill.addColorStop(1, 'rgba(99, 102, 241, 0.0)'); // Pudar ke transparan (bawah)
-
                 const trendChart = new Chart(ctx, {
-                    type: 'line', // Diubah menjadi Line Chart
+                    type: 'bar',
                     data: {
                         labels: chartData.monthly.labels,
-                        datasets: [{
-                            label: 'Jumlah Pasien',
-                            data: chartData.monthly.data,
-                            borderColor: '#6366f1', // Warna garis utama (Indigo-500)
-                            backgroundColor: gradientFill,
-                            borderWidth: 3,
-                            fill: true, // Mengaktifkan warna di bawah garis
-                            tension: 0.4, // KUNCI ESTETIK: Membuat garis melengkung (smooth curve)
-                            pointBackgroundColor: '#ffffff', // Warna titik
-                            pointBorderColor: '#6366f1',
-                            pointBorderWidth: 2,
-                            pointRadius: 1, // Titik sangat kecil saat diam
-                            pointHoverRadius: 6, // Titik membesar saat di-hover
-                            pointHoverBackgroundColor: '#6366f1',
-                            pointHoverBorderColor: '#ffffff'
-                        }]
+                        datasets: [
+                            {
+                                label: 'Faktor Risiko',
+                                data: chartData.monthly.faktor,
+                                backgroundColor: '#ef4444',
+                                hoverBackgroundColor: '#dc2626',
+                                borderRadius: 6,
+                                borderSkipped: 'bottom',
+                                maxBarThickness: 15
+                            },
+                            {
+                                label: 'Deteksi Dini',
+                                data: chartData.monthly.deteksi,
+                                backgroundColor: '#22c55e',
+                                hoverBackgroundColor: '#16a34a',
+                                borderRadius: 6,
+                                borderSkipped: 'bottom',
+                                maxBarThickness: 15
+                            },
+                            {
+                                label: 'Peserta',
+                                data: chartData.monthly.pasien,
+                                backgroundColor: '#3b82f6',
+                                hoverBackgroundColor: '#2563eb',
+                                borderRadius: 6,
+                                borderSkipped: 'bottom',
+                                maxBarThickness: 15
+                            }
+                        ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'bottom',
+                                alignment: 'center',
+                                labels: {
+                                    boxWidth: 10,
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                    padding: 20,
+                                    font: { size: 12, weight: '600' }
+                                }
+                            }
+                        },
                         interaction: { mode: 'index', intersect: false },
                         scales: {
                             y: {
@@ -430,8 +351,8 @@
                             },
                             x: {
                                 border: { display: false },
-                                grid: { display: false }, // Hilangkan grid vertikal agar bersih
-                                ticks: { padding: 10, font: { weight: '500' } }
+                                grid: { display: false },
+                                ticks: { padding: 10, font: { weight: '600' } }
                             }
                         }
                     }
@@ -441,7 +362,9 @@
                 document.getElementById('filterRange').addEventListener('change', function () {
                     const key = this.value;
                     trendChart.data.labels = chartData[key].labels;
-                    trendChart.data.datasets[0].data = chartData[key].data;
+                    trendChart.data.datasets[0].data = chartData[key].faktor;
+                    trendChart.data.datasets[1].data = chartData[key].deteksi;
+                    trendChart.data.datasets[2].data = chartData[key].pasien;
                     trendChart.update();
                 });
             }

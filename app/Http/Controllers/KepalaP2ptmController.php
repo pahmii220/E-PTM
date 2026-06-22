@@ -5,6 +5,8 @@ use App\Models\DokumenPengesahan;
 use App\Models\Puskesmas;
 use App\Models\DeteksiDiniPTM;
 use App\Models\Pasien;
+use App\Models\FaktorResikoPTM;
+
 
 class KepalaP2ptmController extends Controller
 {
@@ -47,6 +49,67 @@ public function dashboard()
     
     return view('kepala_p2ptm.dashboard', compact('data', 'skNormal', 'skDicurigai', 'skRisiko', 'totalSkrining'));
 }
+
+public function printStatistik()
+{
+    $tahun = date('Y');
+    $bulanIndo = [
+        1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 
+        5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 
+        9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+    ];
+
+    $statistikBulanan = [];
+    $pasienBulanan = [];
+    $deteksiBulanan = [];
+    $faktorBulanan = [];
+
+    for ($m = 1; $m <= 12; $m++) {
+        $pCount = Pasien::where('status_verifikasi', 'approved')
+            ->whereYear('dibuat_pada', $tahun)
+            ->whereMonth('dibuat_pada', $m)
+            ->count();
+            
+        $dCount = DeteksiDiniPTM::where('status_verifikasi', 'approved')
+            ->whereYear('tanggal_pemeriksaan', $tahun)
+            ->whereMonth('tanggal_pemeriksaan', $m)
+            ->count();
+            
+        $fCount = FaktorResikoPTM::where('status_verifikasi', 'approved')
+            ->whereYear('tanggal_pemeriksaan', $tahun)
+            ->whereMonth('tanggal_pemeriksaan', $m)
+            ->count();
+
+        $statistikBulanan[] = [
+            'nama_bulan' => $bulanIndo[$m],
+            'total_pasien' => $pCount,
+            'total_deteksi' => $dCount,
+            'total_faktor' => $fCount,
+        ];
+
+        $pasienBulanan[] = $pCount;
+        $deteksiBulanan[] = $dCount;
+        $faktorBulanan[] = $fCount;
+    }
+
+    $bulanLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+
+    $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
+    $qrToken = "STATISTIK-" . date('m-Y') . "-" . strtoupper(uniqid());
+
+    return view('kepala_p2ptm.laporan.print_statistik', compact(
+        'statistikBulanan',
+        'bulanLabels',
+        'pasienBulanan',
+        'deteksiBulanan',
+        'faktorBulanan',
+        'kepalaAktif',
+        'qrToken',
+        'tahun'
+    ));
+}
+
+
 // Ganti bagian ini di KepalaP2ptmController.php
 
 public function verifikasiPublik($id)

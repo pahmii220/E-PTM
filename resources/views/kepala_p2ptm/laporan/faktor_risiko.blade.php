@@ -41,7 +41,7 @@
                 <div class="d-flex justify-content-end gap-2">
                     <a href="{{ route('kepala.laporan.faktor_risiko.cetak', ['bulan' => request('bulan', date('m')), 'tahun' => request('tahun', date('Y'))]) }}"
                         class="btn btn-outline-dark btn-sm rounded-pill shadow-sm px-4" target="_blank">
-                        <i class="bi bi-printer"></i> Cetak Laporan
+                        <i class="bi bi-printer"></i> Cetak & Sahkan Laporan
                     </a>
                 </div>
             </div>

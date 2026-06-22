@@ -120,32 +120,37 @@ public function process(Request $request)
 /**
      * List pasien — mendukung filter status (approved/rejected/pending) dan filter Puskesmas
      */
-    public function pasien(Request $request)
-    {
-        $status = $request->status ?? 'pending';
-        $puskesmasId = $request->puskesmas_id ?? 'all';
+        public function pasien(Request $request)
+        {
+            $status = $request->status ?? 'pending';
+            $puskesmasId = $request->puskesmas_id ?? 'all';
+             $bulan = $request->bulan ?? 'all';
 
-        // Gunakan with('puskesmas') agar load datanya lebih ringan (Eager Loading)
-        $query = Pasien::with('puskesmas')->orderBy('dibuat_pada','desc');
+            // Gunakan with('puskesmas') agar load datanya lebih ringan (Eager Loading)
+            $query = Pasien::with('puskesmas')->orderBy('dibuat_pada','desc');
 
-        // Filter berdasarkan Status
-        if ($status !== 'all') {
-            $query->where('status_verifikasi', $status);
+            // Filter berdasarkan Status
+            if ($status !== 'all') {
+                $query->where('status_verifikasi', $status);
+            }
+
+            // Filter berdasarkan Puskesmas
+            if ($puskesmasId !== 'all') {
+                $query->where('puskesmas_id', $puskesmasId);
+            }
+            // Filter berdasarkan Bulan
+if ($bulan !== 'all') {
+    $query->whereMonth('dibuat_pada', $bulan);
+}
+
+            // Simpan semua parameter query agar pagination tidak mereset filter
+            $data = $query->paginate(20)->appends($request->query());
+
+            // Ambil daftar puskesmas untuk ditampilkan di dropdown filter
+            $puskesmasList = \App\Models\Puskesmas::all();
+
+            return view('pengguna.verifikasi.pasien', compact('data', 'status', 'puskesmasList','bulan'));
         }
-
-        // Filter berdasarkan Puskesmas
-        if ($puskesmasId !== 'all') {
-            $query->where('puskesmas_id', $puskesmasId);
-        }
-
-        // Simpan semua parameter query agar pagination tidak mereset filter
-        $data = $query->paginate(20)->appends($request->query());
-
-        // Ambil daftar puskesmas untuk ditampilkan di dropdown filter
-        $puskesmasList = \App\Models\Puskesmas::all();
-
-        return view('pengguna.verifikasi.pasien', compact('data', 'status', 'puskesmasList'));
-    }
 
 
 /**

@@ -56,7 +56,7 @@
     </style>
 </head>
 
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-gray-50 text-gray-800" x-data="{ mobileMenuOpen: false, mobileProfilOpen: false }">
 
     <!-- 1. TOP BAR & NAVIGATION -->
     <header id="navbar"
@@ -65,16 +65,16 @@
             <div class="flex justify-between items-center">
                 <!-- Logo & Title -->
                 <div class="flex items-center space-x-3">
-                    <img src="{{ asset('images/dinkes.png') }}" alt="Logo Dinas Kesehatan Banjarmasin"
+                    <img src="{{ asset('images/dinkes.png') }}" alt="Logo Dinas Kesehatan Kalsel"
                         class="h-12 md:h-14 w-auto drop-shadow-md bg-white/90 backdrop-blur-sm rounded-full p-1 border border-emerald-100"
                         style="max-height: 60px;">
                     <div class="border-l-2 border-emerald-400 pl-3">
                         <span id="nav-title"
-                            class="font-extrabold text-lg md:text-xl text-white block tracking-tight leading-tight uppercase drop-shadow-lg transition-colors duration-300">DINAS
+                            class="font-extrabold text-base md:text-xl text-white block tracking-tight leading-tight uppercase drop-shadow-lg transition-colors duration-300">DINAS
                             KESEHATAN</span>
                         <span id="nav-subtitle"
-                            class="text-[10px] md:text-xs font-semibold text-emerald-100 tracking-wider uppercase block drop-shadow-md transition-colors duration-300">Kota
-                            Banjarmasin</span>
+                            class="text-[9px] md:text-xs font-semibold text-emerald-100 tracking-wider uppercase block drop-shadow-md transition-colors duration-300">Provinsi
+                            Kalimantan Selatan</span>
                     </div>
                 </div>
 
@@ -129,10 +129,60 @@
                 </nav>
 
                 <!-- Mobile Menu Button -->
-                <button class="md:hidden text-white text-2xl drop-shadow-md" id="mobile-menu-btn">
-                    <i class="fa-solid fa-bars"></i>
+                <button class="md:hidden text-white text-2xl drop-shadow-md focus:outline-none" @click="mobileMenuOpen = !mobileMenuOpen">
+                    <i class="fa-solid text-white" :class="mobileMenuOpen ? 'fa-xmark' : 'fa-bars'"></i>
                 </button>
             </div>
+        </div>
+
+        <!-- Mobile Drawer (Alpine.js) -->
+        <div x-show="mobileMenuOpen" 
+             x-transition:enter="transition ease-out duration-300 transform"
+             x-transition:enter-start="-translate-y-full opacity-0"
+             x-transition:enter-end="translate-y-0 opacity-100"
+             x-transition:leave="transition ease-in duration-200 transform"
+             x-transition:leave-start="translate-y-0 opacity-100"
+             x-transition:leave-end="-translate-y-full opacity-0"
+             class="absolute top-full left-0 w-full bg-emerald-950/95 backdrop-blur-md border-b border-emerald-800 shadow-2xl py-6 px-6 md:hidden flex flex-col space-y-4 z-50"
+             style="display: none;">
+            
+            <a href="#beranda" @click="mobileMenuOpen = false"
+                class="text-white font-semibold text-lg hover:text-emerald-300 transition py-2 border-b border-white/10">Beranda</a>
+            
+            <!-- Profil Dropdown Mobile -->
+            <div class="flex flex-col">
+                <button @click="mobileProfilOpen = !mobileProfilOpen"
+                    class="text-white font-semibold text-lg hover:text-emerald-300 transition py-2 border-b border-white/10 flex justify-between items-center focus:outline-none">
+                    <span>Profil</span>
+                    <i class="fa-solid fa-chevron-down text-sm transition-transform duration-300" :class="mobileProfilOpen ? 'rotate-180' : ''"></i>
+                </button>
+                <div x-show="mobileProfilOpen" class="pl-4 py-2 flex flex-col space-y-3 bg-emerald-900/50 rounded-lg mt-2">
+                    <a href="{{ route('frontend.profil') }}" @click="mobileMenuOpen = false" class="text-emerald-100 hover:text-white text-sm py-1">
+                        <i class="fa-regular fa-building w-5"></i> Tentang Kami
+                    </a>
+                    <a href="{{ route('frontend.profil') }}#visi-misi" @click="mobileMenuOpen = false" class="text-emerald-100 hover:text-white text-sm py-1">
+                        <i class="fa-solid fa-bullseye w-5"></i> Visi dan Misi
+                    </a>
+                    <a href="{{ route('frontend.struktur') }}" @click="mobileMenuOpen = false" class="text-emerald-100 hover:text-white text-sm py-1">
+                        <i class="fa-solid fa-sitemap w-5"></i> Struktur Organisasi
+                    </a>
+                    <a href="{{ route('frontend.profil') }}#kinerja" @click="mobileMenuOpen = false" class="text-emerald-100 hover:text-white text-sm py-1">
+                        <i class="fa-solid fa-file-contract w-5"></i> Perjanjian Kinerja
+                    </a>
+                </div>
+            </div>
+
+            <a href="#layanan" @click="mobileMenuOpen = false"
+                class="text-white font-semibold text-lg hover:text-emerald-300 transition py-2 border-b border-white/10">Layanan PTM</a>
+            
+            <a href="#edukasi" @click="mobileMenuOpen = false"
+                class="text-white font-semibold text-lg hover:text-emerald-300 transition py-2 border-b border-white/10">Edukasi</a>
+
+            <a href="{{ route('login') }}" @click="mobileMenuOpen = false"
+                class="bg-emerald-500 hover:bg-emerald-400 text-white text-center py-3 rounded-xl font-bold shadow-lg transition flex items-center justify-center space-x-2 border border-emerald-400/30">
+                <i class="fa-solid fa-right-to-bracket"></i>
+                <span>Login</span>
+            </a>
         </div>
     </header>
 
@@ -248,7 +298,7 @@
         <div class="grid lg:grid-cols-2 gap-12 items-center">
             <!-- Gambar Profil -->
             <div class="relative">
-                <img src="https://smart.kalselprov.go.id/uploads/foto/KESEHATAN.jpeg" alt="Dinas Kesehatan Banjarmasin"
+                <img src="https://smart.kalselprov.go.id/uploads/foto/KESEHATAN.jpeg" alt="Dinas Kesehatan Kalsel"
                     class="rounded-2xl shadow-2xl w-full h-[400px] object-cover border-4 border-emerald-50">
                 <!-- Aksen dekoratif -->
                 <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-emerald-100 rounded-full -z-10"></div>
@@ -265,8 +315,8 @@
 
     <div class="space-y-6 text-gray-600 leading-relaxed text-lg">
         <p>
-            Dinas Kesehatan Kota Banjarmasin merupakan unsur pelaksana urusan pemerintahan di bidang kesehatan yang
-            berkedudukan di bawah dan bertanggung jawab kepada Walikota Banjarmasin.
+            Dinas Kesehatan Provinsi Kalimantan Selatan merupakan unsur pelaksana urusan pemerintahan di bidang kesehatan yang
+            berkedudukan di bawah dan bertanggung jawab kepada Gubernur Kalimantan Selatan.
         </p>
         <p>
             Kami berkomitmen penuh untuk menyelenggarakan pelayanan kesehatan yang bermutu, merata, dan terjangkau bagi
@@ -289,6 +339,57 @@
     </div>
 </section>
 
+<!-- 3.5 STATISTIK COUNTER SECTION -->
+<section id="statistik-counter" class="relative py-16 bg-gradient-to-br from-emerald-900 via-teal-950 to-emerald-950 text-white overflow-hidden">
+    <!-- Dekorasi Latar Belakang Bulat -->
+    <div class="absolute top-0 left-0 w-64 h-64 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-2xl"></div>
+    <div class="absolute bottom-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- Card 1 -->
+            <div class="bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-2xl text-center shadow-xl hover:scale-105 hover:bg-white/10 transition-all duration-300 group">
+                <div class="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-400/30 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                    <i class="fa-solid fa-hospital-user text-2xl text-emerald-400 group-hover:text-white"></i>
+                </div>
+                <h3 class="text-4xl font-extrabold tracking-tight mb-2">30+</h3>
+                <p class="text-emerald-100 text-sm font-semibold uppercase tracking-wider">Puskesmas Terintegrasi</p>
+                <div class="w-12 h-1 bg-yellow-400 rounded-full mx-auto mt-4 opacity-70 group-hover:w-20 transition-all duration-300"></div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-2xl text-center shadow-xl hover:scale-105 hover:bg-white/10 transition-all duration-300 group">
+                <div class="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-400/30 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                    <i class="fa-solid fa-file-medical text-2xl text-emerald-400 group-hover:text-white"></i>
+                </div>
+                <h3 class="text-4xl font-extrabold tracking-tight mb-2">15.000+</h3>
+                <p class="text-emerald-100 text-sm font-semibold uppercase tracking-wider">Skrining Deteksi Dini</p>
+                <div class="w-12 h-1 bg-yellow-400 rounded-full mx-auto mt-4 opacity-70 group-hover:w-20 transition-all duration-300"></div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-2xl text-center shadow-xl hover:scale-105 hover:bg-white/10 transition-all duration-300 group">
+                <div class="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-400/30 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                    <i class="fa-solid fa-heart-circle-check text-2xl text-emerald-400 group-hover:text-white"></i>
+                </div>
+                <h3 class="text-4xl font-extrabold tracking-tight mb-2">85%</h3>
+                <p class="text-emerald-100 text-sm font-semibold uppercase tracking-wider">Kepatuhan Rujukan</p>
+                <div class="w-12 h-1 bg-yellow-400 rounded-full mx-auto mt-4 opacity-70 group-hover:w-20 transition-all duration-300"></div>
+            </div>
+
+            <!-- Card 4 -->
+            <div class="bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-2xl text-center shadow-xl hover:scale-105 hover:bg-white/10 transition-all duration-300 group">
+                <div class="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-400/30 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                    <i class="fa-solid fa-clipboard-list text-2xl text-emerald-400 group-hover:text-white"></i>
+                </div>
+                <h3 class="text-4xl font-extrabold tracking-tight mb-2">6</h3>
+                <p class="text-emerald-100 text-sm font-semibold uppercase tracking-wider">Program Prioritas PTM</p>
+                <div class="w-12 h-1 bg-yellow-400 rounded-full mx-auto mt-4 opacity-70 group-hover:w-20 transition-all duration-300"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- 4. PROGRAM PRIORITAS KESEHATAN MASYARAKAT -->
 <section id="program-prioritas" class="py-20 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -304,7 +405,7 @@
             <div
                 class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition duration-300 overflow-hidden border border-gray-100 group">
                 <div class="h-56 overflow-hidden">
-                    <img src="https://dinaskesehatan.org/wp-content/uploads/2026/02/Perbaikan-Gizi-Masyarakat.webp"
+                    <img src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=600&q=80"
                         alt="Perbaikan Gizi Masyarakat"
                         class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
                 </div>
@@ -321,7 +422,7 @@
             <div
                 class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition duration-300 overflow-hidden border border-gray-100 group">
                 <div class="h-56 overflow-hidden">
-                    <img src="https://dinaskesehatan.org/wp-content/uploads/2026/02/Promosi-Kesehatan.webp"
+                    <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=600&q=80"
                         alt="Promosi Kesehatan"
                         class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
                 </div>
@@ -338,7 +439,7 @@
             <div
                 class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition duration-300 overflow-hidden border border-gray-100 group">
                 <div class="h-56 overflow-hidden">
-                    <img src="https://dinaskesehatan.org/wp-content/uploads/2026/02/Kesehatan-Lingkungan.webp"
+                    <img src="https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=600&q=80"
                         alt="Kesehatan Lingkungan"
                         class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
                 </div>
@@ -352,6 +453,75 @@
             </div>
         </div>
 
+    </div>
+</section>
+
+<!-- 4.5 ALUR LAYANAN SECTION -->
+<section id="layanan" class="py-20 bg-white relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Judul Section -->
+        <div class="text-center mb-16">
+            <span class="inline-block px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs uppercase tracking-widest rounded mb-3">Layanan PTM</span>
+            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Alur Pelayanan Deteksi Dini PTM</h2>
+            <div class="w-20 h-1.5 bg-yellow-400 rounded-full mx-auto mt-4"></div>
+            <p class="text-gray-500 mt-4 max-w-2xl mx-auto">Mekanisme pelayanan terpadu satu data E-PTM Dinas Kesehatan Provinsi Kalimantan Selatan untuk menjangkau setiap individu.</p>
+        </div>
+
+        <!-- Alur Pelayanan Stepper -->
+        <div class="relative">
+            <!-- Garis Penghubung (Hanya Desktop) -->
+            <div class="hidden lg:block absolute top-1/2 left-4 right-4 h-0.5 bg-gray-200 -translate-y-12 z-0"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10">
+                <!-- Step 1 -->
+                <div class="bg-gray-50 hover:bg-emerald-50/50 border border-gray-100 hover:border-emerald-200 p-6 rounded-2xl shadow-sm transition duration-300 group text-center flex flex-col justify-between">
+                    <div>
+                        <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-emerald-600 group-hover:text-white transition duration-300 shadow-inner">
+                            <i class="fa-solid fa-user-check text-xl"></i>
+                        </div>
+                        <span class="text-xs font-bold text-emerald-600 tracking-widest uppercase block mb-1">Langkah 01</span>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Pemeriksaan Awal</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">Warga melakukan skrining kesehatan (tekanan darah, gula darah, berat badan) di Posbindu PTM atau Puskesmas.</p>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="bg-gray-50 hover:bg-emerald-50/50 border border-gray-100 hover:border-emerald-200 p-6 rounded-2xl shadow-sm transition duration-300 group text-center flex flex-col justify-between">
+                    <div>
+                        <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-emerald-600 group-hover:text-white transition duration-300 shadow-inner">
+                            <i class="fa-solid fa-laptop-medical text-xl"></i>
+                        </div>
+                        <span class="text-xs font-bold text-emerald-600 tracking-widest uppercase block mb-1">Langkah 02</span>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Pencatatan E-PTM</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">Petugas kesehatan menginput hasil pemeriksaan secara real-time dan terstruktur ke dalam aplikasi E-PTM.</p>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="bg-gray-50 hover:bg-emerald-50/50 border border-gray-100 hover:border-emerald-200 p-6 rounded-2xl shadow-sm transition duration-300 group text-center flex flex-col justify-between">
+                    <div>
+                        <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-emerald-600 group-hover:text-white transition duration-300 shadow-inner">
+                            <i class="fa-solid fa-user-shield text-xl"></i>
+                        </div>
+                        <span class="text-xs font-bold text-emerald-600 tracking-widest uppercase block mb-1">Langkah 03</span>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Verifikasi Dinas</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">Pegawai Dinas Kesehatan memvalidasi data untuk memastikan akurasi data masukan dari setiap Puskesmas.</p>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="bg-gray-50 hover:bg-emerald-50/50 border border-gray-100 hover:border-emerald-200 p-6 rounded-2xl shadow-sm transition duration-300 group text-center flex flex-col justify-between">
+                    <div>
+                        <div class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-emerald-600 group-hover:text-white transition duration-300 shadow-inner">
+                            <i class="fa-solid fa-chart-line text-xl"></i>
+                        </div>
+                        <span class="text-xs font-bold text-emerald-600 tracking-widest uppercase block mb-1">Langkah 04</span>
+                        <h3 class="text-lg font-bold text-gray-900 mb-2">Monitoring & Intervensi</h3>
+                        <p class="text-gray-600 text-sm leading-relaxed">Kepala P2PTM memantau laporan eksekutif untuk mengambil tindakan preventif dan intervensi rujukan lanjutan.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
 
@@ -462,6 +632,106 @@
     </div>
 </section>
 
+<!-- 6. KAMPANYE EDUKASI PTM CERDIK SECTION -->
+<section id="edukasi" class="py-20 bg-gray-50 relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Judul Section -->
+        <div class="text-center mb-16">
+            <span class="inline-block px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs uppercase tracking-widest rounded mb-3">Edukasi Kesehatan</span>
+            <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Kampanye Pencegahan PTM: Slogan "CERDIK"</h2>
+            <div class="w-20 h-1.5 bg-yellow-400 rounded-full mx-auto mt-4"></div>
+            <p class="text-gray-500 mt-4 max-w-2xl mx-auto">Mari cegah Penyakit Tidak Menular dengan menerapkan gaya hidup sehat secara konsisten melalui langkah CERDIK setiap hari.</p>
+        </div>
+
+        <!-- Grid CERDIK -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- C -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:border-emerald-200 transition-all duration-300 group flex items-start space-x-5">
+                <div class="flex-shrink-0 w-14 h-14 bg-emerald-100 text-emerald-700 font-extrabold text-2xl rounded-full flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition duration-300 shadow-sm animate-fade-in">
+                    C
+                </div>
+                <div class="space-y-2">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        Cek Kesehatan Berkala
+                        <i class="fa-solid fa-stethoscope text-emerald-500 text-sm"></i>
+                    </h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Lakukan pemeriksaan fisik secara rutin (tekanan darah, gula darah, berat badan) minimal 1 bulan sekali untuk deteksi dini.</p>
+                </div>
+            </div>
+
+            <!-- E -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:border-emerald-200 transition-all duration-300 group flex items-start space-x-5">
+                <div class="flex-shrink-0 w-14 h-14 bg-emerald-100 text-emerald-700 font-extrabold text-2xl rounded-full flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition duration-300 shadow-sm">
+                    E
+                </div>
+                <div class="space-y-2">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        Enyahkan Asap Rokok
+                        <i class="fa-solid fa-ban-smoking text-emerald-500 text-sm"></i>
+                    </h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Hindari rokok aktif maupun paparan asap rokok (perokok pasif) untuk meminimalisir risiko penyakit jantung dan paru-paru.</p>
+                </div>
+            </div>
+
+            <!-- R -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:border-emerald-200 transition-all duration-300 group flex items-start space-x-5">
+                <div class="flex-shrink-0 w-14 h-14 bg-emerald-100 text-emerald-700 font-extrabold text-2xl rounded-full flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition duration-300 shadow-sm">
+                    R
+                </div>
+                <div class="space-y-2">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        Rajin Aktivitas Fisik
+                        <i class="fa-solid fa-person-running text-emerald-500 text-sm"></i>
+                    </h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Lakukan olahraga atau aktivitas fisik intensitas sedang minimal 30 menit sehari untuk membakar energi dan menjaga kebugaran.</p>
+                </div>
+            </div>
+
+            <!-- D -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:border-emerald-200 transition-all duration-300 group flex items-start space-x-5">
+                <div class="flex-shrink-0 w-14 h-14 bg-emerald-100 text-emerald-700 font-extrabold text-2xl rounded-full flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition duration-300 shadow-sm">
+                    D
+                </div>
+                <div class="space-y-2">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        Diet Seimbang
+                        <i class="fa-solid fa-apple-whole text-emerald-500 text-sm"></i>
+                    </h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Batasi asupan gula, garam, dan lemak berlebih. Perbanyak konsumsi serat melalui buah-buahan dan sayur-sayuran segar setiap hari.</p>
+                </div>
+            </div>
+
+            <!-- I -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:border-emerald-200 transition-all duration-300 group flex items-start space-x-5">
+                <div class="flex-shrink-0 w-14 h-14 bg-emerald-100 text-emerald-700 font-extrabold text-2xl rounded-full flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition duration-300 shadow-sm">
+                    I
+                </div>
+                <div class="space-y-2">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        Istirahat Cukup
+                        <i class="fa-solid fa-bed text-emerald-500 text-sm"></i>
+                    </h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Penuhi waktu istirahat dan tidur malam berkualitas selama 7-8 jam per hari untuk memulihkan kekebalan tubuh.</p>
+                </div>
+            </div>
+
+            <!-- K -->
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:border-emerald-200 transition-all duration-300 group flex items-start space-x-5">
+                <div class="flex-shrink-0 w-14 h-14 bg-emerald-100 text-emerald-700 font-extrabold text-2xl rounded-full flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition duration-300 shadow-sm">
+                    K
+                </div>
+                <div class="space-y-2">
+                    <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        Kelola Stres
+                        <i class="fa-solid fa-brain text-emerald-500 text-sm"></i>
+                    </h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">Kendalikan kecemasan dengan meditasi, relaksasi pikiran, berpikir positif, dan melakukan hobi yang menyenangkan.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- Tambahkan Alpine.js untuk fungsi interaktifnya (tambahkan sebelum penutup </body>) -->
 <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
@@ -475,7 +745,7 @@
                     <img src="{{ asset('images/dinkes.png') }}" alt="Logo Dinas Kesehatan"
                         class="h-12 w-auto bg-white/90 backdrop-blur rounded-full p-1 border border-gray-600">
                     <span class="font-bold text-white text-lg leading-tight uppercase">Dinas
-                        Kesehatan<br>Banjarmasin</span>
+                        Kesehatan<br>Prov. Kalsel</span>
                 </div>
                 <p class="text-sm leading-relaxed">Mengabdi untuk mewujudkan derajat kesehatan masyarakat yang
                     setinggi-tingginya melalui pelayanan prima dan inovasi digitalisasi satu data.</p>
@@ -535,7 +805,7 @@
         <!-- Copyright -->
         <div
             class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-6 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center text-xs">
-            <p>&copy; {{ date('Y') }} Dinas Kesehatan Kota Banjarmasin. Hak Cipta Dilindungi.</p>
+            <p>&copy; {{ date('Y') }} Dinas Kesehatan Provinsi Kalimantan Selatan. Hak Cipta Dilindungi.</p>
             <div class="mt-4 md:mt-0 flex space-x-4">
                 <span class="hover:text-white transition cursor-default"><i
                         class="fa-solid fa-shield-halved text-emerald-500 mr-1"></i> Aman & Terverifikasi</span>
