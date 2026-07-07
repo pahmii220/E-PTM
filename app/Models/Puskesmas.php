@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Pasien;
+use App\Models\Peserta;
 use App\Models\DeteksiDiniPTM;
 use App\Models\FaktorResikoPTM;
 use App\Models\TindakLanjutPTM; // Menambahkan import model TindakLanjutPTM
@@ -30,12 +30,12 @@ class Puskesmas extends Model
 
     /**
      * ==========================
-     * RELASI PASIEN
+     * RELASI PESERTA
      * ==========================
      */
-    public function pasien()
+    public function peserta()
     {
-        return $this->hasMany(Pasien::class, 'puskesmas_id');
+        return $this->hasMany(Peserta::class, 'puskesmas_id');
     }
 
     /**
@@ -47,9 +47,9 @@ class Puskesmas extends Model
     {
         return $this->hasManyThrough(
             DeteksiDiniPTM::class,
-            Pasien::class,
-            'puskesmas_id', // FK di tabel pasien
-            'pasien_id'     // FK di tabel deteksi_dini_ptm
+            Peserta::class,
+            'puskesmas_id', // FK di tabel peserta
+            'peserta_id'     // FK di tabel deteksi_dini_ptm
         );
     }
 
@@ -62,9 +62,9 @@ class Puskesmas extends Model
     {
         return $this->hasManyThrough(
             FaktorResikoPTM::class,
-            Pasien::class,
-            'puskesmas_id', // FK di tabel pasien
-            'pasien_id'     // FK di tabel faktor_resiko_ptm
+            Peserta::class,
+            'puskesmas_id', // FK di tabel peserta
+            'peserta_id'     // FK di tabel faktor_resiko_ptm
         );
     }
 
@@ -77,9 +77,9 @@ class Puskesmas extends Model
     {
         return $this->hasManyThrough(
             TindakLanjutPTM::class,
-            Pasien::class,
-            'puskesmas_id', // FK di tabel pasien
-            'pasien_id'     // FK di tabel tindak_lanjut_ptm
+            Peserta::class,
+            'puskesmas_id', // FK di tabel peserta
+            'peserta_id'     // FK di tabel tindak_lanjut_ptm
         );
     }
 

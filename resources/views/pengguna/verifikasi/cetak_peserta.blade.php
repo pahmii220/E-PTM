@@ -146,12 +146,27 @@
             <h3 style="margin:0;font-size:15px;letter-spacing:0.6px;">LAPORAN PESERTA</h3>
         </div>
 
-        {{-- INFO BULAN --}}
-        <div style="font-size: 13px; font-weight: bold; margin-bottom: 5px;">
+    {{-- INFO BULAN / PERIODE --}}
+    <div style="font-size: 13px; font-weight: bold; margin-bottom: 5px;">
+        @if(request('filter_type') === 'tanggal' && request('tgl_awal') && request('tgl_akhir'))
+            Periode: {{ \Carbon\Carbon::parse(request('tgl_awal'))->format('d/m/Y') }} s/d
+            {{ \Carbon\Carbon::parse(request('tgl_akhir'))->format('d/m/Y') }}
+        @else
             Bulan:
             {{ \Carbon\Carbon::create()->month((int) request('bulan', now()->month))->locale('id')->translatedFormat('F') }}
             {{ request('tahun', now()->year) }}
-        </div>
+        @endif
+    </div>
+    
+    {{-- KETERANGAN LAPORAN --}}
+    <div style="font-size:12px; margin-bottom:10px;">
+        Laporan ini berisi daftar peserta berdasarkan periode yang dipilih. Informasi yang
+        disajikan digunakan sebagai bahan pendataan, monitoring, dan penyusunan laporan peserta pada Dinas Kesehatan Provinsi
+        Kalimantan Selatan.
+    </div>
+    
+    {{-- TABEL DATA --}}
+    <table class="grid">
 
         {{-- TABEL DATA --}}
         <table class="grid">
@@ -230,12 +245,16 @@
                                 <div class="qr-container">
                                     @if(!empty($qrToken))
                                         @php
-                    $bulanAngka = (int) request('bulan', now()->month);
-                    $tahun = request('tahun', now()->year);
-                    $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
+        if (request('filter_type') === 'tanggal' && request('tgl_awal') && request('tgl_akhir')) {
+            $periode = \Carbon\Carbon::parse(request('tgl_awal'))->format('d/m/Y') . ' - ' . \Carbon\Carbon::parse(request('tgl_akhir'))->format('d/m/Y');
+        } else {
+            $bulanAngka = (int) request('bulan', now()->month);
+            $tahun = request('tahun', now()->year);
+            $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
+        }
 
-                    // Tambahkan ->setTimezone('Asia/Makassar') untuk WITA
-                    $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i'); 
+        // Tambahkan ->setTimezone('Asia/Makassar') untuk WITA
+        $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i'); 
                                         @endphp
 
                                         {!! QrCode::size(100)->generate(url('/verifikasi-laporan?judul=Laporan%20Peserta%20PTM&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah))) !!}

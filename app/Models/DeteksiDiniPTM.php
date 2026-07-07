@@ -17,7 +17,7 @@ class DeteksiDiniPTM extends Model
     protected $table = 'deteksi_dini_ptm';
 
     protected $fillable = [
-        'pasien_id',
+        'peserta_id',
         'puskesmas_id',          // ✅ GANTI
         'tanggal_pemeriksaan',
         'tekanan_darah',
@@ -48,11 +48,11 @@ class DeteksiDiniPTM extends Model
     // RELASI
     // -----------------------
 
-    // relasi ke pasien
-public function pasien()
-{
-    return $this->belongsTo(\App\Models\Pasien::class, 'pasien_id');
-}
+    // relasi ke peserta
+    public function peserta()
+    {
+        return $this->belongsTo(\App\Models\Peserta::class, 'peserta_id');
+    }
 
 
     // relasi ke puskesmas

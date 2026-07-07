@@ -87,7 +87,7 @@
                         @foreach($deteksi as $i => $d)
                             <tr>
                                 <td>{{ $i + 1 }}</td>
-                                <td class="text-start fw-semibold">{{ $d->pasien->nama_lengkap ?? '-' }}</td>
+                                <td class="text-start fw-semibold">{{ $d->peserta->nama_lengkap ?? '-' }}</td>
                                 <td>{{ \Carbon\Carbon::parse($d->tanggal_pemeriksaan)->format('d-m-Y') }}</td>
                                 <td>{{ $d->tekanan_darah ?? '-' }}</td>
                                 <td>{{ $d->gula_darah ?? '-' }}</td>
@@ -156,8 +156,8 @@
                                                         <div class="modal-body text-start p-4 text-dark"
                                                             style="white-space: normal; line-height: 1.6;">
                                                             <div class="mb-2 text-muted" style="font-size: 12px;">
-                                                                Pesan skrining pasien:
-                                                                <strong>{{ $d->pasien->nama_lengkap ?? '-' }}</strong>
+                                                                Pesan skrining peserta:
+                                                                <strong>{{ $d->peserta->nama_lengkap ?? '-' }}</strong>
                                                             </div>
                                                             <div class="p-3 bg-light border-start border-danger border-4 rounded">
                                                                 {{ $d->catatan_verifikasi }}

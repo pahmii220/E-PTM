@@ -162,6 +162,14 @@
             </h3>
         </div>
 
+       
+        {{-- PENJELASAN SINGKAT --}}
+        <div style="font-size: 11px; color: #444; margin-bottom: 12px; line-height: 1.4; text-align: left;">
+            Laporan ini memberikan gambaran mengenai pelaksanaan kegiatan Penyakit Tidak Menular (PTM).
+        </div>
+     
+
+
         <table class="grid">
             <thead>
                 <tr>
@@ -260,19 +268,19 @@
             <div class="qr-container" style="margin: 10px 0;">
                 @if(isset($qrToken))
                     @php
-                        // Judul Laporan
-                        $judul = 'Laporan Kegiatan PTM';
+        // Judul Laporan
+        $judul = 'Laporan Kegiatan PTM';
 
-                        // Menentukan periode (opsional: bisa ambil dari request jika ada filter bulan/tahun)
-                        $periode = (request('bulan') && request('tahun'))
-                            ? \Carbon\Carbon::create()->month((int) request('bulan'))->format('F') . ' ' . request('tahun')
-                            : 'Data Kegiatan ' . now()->year;
+        // Menentukan periode (opsional: bisa ambil dari request jika ada filter bulan/tahun)
+        $periode = (request('bulan') && request('tahun'))
+            ? \Carbon\Carbon::create()->month((int) request('bulan'))->format('F') . ' ' . request('tahun')
+            : 'Data Kegiatan ' . now()->year;
 
-                        $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
+        $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
 
-                        // Identitas Kepala
-                        $namaPejabat = $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah';
-                        $nipPejabat = $kepalaAktif->nip ?? '1973062022006041016';
+        // Identitas Kepala
+        $namaPejabat = $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah';
+        $nipPejabat = $kepalaAktif->nip ?? '1973062022006041016';
                     @endphp
 
                     {!! QrCode::size(85)->generate(url('/verifikasi-laporan?judul=' . urlencode($judul) . '&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah) . '&nama_kepala=' . urlencode($namaPejabat) . '&nip=' . urlencode($nipPejabat))) !!}

@@ -66,7 +66,7 @@
                                 <tr>
                                     <th width="5%">No</th>
                                     <th class="text-start">Nama Puskesmas</th>
-                                    <th>Total Pasien</th>
+                                    <th>Total Peserta</th>
                                     <th>Deteksi Dini</th>
                                     <th>Faktor Risiko</th>
                                 </tr>
@@ -76,7 +76,7 @@
                                     <tr>
                                         <td>{{ $loop->iteration }}</td>
                                         <td class="text-start fw-semibold">{{ $item->nama_puskesmas }}</td>
-                                        <td>{{ $item->total_pasien }}</td>
+                                        <td>{{ $item->total_peserta }}</td>
                                         <td>{{ $item->total_deteksi }}</td>
                                         <td>{{ $item->total_faktor }}</td>
                                     </tr>

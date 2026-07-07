@@ -11,7 +11,7 @@
                     <small class="text-muted">Fokus pada persetujuan data identitas dasar peserta</small>
                 </div>
                 <div class="d-flex gap-2 align-items-center">
-                    <a href="{{ route('pengguna.verifikasi.print.pasien', ['status' => $status, 'puskesmas_id' => request('puskesmas_id')]) }}"
+                    <a href="{{ route('pengguna.verifikasi.print.peserta', ['status' => $status, 'puskesmas_id' => request('puskesmas_id')]) }}"
                         class="btn btn-outline-primary btn-sm rounded-pill shadow-sm" target="_blank">
                         <i class="bi bi-printer"></i> Cetak
                     </a>
@@ -73,7 +73,7 @@
                                 <th>No RM</th>
                                 <th>Kontak</th>
                                 <th>Puskesmas</th>
-                                <th>Status Identitas</th>
+                                <th>Status</th>
                                 <th>Tanggal Entry</th>
                                 <th class="text-end pe-4">Aksi</th>
                             </tr>
@@ -126,13 +126,19 @@
                                         <span class="status-badge status-{{ $row->status_verifikasi }}">
                                             <i
                                                 class="bi {{ $row->status_verifikasi == 'approved' ? 'bi-check-circle' : ($row->status_verifikasi == 'rejected' ? 'bi-x-circle' : 'bi-clock-history') }}"></i>
-                                            {{ ucfirst($row->status_verifikasi) }}
+                                            @if($row->status_verifikasi === 'approved')
+                                                Diterima
+                                            @elseif($row->status_verifikasi === 'rejected')
+                                                Ditolak
+                                            @else
+                                                Tertunda
+                                            @endif
                                         </span>
                                     </td>
                                     <td class="text-muted small">{{ $row->dibuat_pada->format('d-m-Y H:i') }}</td>
                                     <td class="text-end pe-4">
                                         @if ($row->status_verifikasi !== 'pending')
-                                            <a href="{{ route('pengguna.verifikasi.pasien.show', $row->id) }}"
+                                            <a href="{{ route('pengguna.verifikasi.peserta.show', $row->id) }}"
                                                 class="btn btn-outline-primary btn-sm rounded-circle me-1" title="Lihat Detail">
                                                 <i class="bi bi-eye"></i>
                                             </a>
@@ -141,13 +147,13 @@
                                         @if ($row->status_verifikasi === 'pending')
                                             <button class="btn btn-success btn-sm rounded-circle me-1" title="Setujui Identitas"
                                                 data-bs-toggle="modal" data-bs-target="#verifyModal" data-id="{{ $row->id }}"
-                                                data-type="pasien" data-action="approve" data-pasien="{{ $amanData }}">
+                                                data-type="peserta" data-action="approve" data-peserta="{{ $amanData }}">
                                                 <i class="bi bi-check-lg"></i>
                                             </button>
 
                                             <button class="btn btn-danger btn-sm rounded-circle" title="Tolak Identitas"
                                                 data-bs-toggle="modal" data-bs-target="#verifyModal" data-id="{{ $row->id }}"
-                                                data-type="pasien" data-action="reject" data-pasien="{{ $amanData }}">
+                                                data-type="peserta" data-action="reject" data-peserta="{{ $amanData }}">
                                                 <i class="bi bi-x-lg"></i>
                                             </button>
                                         @endif
@@ -287,11 +293,11 @@
                             var button = event.relatedTarget;
 
                             try {
-                                var base64Data = button.getAttribute('data-pasien');
-                                var dataPasien = JSON.parse(atob(base64Data));
+                                var base64Data = button.getAttribute('data-peserta');
+                                var dataPeserta = JSON.parse(atob(base64Data));
 
                                 var id = button.getAttribute('data-id');
-                                var type = button.getAttribute('data-type') || 'pasien';
+                                var type = button.getAttribute('data-type') || 'peserta';
                                 var action = button.getAttribute('data-action');
 
                                 // Set Hidden Input Form
@@ -300,24 +306,24 @@
                                 document.getElementById('modal_action').value = action;
                                 document.getElementById('modal_status').value = (action === 'approve') ? 'approved' : 'rejected';
 
-                                // Set href tombol secara dinamis dengan parameter pasien_id & status pending
-                                document.getElementById('link_faktor').href = "{{ route('pengguna.verifikasi.faktor') }}?pasien_id=" + id + "&status=pending";
-                                document.getElementById('link_deteksi').href = "{{ route('pengguna.verifikasi.deteksi') }}?pasien_id=" + id + "&status=pending";
+                                // Set href tombol secara dinamis dengan parameter peserta_id & status pending
+                                document.getElementById('link_faktor').href = "{{ route('pengguna.verifikasi.faktor') }}?peserta_id=" + id + "&status=pending";
+                                document.getElementById('link_deteksi').href = "{{ route('pengguna.verifikasi.deteksi') }}?peserta_id=" + id + "&status=pending";
 
                                 // 🚀 MASUKKAN DATA BARU KE INPUT FIELD MODAL
-                                document.getElementById('disp_nama').value = dataPasien.nama || '-';
-                                document.getElementById('disp_nik').value = dataPasien.nik || '-';
-                                document.getElementById('disp_rm').value = dataPasien.rm || '-';
-                                document.getElementById('disp_ttl').value = (dataPasien.tempat_lahir || '-') + ', ' + (dataPasien.tgl_lahir || '-');
+                                document.getElementById('disp_nama').value = dataPeserta.nama || '-';
+                                document.getElementById('disp_nik').value = dataPeserta.nik || '-';
+                                document.getElementById('disp_rm').value = dataPeserta.rm || '-';
+                                document.getElementById('disp_ttl').value = (dataPeserta.tempat_lahir || '-') + ', ' + (dataPeserta.tgl_lahir || '-');
 
-                                let jk = dataPasien.jk;
+                                let jk = dataPeserta.jk;
                                 document.getElementById('disp_jk').value = (jk === 'L' || jk === 'Laki-laki') ? 'Laki-laki' : ((jk === 'P' || jk === 'Perempuan') ? 'Perempuan' : jk);
 
-                                document.getElementById('disp_pekerjaan').value = dataPasien.pekerjaan || '-';
-                                document.getElementById('disp_kecamatan').value = dataPasien.kecamatan || '-';
-                                document.getElementById('disp_alamat').value = dataPasien.alamat;
-                                document.getElementById('disp_kontak').value = dataPasien.kontak;
-                                document.getElementById('disp_puskesmas').value = dataPasien.puskesmas;
+                                document.getElementById('disp_pekerjaan').value = dataPeserta.pekerjaan || '-';
+                                document.getElementById('disp_kecamatan').value = dataPeserta.kecamatan || '-';
+                                document.getElementById('disp_alamat').value = dataPeserta.alamat;
+                                document.getElementById('disp_kontak').value = dataPeserta.kontak;
+                                document.getElementById('disp_puskesmas').value = dataPeserta.puskesmas;
 
                                 // Atur Tampilan Tombol
                                 let noteInput = document.getElementById('verifyNote');

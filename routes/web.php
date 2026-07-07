@@ -36,7 +36,7 @@ use App\Http\Controllers\Admin\PenggunaController;
 |--------------------------------------------------------------------------
 */
 use App\Http\Controllers\Petugas\DashboardController as PetugasDashboardController;
-use App\Http\Controllers\Petugas\PasienController;
+use App\Http\Controllers\Petugas\PesertaController;
 use App\Http\Controllers\Petugas\DeteksiDiniPTMController;
 use App\Http\Controllers\Petugas\FaktorResikoPTMController;
 use App\Http\Controllers\Petugas\TindakLanjutPTMController;
@@ -56,7 +56,7 @@ use App\Http\Controllers\Pengguna\RekapPuskesmasController;
 use App\Http\Controllers\Pengguna\PegawaiDinkesController;
 use App\Http\Controllers\Pengguna\LaporanStatusPTMController;
 use App\Http\Controllers\Pengguna\RekapLaporanController;
-
+use App\Http\Controllers\NotificationController;
 
 
 /*
@@ -90,6 +90,12 @@ Route::get('/struktur', [HomeController::class, 'struktur'])->name('frontend.str
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
+
+// Rute Notifikasi (Bisa diakses user manapun yang sedang login)
+Route::middleware('auth')->group(function() {
+    Route::get('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllRead');
+});
 
 // RUTE REGISTER
 Route::get('/register', [RegisterController::class, 'showRegisterForm'])->name('register');
@@ -277,7 +283,7 @@ Route::prefix('petugas')
     Route::get('/dashboard', [PetugasDashboardController::class,'index'])
         ->name('dashboard');
 
-    Route::resource('pasien', PasienController::class);
+    Route::resource('peserta', PesertaController::class);
     Route::resource('deteksi_dini', DeteksiDiniPTMController::class);
     Route::resource('faktor_resiko', FaktorResikoPTMController::class);
     Route::resource('kegiatan', KegiatanPTMController::class);
@@ -327,7 +333,7 @@ Route::prefix('pengguna')
         ->name('dashboard');
 
     Route::get('/verifikasi', [VerifikasiController::class,'index'])->name('verifikasi.index');
-    Route::get('/verifikasi/pasien', [VerifikasiController::class,'pasien'])->name('verifikasi.pasien');
+    Route::get('/verifikasi/peserta', [VerifikasiController::class,'peserta'])->name('verifikasi.peserta');
     Route::get('/verifikasi/deteksi', [VerifikasiController::class,'deteksiPending'])->name('verifikasi.deteksi');
     Route::get('/verifikasi/faktor', [VerifikasiController::class,'faktorPending'])->name('verifikasi.faktor');
     Route::get(
@@ -340,12 +346,12 @@ Route::prefix('pengguna')
     Route::post('/verifikasi/process', [VerifikasiController::class,'process'])
         ->name('verifikasi.process');
 
-    Route::post('/verifikasi/pasien/{id}', [VerifikasiController::class,'pasienVerify'])->name('verifikasi.pasien.verify');
+    Route::post('/verifikasi/peserta/{id}', [VerifikasiController::class,'pesertaVerify'])->name('verifikasi.peserta.verify');
     Route::post('/verifikasi/deteksi/{id}', [VerifikasiController::class,'deteksiVerify'])->name('verifikasi.deteksi.verify');
     Route::post('/verifikasi/faktor/{id}', [VerifikasiController::class,'faktorVerify'])->name('verifikasi.faktor.verify');
 
     Route::get('/verifikasi/print/deteksi', [VerifikasiController::class,'printDeteksi'])->name('verifikasi.print.deteksi');
-    Route::get('/verifikasi/print/pasien', [VerifikasiController::class,'printPasien'])->name('verifikasi.print.pasien');
+    Route::get('/verifikasi/print/peserta', [VerifikasiController::class,'printPeserta'])->name('verifikasi.print.peserta');
     Route::get('/verifikasi/print/faktor', [VerifikasiController::class,'printFaktor'])->name('verifikasi.print.faktor');
     
 Route::get('/rekap-laporan',
@@ -385,9 +391,9 @@ Route::get('/pegawai-dinkes/{id}/edit', [PegawaiDinkesController::class, 'edit']
 Route::put('/pegawai-dinkes/{id}', [PegawaiDinkesController::class, 'update'])
     ->name('pegawai_dinkes.update');
 Route::get(
-    'verifikasi/pasien/{id}',
-    [VerifikasiController::class, 'showPasien']
-)->name('verifikasi.pasien.show');
+    'verifikasi/peserta/{id}',
+    [VerifikasiController::class, 'showPeserta']
+)->name('verifikasi.peserta.show');
 
  Route::get('/pengaturan-akun',
             [\App\Http\Controllers\Pengguna\PengaturanAkunController::class, 'index']
@@ -401,9 +407,9 @@ Route::get(
             [\App\Http\Controllers\Pengguna\PengaturanAkunController::class, 'updatePassword']
         )->name('ganti.password');
 
-                Route::post('/pasien/mass', 
+                Route::post('/peserta/mass', 
             [VerifikasiController::class, 'massVerify']
-        )->name('pasien.mass');
+        )->name('peserta.mass');
 
         // Route Akses untuk Pegawai (Mengisi Survei)
     Route::get('/evaluasi-aplikasi', [EvaluasiController::class, 'tampilkanForm'])->name('evaluasi.form');

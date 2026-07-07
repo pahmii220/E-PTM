@@ -6,7 +6,7 @@
             @php 
                         use Illuminate\Support\Facades\Route;
     use Carbon\Carbon;
-    use App\Models\Pasien;
+    use App\Models\Peserta;
     use App\Models\DeteksiDiniPTM;
     use App\Models\User;
     use App\Models\Puskesmas;
@@ -38,7 +38,7 @@
     // =======================================================================
     // 2. DATA KPI (Modified)
     // =======================================================================
-    $realTotalPasien = Pasien::count();
+    $realTotalPeserta = Peserta::count();
     $realTotalDeteksi = DeteksiDiniPTM::count();
     $realTotalPegawai = User::where('role_name', 'pegawai')->count();
     $realTotalPetugas = User::where('role_name', 'petugas')->count();
@@ -48,7 +48,7 @@
     $puskesmasLabels = $puskesmasList->pluck('nama_puskesmas')->toArray();
     $puskesmasData = $puskesmasList->map(function ($p)
      {
-        return Pasien::where('puskesmas_id', $p->id)->count();
+        return Peserta::where('puskesmas_id', $p->id)->count();
     })->toArray();
 
     // Data Deteksi Dini per Puskesmas
@@ -92,7 +92,7 @@
                 <div class="row g-3 mb-4">
                     {{-- Card 1: Peserta --}}
                     <div class="col-6 col-lg-3">
-                        <div class="card border-0 shadow-sm rounded-2xl h-100"><div class="card-body p-4 d-flex align-items-center gap-3"><div class="w-14 h-14 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center text-3xl"><i class="bi bi-people-fill"></i></div><div><p class="text-gray-500 text-xs mb-1 font-semibold uppercase tracking-wider">Total Peserta</p><h3 class="text-gray-800 font-extrabold mb-0 text-2xl">{{ number_format($realTotalPasien) }}</h3></div></div></div>
+                        <div class="card border-0 shadow-sm rounded-2xl h-100"><div class="card-body p-4 d-flex align-items-center gap-3"><div class="w-14 h-14 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center text-3xl"><i class="bi bi-people-fill"></i></div><div><p class="text-gray-500 text-xs mb-1 font-semibold uppercase tracking-wider">Total Peserta</p><h3 class="text-gray-800 font-extrabold mb-0 text-2xl">{{ number_format($realTotalPeserta) }}</h3></div></div></div>
                     </div>
                     {{-- Card 2: Deteksi Dini --}}
                         <div class="col-6 col-lg-3">

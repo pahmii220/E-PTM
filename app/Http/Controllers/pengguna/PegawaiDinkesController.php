@@ -17,14 +17,14 @@ class PegawaiDinkesController extends Controller
     public function index(Request $request)
     {
         // 1. Hitung total data untuk KPI Card biasa
-        $totalPasien  = \App\Models\Pasien::count();
+        $totalPeserta = \App\Models\Peserta::count();
         $totalDeteksi = \App\Models\DeteksiDiniPTM::count();
         $totalFaktor  = \App\Models\FaktorResikoPTM::count();
 
         // 2. Hitung status verifikasi
-        $pendingTotal  = \App\Models\Pasien::where('status_verifikasi', 'pending')->count();
-        $approvedTotal = \App\Models\Pasien::where('status_verifikasi', 'approved')->count();
-        $rejectedTotal = \App\Models\Pasien::where('status_verifikasi', 'rejected')->count();
+        $pendingTotal  = \App\Models\Peserta::where('status_verifikasi', 'pending')->count();
+        $approvedTotal = \App\Models\Peserta::where('status_verifikasi', 'approved')->count();
+        $rejectedTotal = \App\Models\Peserta::where('status_verifikasi', 'rejected')->count();
 
         $verifCounts = [
             'approved' => $approvedTotal,
@@ -48,7 +48,7 @@ class PegawaiDinkesController extends Controller
         $lastUpdatedAt = now();
 
         return view('pengguna.dashboard', compact(
-            'totalPasien', 
+            'totalPeserta', 
             'totalDeteksi', 
             'totalFaktor', 
             'pendingTotal', 

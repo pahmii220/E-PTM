@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use App\Models\Pasien;
+use App\Models\Peserta;
 use App\Models\DeteksiDiniPTM;
 use App\Models\FaktorResikoPTM;
 use App\Models\Petugas;
@@ -44,13 +44,13 @@ class PenggunaDashboardController extends Controller
     {
         try {
             // --- Basic totals (defensive checks) ---
-            $totalPasien  = class_exists(Pasien::class) ? Pasien::count() : 0;
+            $totalPeserta = class_exists(Peserta::class) ? Peserta::count() : 0;
             $totalDeteksi = class_exists(DeteksiDiniPTM::class) ? DeteksiDiniPTM::count() : 0;
             $totalFaktor  = class_exists(FaktorResikoPTM::class) ? FaktorResikoPTM::count() : 0;
 
             // --- Pending counts (safe: sum dari tabel yang ada) ---
-            $pendingPasien = (Schema::hasTable('pasien') && Schema::hasColumn('pasien','status_verifikasi'))
-                ? Pasien::whereNotNull('status_verifikasi')->get()->filter(function($p){
+            $pendingPeserta = (Schema::hasTable('peserta') && Schema::hasColumn('peserta','status_verifikasi'))
+                ? Peserta::whereNotNull('status_verifikasi')->get()->filter(function($p){
                     return $this->normalizeVerificationStatus($p->status_verifikasi) === 'pending';
                 })->count()
                 : 0;
@@ -67,7 +67,7 @@ class PenggunaDashboardController extends Controller
                 })->count()
                 : 0;
 
-            $pendingTotal = $pendingPasien + $pendingDeteksi + $pendingFaktor;
+            $pendingTotal = $pendingPeserta + $pendingDeteksi + $pendingFaktor;
 
             // -----------------------
             // Status filter (query param) - normalisasi input
@@ -84,7 +84,7 @@ class PenggunaDashboardController extends Controller
             // -----------------------
             // Recent Deteksi (ambil lebih banyak jika filter, lalu filter di PHP untuk toleransi)
             // -----------------------
-            $recentQuery = DeteksiDiniPTM::with(['pasien','petugas'])->orderBy('dibuat_pada','desc');
+            $recentQuery = DeteksiDiniPTM::with(['peserta','petugas'])->orderBy('dibuat_pada','desc');
             if ($statusFilter) {
                 // ambil lebih banyak lalu filter supaya variasi string tidak mengganggu
                 $recentDeteksi = $recentQuery->limit(50)->get()->filter(function($d) use ($statusFilter) {
@@ -123,7 +123,7 @@ class PenggunaDashboardController extends Controller
             // All Deteksi (paginate) dengan eager load
             // -----------------------
             $deteksiModel = new DeteksiDiniPTM;
-            $with = ['pasien','petugas'];
+            $with = ['peserta','petugas'];
             if (method_exists($deteksiModel,'faktor_resiko')) $with[] = 'faktor_resiko';
             if (method_exists($deteksiModel,'faktorResiko')) $with[] = 'faktorResiko'; // alternative naming
             $allDeteksi = DeteksiDiniPTM::with(array_unique($with))->orderBy('dibuat_pada','desc')->paginate(25);
@@ -136,7 +136,7 @@ class PenggunaDashboardController extends Controller
 $tables = [
     'deteksi_dini_ptm',
     'faktor_resiko_ptm',
-    'pasien',
+    'peserta',
 ];
 
 foreach ($tables as $tbl) {
@@ -206,8 +206,8 @@ $pendingTotal = $verifCounts['pending'];
             // Return view (semua variabel dipasok)
             // -----------------------
             return view('pengguna.dashboard', compact(
-                'totalPasien','totalDeteksi','totalFaktor',
-                'pendingPasien','pendingDeteksi','pendingFaktor','pendingTotal',
+                'totalPeserta','totalDeteksi','totalFaktor',
+                'pendingPeserta','pendingDeteksi','pendingFaktor','pendingTotal',
                 'recentDeteksi','topPetugas','allDeteksi',
                 'verifCounts','chartLabels','chartData','chartDeteksi','chartFaktor','avgPerDay','weeklyTotal','lastUpdatedAt',
                 'statusFilter', 'rekapPuskesmas'

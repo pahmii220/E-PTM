@@ -15,7 +15,7 @@ class TindakLanjutPTM extends Model
     protected $table = 'tindak_lanjut_ptm';
 
     protected $fillable = [
-        'pasien_id',
+        'peserta_id',
         'deteksi_dini_id',
         'jenis_tindak_lanjut',
         'tanggal_tindak_lanjut',
@@ -28,9 +28,9 @@ class TindakLanjutPTM extends Model
      | RELATIONS
      ===================== */
 
-    public function pasien()
+    public function peserta()
     {
-        return $this->belongsTo(Pasien::class);
+        return $this->belongsTo(Peserta::class, 'peserta_id');
     }
 
     public function deteksiDini()

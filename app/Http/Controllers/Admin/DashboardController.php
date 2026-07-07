@@ -16,33 +16,33 @@ class DashboardController extends Controller
         // ===============================
         $totalPengguna = User::count();
         $totalPetugas  = User::where('role_name', 'petugas')->count();
-        $totalPasien   = DB::table('pasien')->count();
+        $totalPeserta  = DB::table('peserta')->count();
         $totalDeteksi  = DB::table('deteksi_dini_ptm')->count();
 
         // ===============================
         // FILTER PERIODE (DARI REQUEST)
         // ===============================
         $periode = $request->input('periode', 'tahun_ini'); // Default: tahun ini
-        $queryPasien = DB::table('pasien');
+        $queryPeserta = DB::table('peserta');
         $queryDeteksi = DB::table('deteksi_dini_ptm');
 
         if ($periode == 'bulan_ini') {
-            $queryPasien->whereMonth('dibuat_pada', date('m'))->whereYear('dibuat_pada', date('Y'));
+            $queryPeserta->whereMonth('dibuat_pada', date('m'))->whereYear('dibuat_pada', date('Y'));
             $queryDeteksi->whereMonth('created_at', date('m'))->whereYear('created_at', date('Y'));
         } elseif ($periode == '3_bulan') {
-            $queryPasien->where('dibuat_pada', '>=', now()->subMonths(3));
+            $queryPeserta->where('dibuat_pada', '>=', now()->subMonths(3));
             $queryDeteksi->where('created_at', '>=', now()->subMonths(3));
         } else {
             // tahun_ini
-            $queryPasien->whereYear('dibuat_pada', date('Y'));
+            $queryPeserta->whereYear('dibuat_pada', date('Y'));
             $queryDeteksi->whereYear('created_at', date('Y'));
         }
 
         // ===============================
-        // 2. CHART 1: TREN KASUS (Berdasarkan Pasien Baru per Bulan)
+        // 2. CHART 1: TREN KASUS (Berdasarkan Peserta Baru per Bulan)
         // ===============================
         // Kita clone query agar tidak mengganggu query aslinya
-        $trenPTM = (clone $queryPasien)
+        $trenPTM = (clone $queryPeserta)
             ->select(
                 DB::raw('MONTH(dibuat_pada) as bulan'),
                 DB::raw('COUNT(*) as total')
@@ -70,7 +70,7 @@ class DashboardController extends Controller
         // ===============================
         // 3. CHART 2: DEMOGRAFI GENDER
         // ===============================
-        $genderStats = (clone $queryPasien)
+        $genderStats = (clone $queryPeserta)
             ->select('jenis_kelamin', DB::raw('COUNT(*) as total'))
             ->groupBy('jenis_kelamin')
             ->get();
@@ -84,12 +84,12 @@ class DashboardController extends Controller
 
         // ===============================
         // 4. CHART 3: SEBARAN WILAYAH (Berdasarkan Puskesmas)
-        // Asumsi: Tabel 'pasien' punya 'puskesmas_id' dan berelasi ke tabel 'puskesmas'
+        // Asumsi: Tabel 'peserta' punya 'puskesmas_id' dan berelasi ke tabel 'puskesmas'
         // Jika deteksi dini yang dihitung, ganti query ke tabel deteksi dini.
         // ===============================
-        $wilayahStats = DB::table('pasien')
-            ->join('puskesmas', 'pasien.puskesmas_id', '=', 'puskesmas.id')
-            ->select('puskesmas.nama_puskesmas', DB::raw('COUNT(pasien.id) as total'))
+        $wilayahStats = DB::table('peserta')
+            ->join('puskesmas', 'peserta.puskesmas_id', '=', 'puskesmas.id')
+            ->select('puskesmas.nama_puskesmas', DB::raw('COUNT(peserta.id) as total'))
             ->groupBy('puskesmas.id', 'puskesmas.nama_puskesmas')
             ->orderByDesc('total')
             ->limit(5) // Ambil 5 Puskesmas terbanyak agar grafik tidak terlalu padat
@@ -101,7 +101,7 @@ class DashboardController extends Controller
         return view('admin.dashboard', compact(
             'totalPengguna',
             'totalPetugas',
-            'totalPasien',
+            'totalPeserta',
             'totalDeteksi',
             'labels',
             'data',

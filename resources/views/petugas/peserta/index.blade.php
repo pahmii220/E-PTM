@@ -10,7 +10,7 @@
             <h2 class="fw-bold mb-0">Daftar Peserta</h2>
 
             <div class="d-flex gap-2">
-                <a href="{{ route('petugas.pasien.create') }}" class="btn btn-success">
+                <a href="{{ route('petugas.peserta.create') }}" class="btn btn-success">
                     <i class="bi bi-plus-circle"></i> Tambah Peserta
                 </a>
             </div>
@@ -42,7 +42,7 @@
                         <div class="col-md-3">
                             <select id="filterPuskesmas" class="form-select">
                                 <option value="">Semua Puskesmas</option>
-                                @foreach($pasien->pluck('puskesmas.nama_puskesmas')->unique()->filter() as $pkm)
+                                @foreach($peserta->pluck('puskesmas.nama_puskesmas')->unique()->filter() as $pkm)
                                     <option value="{{ $pkm }}">{{ $pkm }}</option>
                                 @endforeach
                             </select>
@@ -67,7 +67,7 @@
         {{-- TABLE --}}
         <div class="card shadow-lg border-0">
             <div class="card-body p-3 table-responsive">
-                <table id="pasienTable" class="table table-striped table-hover align-middle text-center">
+                <table id="pesertaTable" class="table table-striped table-hover align-middle text-center">
                     <thead class="bg-success text-white">
                         <tr>
                             <th>No</th>
@@ -85,7 +85,7 @@
                     </thead>
 
                     <tbody>
-                        @foreach($pasien as $i => $p)
+                        @foreach($peserta as $i => $p)
                             <tr>
                                 <td>{{ $i + 1 }}</td>
 
@@ -167,7 +167,7 @@
                                                         <div class="modal-body text-start p-4 text-dark"
                                                             style="white-space: normal; line-height: 1.6;">
                                                             <div class="mb-2 text-muted" style="font-size: 12px;">
-                                                                Pesan untuk data pasien: <strong>{{ $p->nama_lengkap }}</strong>
+                                                                Pesan untuk data peserta: <strong>{{ $p->nama_lengkap }}</strong>
                                                             </div>
                                                             <div class="p-3 bg-light border-start border-danger border-4 rounded">
                                                                 {{ $p->catatan_verifikasi }}
@@ -176,7 +176,7 @@
                                                         <div class="modal-footer border-0 bg-light">
                                                             <button type="button" class="btn btn-secondary btn-sm px-4"
                                                                 data-bs-dismiss="modal">Tutup</button>
-                                                            <a href="{{ route('petugas.pasien.edit', $p->id) }}"
+                                                            <a href="{{ route('petugas.peserta.edit', $p->id) }}"
                                                                 class="btn btn-danger btn-sm px-4">
                                                                 <i class="bi bi-pencil-square"></i> Perbaiki Data
                                                             </a>
@@ -202,12 +202,12 @@
                                         </span>
                                     @else
                                         {{-- ✏️ EDIT --}}
-                                        <a href="{{ route('petugas.pasien.edit', $p->id) }}" class="btn btn-sm btn-warning me-1">
+                                        <a href="{{ route('petugas.peserta.edit', $p->id) }}" class="btn btn-sm btn-warning me-1">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
 
                                         {{-- 🗑️ DELETE --}}
-                                        <form action="{{ route('petugas.pasien.destroy', $p->id) }}" method="POST" class="d-inline"
+                                        <form action="{{ route('petugas.peserta.destroy', $p->id) }}" method="POST" class="d-inline"
                                             onsubmit="return confirm('Yakin hapus data?')">
                                             @csrf @method('DELETE')
                                             <button class="btn btn-sm btn-danger">
@@ -234,10 +234,10 @@
     <script>
         $(document).ready(function () {
 
-            const basePrintUrl = "{{ route('pengguna.verifikasi.print.pasien') ?? '#' }}";
+            const basePrintUrl = "{{ route('pengguna.verifikasi.print.peserta') ?? '#' }}";
 
             // ✅ INIT DATATABLE
-            const table = $('#pasienTable').DataTable({
+            const table = $('#pesertaTable').DataTable({
                 responsive: true,
                 order: [[1, 'asc']],
 
@@ -257,20 +257,18 @@
                 }
             });
 
-            // ✅ PERUBAHAN INDEX KOLOM UNTUK FILTER (Karena ada tambahan kolom baru)
-
-            // Kolom JK sekarang berada di index 4 (tetap)
+            // Kolom JK sekarang berada di index 4
             $('#filterGender').on('change', function () {
                 table.column(4).search(this.value).draw();
             });
 
-            // Kolom Status sekarang bergeser ke index 9
+            // Kolom Status sekarang bergeser to index 9
             $('#filterStatus').on('change', function () {
                 table.column(9).search(this.value).draw();
                 updatePrintUrl();
             });
 
-            // Kolom Puskesmas sekarang bergeser ke index 8
+            // Kolom Puskesmas sekarang bergeser to index 8
             if ($('#filterPuskesmas').length) {
                 $('#filterPuskesmas').on('change', function () {
                     table.column(8).search(this.value).draw();
@@ -316,8 +314,8 @@
 
             #printHeader,
             #printHeader *,
-            #pasienTable,
-            #pasienTable * {
+            #pesertaTable,
+            #pesertaTable * {
                 visibility: visible;
             }
 
@@ -329,7 +327,7 @@
                 display: none !important;
             }
 
-            #pasienTable {
+            #pesertaTable {
                 font-size: 12px;
             }
         }

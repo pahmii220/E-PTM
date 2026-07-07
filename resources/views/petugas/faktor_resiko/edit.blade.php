@@ -35,15 +35,15 @@
                     @csrf
                     @method('PUT')
 
-                    {{-- PASIEN --}}
+                    {{-- PESERTA --}}
                     <div class="mb-3">
                         <label class="form-label fw-semibold">
                             Nama Peserta <span class="text-danger">*</span>
                         </label>
-                        <select name="pasien_id" class="form-select rounded-3" required>
+                        <select name="peserta_id" class="form-select rounded-3" required>
                             <option value="">-- Pilih Peserta --</option>
-                            @foreach($pasien as $p)
-                                <option value="{{ $p->id }}" {{ old('pasien_id', $faktor->pasien_id) == $p->id ? 'selected' : '' }}>
+                            @foreach($peserta as $p)
+                                <option value="{{ $p->id }}" {{ old('peserta_id', $faktor->peserta_id) == $p->id ? 'selected' : '' }}>
                                     {{ $p->nama_lengkap }}
                                 </option>
                             @endforeach

@@ -140,61 +140,61 @@ if (auth()->check()) {
         if ($role === 'petugas') {
             $puskesmas_id = DB::table('petugas')->where('user_id', auth()->id())->value('puskesmas_id');
 
-            $pasienNotif = DB::table('pasien')->where('puskesmas_id', $puskesmas_id)->whereIn('status_verifikasi', ['approved', 'rejected'])->whereNotNull('diverifikasi_pada')->where('diverifikasi_pada', '>=', Carbon::now()->subDays(7))->select('id', DB::raw("'peserta' as type"), 'nama_lengkap as nama', 'status_verifikasi as status', 'catatan_verifikasi as note', 'diverifikasi_pada as time')->get();
-            $deteksiNotif = DB::table('deteksi_dini_ptm')->join('pasien', 'deteksi_dini_ptm.pasien_id', '=', 'pasien.id')->where('deteksi_dini_ptm.puskesmas_id', $puskesmas_id)->whereIn('deteksi_dini_ptm.status_verifikasi', ['approved', 'rejected'])->whereNotNull('deteksi_dini_ptm.diverifikasi_pada')->where('deteksi_dini_ptm.diverifikasi_pada', '>=', Carbon::now()->subDays(7))->select('deteksi_dini_ptm.id', DB::raw("'deteksi' as type"), 'pasien.nama_lengkap as nama', 'deteksi_dini_ptm.status_verifikasi as status', 'deteksi_dini_ptm.catatan_verifikasi as note', 'deteksi_dini_ptm.diverifikasi_pada as time')->get();
-            $faktorNotif = DB::table('faktor_resiko_ptm')->join('pasien', 'faktor_resiko_ptm.pasien_id', '=', 'pasien.id')->where('faktor_resiko_ptm.puskesmas_id', $puskesmas_id)->whereIn('faktor_resiko_ptm.status_verifikasi', ['approved', 'rejected'])->whereNotNull('faktor_resiko_ptm.diverifikasi_pada')->where('faktor_resiko_ptm.diverifikasi_pada', '>=', Carbon::now()->subDays(7))->select('faktor_resiko_ptm.id', DB::raw("'faktor' as type"), 'pasien.nama_lengkap as nama', 'faktor_resiko_ptm.status_verifikasi as status', 'faktor_resiko_ptm.catatan_verifikasi as note', 'faktor_resiko_ptm.diverifikasi_pada as time')->get();
+            $pesertaNotif = DB::table('peserta')->where('puskesmas_id', $puskesmas_id)->where('status_verifikasi', 'approved')->whereNotNull('diverifikasi_pada')->where('diverifikasi_pada', '>=', Carbon::now()->subDays(7))->select('id', DB::raw("'peserta' as type"), 'nama_lengkap as nama', 'status_verifikasi as status', 'catatan_verifikasi as note', 'diverifikasi_pada as time')->get();
+            $deteksiNotif = DB::table('deteksi_dini_ptm')->join('peserta', 'deteksi_dini_ptm.peserta_id', '=', 'peserta.id')->where('deteksi_dini_ptm.puskesmas_id', $puskesmas_id)->where('deteksi_dini_ptm.status_verifikasi', 'approved')->whereNotNull('deteksi_dini_ptm.diverifikasi_pada')->where('deteksi_dini_ptm.diverifikasi_pada', '>=', Carbon::now()->subDays(7))->select('deteksi_dini_ptm.id', DB::raw("'deteksi' as type"), 'peserta.nama_lengkap as nama', 'deteksi_dini_ptm.status_verifikasi as status', 'deteksi_dini_ptm.catatan_verifikasi as note', 'deteksi_dini_ptm.diverifikasi_pada as time')->get();
+            $faktorNotif = DB::table('faktor_resiko_ptm')->join('peserta', 'faktor_resiko_ptm.peserta_id', '=', 'peserta.id')->where('faktor_resiko_ptm.puskesmas_id', $puskesmas_id)->where('faktor_resiko_ptm.status_verifikasi', 'approved')->whereNotNull('faktor_resiko_ptm.diverifikasi_pada')->where('faktor_resiko_ptm.diverifikasi_pada', '>=', Carbon::now()->subDays(7))->select('faktor_resiko_ptm.id', DB::raw("'faktor' as type"), 'peserta.nama_lengkap as nama', 'faktor_resiko_ptm.status_verifikasi as status', 'faktor_resiko_ptm.catatan_verifikasi as note', 'faktor_resiko_ptm.diverifikasi_pada as time')->get();
 
             // AMBIL MAX 5 DATA
-            $notifData = $pasienNotif->concat($deteksiNotif)->concat($faktorNotif)->sortByDesc('time')->take(5);
+            $notifData = $pesertaNotif->concat($deteksiNotif)->concat($faktorNotif)->sortByDesc('time')->take(5);
             // UPDATE COUNT BERDASARKAN DATA YANG DITAMPILKAN
             $notifCount += $notifData->count();
 
         } elseif ($role === 'pegawai') {
-            // Ambil pasien yang punya minimal 1 data pending dalam 14 hari terakhir
-            // Di-GROUP per pasien agar 1 pasien = 1 notif (bukan 3 notif terpisah)
-            $pasienDenganDataPending = DB::table('pasien')
+            // Ambil peserta yang punya minimal 1 data pending dalam 14 hari terakhir
+            // Di-GROUP per peserta agar 1 peserta = 1 notif (bukan 3 notif terpisah)
+            $pesertaDenganDataPending = DB::table('peserta')
                 ->where(function($q) {
-                    $q->where('pasien.status_verifikasi', 'pending')
+                    $q->where('peserta.status_verifikasi', 'pending')
                       ->orWhereExists(function($sub) {
                           $sub->from('deteksi_dini_ptm')
-                              ->whereColumn('deteksi_dini_ptm.pasien_id', 'pasien.id')
+                              ->whereColumn('deteksi_dini_ptm.peserta_id', 'peserta.id')
                               ->where('deteksi_dini_ptm.status_verifikasi', 'pending');
                       })
                       ->orWhereExists(function($sub) {
                           $sub->from('faktor_resiko_ptm')
-                              ->whereColumn('faktor_resiko_ptm.pasien_id', 'pasien.id')
+                              ->whereColumn('faktor_resiko_ptm.peserta_id', 'peserta.id')
                               ->where('faktor_resiko_ptm.status_verifikasi', 'pending');
                       });
                 })
                 ->where(function($q) {
-                    $q->where('pasien.diubah_pada', '>=', Carbon::now()->subDays(14))
+                    $q->where('peserta.diubah_pada', '>=', Carbon::now()->subDays(14))
                       ->orWhereExists(function($sub) {
                           $sub->from('deteksi_dini_ptm')
-                              ->whereColumn('deteksi_dini_ptm.pasien_id', 'pasien.id')
+                              ->whereColumn('deteksi_dini_ptm.peserta_id', 'peserta.id')
                               ->where('deteksi_dini_ptm.diubah_pada', '>=', Carbon::now()->subDays(14));
                       })
                       ->orWhereExists(function($sub) {
                           $sub->from('faktor_resiko_ptm')
-                              ->whereColumn('faktor_resiko_ptm.pasien_id', 'pasien.id')
+                              ->whereColumn('faktor_resiko_ptm.peserta_id', 'peserta.id')
                               ->where('faktor_resiko_ptm.diubah_pada', '>=', Carbon::now()->subDays(14));
                       });
                 })
                 ->select(
-                    'pasien.id',
-                    DB::raw("'pasien' as type"),
-                    'pasien.nama_lengkap as nama',
+                    'peserta.id',
+                    DB::raw("'peserta' as type"),
+                    'peserta.nama_lengkap as nama',
                     DB::raw("'pending' as status"),
                     DB::raw("null as note"),
-                    'pasien.diubah_pada as time'
+                    'peserta.diubah_pada as time'
                 )
-                ->orderByDesc('pasien.diubah_pada')
+                ->orderByDesc('peserta.diubah_pada')
                 ->take(5)
                 ->get();
 
-            $notifData = $pasienDenganDataPending;
+            $notifData = $pesertaDenganDataPending;
             $notifCount += $notifData->count();
 
-            $totalPending = DB::table('pasien')->where('status_verifikasi', 'pending')->count() +
+            $totalPending = DB::table('peserta')->where('status_verifikasi', 'pending')->count() +
                 DB::table('deteksi_dini_ptm')->where('status_verifikasi', 'pending')->count() +
                 DB::table('faktor_resiko_ptm')->where('status_verifikasi', 'pending')->count();
 
@@ -214,6 +214,10 @@ if (auth()->check()) {
                 $notifCount++;
             }
         }
+
+        // AMBIL DB NOTIFICATIONS UNTUK REVISI (PETUGAS)
+        $dbNotifications = auth()->check() ? auth()->user()->unreadNotifications : collect([]);
+        $notifCount += $dbNotifications->count();
 
         // Gabungkan ID unik untuk keperluan LocalStorage
         foreach ($notifData as $n) {
@@ -310,7 +314,7 @@ if (auth()->check()) {
                 <li x-show="!readList.includes('pengingat-verif')" x-transition.opacity.duration.300ms
                     class="relative border-bottom bg-blue-50 hover:bg-blue-100 transition">
                     <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent"
-                        href="{{ route('pengguna.verifikasi.pasien') }}">
+                        href="{{ route('pengguna.verifikasi.peserta') }}">
                         <div class="d-flex align-items-start">
                             <div class="text-blue-500 me-3 fs-4"><i class="bi bi-clock-history"></i></div>
                             <div style="line-height: 1.4;">
@@ -357,7 +361,31 @@ if (auth()->check()) {
                 </li>
             @endif
 
-            {{-- LOOPING DATA VERIFIKASI (PASIEN/DETEKSI/FAKTOR) --}}
+            {{-- NOTIFIKASI DATABASE (REVISI/TOLAK DATA) --}}
+            @if(isset($dbNotifications) && $dbNotifications->count() > 0)
+                @foreach($dbNotifications as $notif)
+                    <li class="relative border-bottom bg-red-50 hover:bg-red-100 transition">
+                        <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="{{ route('notifications.read', $notif->id) }}">
+                            <div class="d-flex align-items-start">
+                                <div class="text-red-500 me-3 fs-4"><i class="bi bi-exclamation-circle-fill"></i></div>
+                                <div style="line-height: 1.4;">
+                                    <div class="fw-bold text-dark" style="font-size: 14px;">{{ $notif->data['title'] ?? 'Notifikasi' }}</div>
+                                    <div class="text-muted mt-1" style="font-size: 12px;">{{ $notif->data['message'] ?? '' }}</div>
+                                    <div class="text-secondary mt-2 fw-semibold" style="font-size: 10px;">{{ $notif->created_at->diffForHumans() }}</div>
+                                </div>
+                            </div>
+                        </a>
+                        {{-- Tombol Mark as Read langsung hit route backend agar hapus dari DB --}}
+                        <a href="{{ route('notifications.read', $notif->id) }}"
+                            class="absolute top-3 right-3 text-gray-400 hover:text-red-600 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"
+                            title="Tandai sudah dibaca">
+                            <i class="bi bi-check2"></i>
+                        </a>
+                    </li>
+                @endforeach
+            @endif
+
+            {{-- LOOPING DATA VERIFIKASI (PESERTA/DETEKSI/FAKTOR) --}}
             @forelse($notifData as $notif)
 
                 @php
@@ -366,7 +394,7 @@ if (auth()->check()) {
 
     $editRoute = '#';
     if ($notif->type === 'peserta')
-        $editRoute = route('petugas.pasien.edit', $notif->id);
+        $editRoute = route('petugas.peserta.edit', $notif->id);
     elseif ($notif->type === 'deteksi')
         $editRoute = route('petugas.deteksi_dini.edit', $notif->id) ?? '#';
     elseif ($notif->type === 'faktor')
@@ -374,27 +402,7 @@ if (auth()->check()) {
                 @endphp
 
                 @if($role === 'petugas')
-                    @if($notif->status === 'rejected')
-                        <li x-show="!readList.includes('{{ $notifId }}')" x-transition.opacity.duration.300ms
-                            class="relative border-bottom bg-red-50 hover:bg-red-100 transition">
-                            <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="{{ $editRoute }}">
-                                <div class="d-flex align-items-start">
-                                    <div class="text-danger me-3 fs-4"><i class="bi bi-x-circle-fill"></i></div>
-                                    <div style="line-height: 1.4;">
-                                        <div class="fw-bold text-dark" style="font-size: 14px;">{{ $dataName }} Perlu Revisi</div>
-                                        <div class="text-muted mt-1" style="font-size: 12px;">Pasien
-                                            <strong>{{ $notif->nama }}</strong> ditolak.<br><span class="text-danger">Catatan:
-                                                {{ Str::limit($notif->note, 45) }}</span></div>
-                                        <div class="text-secondary mt-2 fw-semibold" style="font-size: 10px;">
-                                            {{ Carbon::parse($notif->time)->diffForHumans() }}</div>
-                                    </div>
-                                </div>
-                            </a>
-                            <button @click.prevent="markRead('{{ $notifId }}')"
-                                class="absolute top-3 right-3 text-gray-400 hover:text-green-500 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"
-                                title="Tandai sudah dibaca"><i class="bi bi-check2"></i></button>
-                        </li>
-                    @elseif($notif->status === 'approved')
+                    @if($notif->status === 'approved')
                         <li x-show="!readList.includes('{{ $notifId }}')" x-transition.opacity.duration.300ms
                             class="relative border-bottom hover:bg-gray-50 transition">
                             <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="#">
@@ -417,7 +425,7 @@ if (auth()->check()) {
                 @elseif($role === 'pegawai')
                     <li x-show="!readList.includes('{{ $notifId }}')" x-transition.opacity.duration.300ms
                         class="relative border-bottom hover:bg-green-50 transition">
-                        <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="{{ route('pengguna.verifikasi.pasien') }}">
+                        <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="{{ route('pengguna.verifikasi.peserta') }}">
                             <div class="d-flex align-items-start">
                                 <div class="text-green-600 me-3 fs-4"><i class="bi bi-person-plus-fill"></i></div>
                                 <div style="line-height: 1.4;">

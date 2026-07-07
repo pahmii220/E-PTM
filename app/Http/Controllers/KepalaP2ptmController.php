@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\DokumenPengesahan;
 use App\Models\Puskesmas;
 use App\Models\DeteksiDiniPTM;
-use App\Models\Pasien;
+use App\Models\Peserta;
 use App\Models\FaktorResikoPTM;
 
 
@@ -35,7 +35,7 @@ public function dashboard()
 
     // 3. Array Data (Pastikan semua key ada di sini)
     $data = [
-        'totalPeserta'   => \App\Models\Pasien::count(),
+        'totalPeserta'   => \App\Models\Peserta::count(),
         'totalDeteksi'   => \App\Models\DeteksiDiniPTM::count(),
         'totalRisiko'    => \App\Models\FaktorResikoPTM::count(),
         'totalPuskesmas' => $totalPuskesmas,
@@ -60,12 +60,12 @@ public function printStatistik()
     ];
 
     $statistikBulanan = [];
-    $pasienBulanan = [];
+    $pesertaBulanan = [];
     $deteksiBulanan = [];
     $faktorBulanan = [];
 
     for ($m = 1; $m <= 12; $m++) {
-        $pCount = Pasien::where('status_verifikasi', 'approved')
+        $pCount = Peserta::where('status_verifikasi', 'approved')
             ->whereYear('dibuat_pada', $tahun)
             ->whereMonth('dibuat_pada', $m)
             ->count();
@@ -82,12 +82,12 @@ public function printStatistik()
 
         $statistikBulanan[] = [
             'nama_bulan' => $bulanIndo[$m],
-            'total_pasien' => $pCount,
+            'total_peserta' => $pCount,
             'total_deteksi' => $dCount,
             'total_faktor' => $fCount,
         ];
 
-        $pasienBulanan[] = $pCount;
+        $pesertaBulanan[] = $pCount;
         $deteksiBulanan[] = $dCount;
         $faktorBulanan[] = $fCount;
     }
@@ -100,7 +100,7 @@ public function printStatistik()
     return view('kepala_p2ptm.laporan.print_statistik', compact(
         'statistikBulanan',
         'bulanLabels',
-        'pasienBulanan',
+        'pesertaBulanan',
         'deteksiBulanan',
         'faktorBulanan',
         'kepalaAktif',
@@ -116,12 +116,12 @@ public function verifikasiPublik($id)
 {
     // 1. Gunakan with('puskesmas') agar data puskesmas ikut terambil (mencegah error optional)
     // 2. Gunakan find($id) agar tidak otomatis memicu 404 jika kosong
-    $dokumen = \App\Models\Pasien::with('puskesmas')->find($id);
+    $dokumen = \App\Models\Peserta::with('puskesmas')->find($id);
 
     // 3. Jika data tidak ditemukan, arahkan ke halaman error yang cantik
     if (!$dokumen) {
         return view('verifikasi_publik_invalid', [
-            'pesan' => 'Data pasien dengan ID tersebut tidak ditemukan dalam sistem.'
+            'pesan' => 'Data peserta dengan ID tersebut tidak ditemukan dalam sistem.'
         ]);
     }
 

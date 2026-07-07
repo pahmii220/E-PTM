@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\DeteksiDiniPTM;
-use App\Models\Pasien;
+use App\Models\Peserta;
 use App\Models\User;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\DataPtmBaruNotification;
@@ -23,14 +23,14 @@ class DeteksiDiniPTMController extends Controller
 
     if ($user->role_name === 'admin' || $user->role_name === 'pegawai') {
         // ADMIN & PENGGUNA (DINKES): lihat semua
-        $deteksi = DeteksiDiniPTM::with(['pasien', 'puskesmas'])
+        $deteksi = DeteksiDiniPTM::with(['peserta', 'puskesmas'])
             ->latest()
             ->get();
     } else {
         // PETUGAS: hanya puskesmas sendiri
         $puskesmasId = $user->petugas->puskesmas_id;
 
-        $deteksi = DeteksiDiniPTM::with(['pasien', 'puskesmas'])
+        $deteksi = DeteksiDiniPTM::with(['peserta', 'puskesmas'])
             ->where('puskesmas_id', $puskesmasId)
             ->latest()
             ->get();
@@ -50,21 +50,21 @@ public function create()
     }
 
     if (Auth::user()->role_name === 'admin') {
-        // ADMIN: semua pasien yang BELUM punya deteksi dini
-        $pasien = Pasien::whereDoesntHave('deteksiDiniPTM')
+        // ADMIN: semua peserta yang BELUM punya deteksi dini
+        $peserta = Peserta::whereDoesntHave('deteksiDiniPTM')
             ->orderBy('nama_lengkap')
             ->get();
     } else {
-        // PETUGAS: pasien puskesmas sendiri & BELUM punya deteksi dini
+        // PETUGAS: peserta puskesmas sendiri & BELUM punya deteksi dini
         $puskesmasId = Auth::user()->petugas->puskesmas_id;
 
-        $pasien = Pasien::where('puskesmas_id', $puskesmasId)
+        $peserta = Peserta::where('puskesmas_id', $puskesmasId)
             ->whereDoesntHave('deteksiDiniPTM')
             ->orderBy('nama_lengkap')
             ->get();
     }
 
-    return view('petugas.deteksi_dini.create', compact('pasien'));
+    return view('petugas.deteksi_dini.create', compact('peserta'));
 }
 
 
@@ -77,7 +77,7 @@ public function create()
             abort(403);
         }
         $request->validate([
-            'pasien_id'           => 'required|exists:pasien,id',
+            'peserta_id'          => 'required|exists:peserta,id',
             'tanggal_pemeriksaan' => 'required|date',
             'tekanan_darah'       => 'nullable|string',
             'gula_darah'          => 'nullable|numeric',
@@ -113,13 +113,13 @@ public function create()
 
         // Tentukan puskesmas
         $puskesmasId = Auth::user()->role_name === 'admin'
-            ? Pasien::findOrFail($request->pasien_id)->puskesmas_id
+            ? Peserta::findOrFail($request->peserta_id)->puskesmas_id
             : Auth::user()->petugas->puskesmas_id;
 
       // Ubah sedikit bagian create agar datanya ditampung dalam variabel $deteksiBaru
 
         $deteksiBaru = DeteksiDiniPTM::create([
-            'pasien_id'           => $request->pasien_id,
+            'peserta_id'          => $request->peserta_id,
             'petugas_id'          => Auth::user()->role_name === 'petugas'
                                         ? Auth::user()->petugas->id
                                         : null,
@@ -135,7 +135,7 @@ public function create()
             'created_by'          => Auth::id(),
         ]);
         return redirect()
-        ->route('petugas.faktor_resiko.create', ['pasien_id' => $request->pasien_id])
+        ->route('petugas.faktor_resiko.create', ['peserta_id' => $request->peserta_id])
         ->with('success', 'Deteksi Dini tersimpan. Terakhir, silakan lengkapi Faktor Risiko.');
     }
     /**

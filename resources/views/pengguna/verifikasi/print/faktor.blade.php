@@ -154,12 +154,19 @@
             </h3>
         </div>
 
-        {{-- Menampilkan bulan di sebelah kiri --}}
-        @if(isset($bulan) && isset($tahun))
-            <div style="text-align: left; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+        {{-- INFO BULAN / PERIODE --}}
+        <div style="text-align: left; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+            @if(request('filter_type') === 'tanggal' && request('tgl_awal') && request('tgl_akhir'))
+                Periode: {{ \Carbon\Carbon::parse(request('tgl_awal'))->format('d/m/Y') }} s/d {{ \Carbon\Carbon::parse(request('tgl_akhir'))->format('d/m/Y') }}
+            @elseif(isset($bulan) && isset($tahun))
                 Bulan: {{ \Carbon\Carbon::create()->month((int) $bulan)->locale('id')->translatedFormat('F') }} {{ $tahun }}
-            </div>
-        @endif
+            @endif
+        </div>
+
+        {{-- PENJELASAN SINGKAT --}}
+        <div style="font-size: 11px; color: #444; margin-bottom: 12px; line-height: 1.4; text-align: left;">
+            Laporan ini menyajikan ringkasan hasil pemeriksaan faktor risiko Penyakit Tidak Menular (PTM) yang meliputi perilaku berisiko peserta (seperti merokok, alkohol, dan kurang aktivitas fisik).
+        </div>
 
         <table class="grid">
             <thead>
@@ -178,7 +185,7 @@
                 @forelse($items ?? [] as $item)
                     <tr>
                         <td style="text-align:center">{{ $loop->iteration }}</td>
-                        <td>{{ optional($item->pasien)->nama_lengkap ?? '-' }}</td>
+                        <td>{{ optional($item->peserta)->nama_lengkap ?? '-' }}</td>
                         <td style="text-align:center">
                             {{ $item->tanggal_pemeriksaan ? \Carbon\Carbon::parse($item->tanggal_pemeriksaan)->format('d-m-Y') : ($item->dibuat_pada ? $item->dibuat_pada->format('d-m-Y') : '-') }}
                         </td>
@@ -194,8 +201,12 @@
                         </td>
                     </tr>
                 @endforelse
-            </tbody>
         </table>
+
+        {{-- TOTAL --}}
+        <div style="margin-top:6px; font-size:12px; font-weight:700;">
+            Jumlah keseluruhan pemeriksaan sebanyak = {{ $items->count() }} data
+        </div>
 
         {{-- BAGIAN TANDA TANGAN & QR CODE (Telah disinkronkan) --}}
         <div class="ttd">
@@ -253,11 +264,15 @@
                                 <div class="qr-container">
                                     @if(!empty($qrToken))
                                         @php
-                    $bulanAngka = (int) request('bulan', now()->month);
-                    $tahun = request('tahun', now()->year);
-                    $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
+                                            if (request('filter_type') === 'tanggal' && request('tgl_awal') && request('tgl_akhir')) {
+                                                $periode = \Carbon\Carbon::parse(request('tgl_awal'))->format('d/m/Y') . ' - ' . \Carbon\Carbon::parse(request('tgl_akhir'))->format('d/m/Y');
+                                            } else {
+                                                $bulanAngka = (int) request('bulan', now()->month);
+                                                $tahun = request('tahun', now()->year);
+                                                $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
+                                            }
 
-                    $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i'); 
+                                            $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i'); 
                                         @endphp
 
                                         {{-- INI YANG PENTING: Gunakan URL, bukan $qrToken --}}

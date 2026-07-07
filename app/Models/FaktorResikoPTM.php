@@ -16,7 +16,7 @@ class FaktorResikoPTM extends Model
     protected $table = 'faktor_resiko_ptm';
 
     protected $fillable = [
-        'pasien_id',
+        'peserta_id',
         'puskesmas_id',              // ✅ GANTI
         'tanggal_pemeriksaan',
         'merokok',
@@ -43,11 +43,11 @@ class FaktorResikoPTM extends Model
     // RELASI
     // -----------------------
 
-    // Relasi ke Pasien
-public function pasien()
-{
-    return $this->belongsTo(\App\Models\Pasien::class, 'pasien_id');
-}
+    // Relasi ke Peserta
+    public function peserta()
+    {
+        return $this->belongsTo(\App\Models\Peserta::class, 'peserta_id');
+    }
 
 
     // Relasi ke Puskesmas

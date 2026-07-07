@@ -43,7 +43,7 @@
                                 Nama Peserta
                             </label>
                             <input type="text" class="form-control rounded-3"
-                                value="{{ $tindakLanjut->pasien->nama_lengkap }}" readonly>
+                                value="{{ $tindakLanjut->peserta->nama_lengkap }}" readonly>
                         </div>
 
                         {{-- TANGGAL PEMERIKSAAN --}}

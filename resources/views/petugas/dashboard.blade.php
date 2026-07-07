@@ -265,19 +265,19 @@
             const chartData = {
                 monthly: {
                     labels: {!! json_encode($monthLabels ?? []) !!},
-                    pasien: {!! json_encode($monthPasien ?? []) !!},
+                    peserta: {!! json_encode($monthPeserta ?? []) !!},
                     deteksi: {!! json_encode($monthDeteksi ?? []) !!},
                     faktor: {!! json_encode($monthFaktor ?? []) !!}
                 },
                 weekly: {
                     labels: {!! json_encode($weeklyLabels ?? []) !!},
-                    pasien: {!! json_encode($weeklyPasien ?? []) !!},
+                    peserta: {!! json_encode($weeklyPeserta ?? []) !!},
                     deteksi: {!! json_encode($weeklyDeteksi ?? []) !!},
                     faktor: {!! json_encode($weeklyFaktor ?? []) !!}
                 },
                 daily: {
                     labels: {!! json_encode($dailyLabels ?? []) !!},
-                    pasien: {!! json_encode($dailyPasien ?? []) !!},
+                    peserta: {!! json_encode($dailyPeserta ?? []) !!},
                     deteksi: {!! json_encode($dailyDeteksi ?? []) !!},
                     faktor: {!! json_encode($dailyFaktor ?? []) !!}
                 }
@@ -315,7 +315,7 @@
                             },
                             {
                                 label: 'Peserta',
-                                data: chartData.monthly.pasien,
+                                data: chartData.monthly.peserta,
                                 backgroundColor: '#3b82f6',
                                 hoverBackgroundColor: '#2563eb',
                                 borderRadius: 6,
@@ -364,7 +364,7 @@
                     trendChart.data.labels = chartData[key].labels;
                     trendChart.data.datasets[0].data = chartData[key].faktor;
                     trendChart.data.datasets[1].data = chartData[key].deteksi;
-                    trendChart.data.datasets[2].data = chartData[key].pasien;
+                    trendChart.data.datasets[2].data = chartData[key].peserta;
                     trendChart.update();
                 });
             }

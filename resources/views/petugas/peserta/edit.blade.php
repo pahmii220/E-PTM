@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title', 'Edit Data Pasien')
+@section('title', 'Edit Data Peserta')
 
 @section('content')
     <div class="container-fluid py-4" style="max-width:1100px">
@@ -31,7 +31,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('petugas.pasien.update', $pasien->id) }}" method="POST">
+                <form action="{{ route('petugas.peserta.update', $peserta->id) }}" method="POST">
                     @csrf
                     @method('PUT')
 
@@ -43,7 +43,7 @@
                                 NIK (Nomor Induk Kependudukan) <span class="text-danger">*</span>
                             </label>
                             <input type="text" name="nik" class="form-control rounded-3 @error('nik') is-invalid @enderror"
-                                value="{{ old('nik', $pasien->nik) }}" minlength="16" maxlength="16" required>
+                                value="{{ old('nik', $peserta->nik) }}" minlength="16" maxlength="16" required>
                             @error('nik')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -56,7 +56,7 @@
                             </label>
                             <input type="text" name="no_rekam_medis"
                                 class="form-control rounded-3 @error('no_rekam_medis') is-invalid @enderror"
-                                value="{{ old('no_rekam_medis', $pasien->no_rekam_medis) }}" required>
+                                value="{{ old('no_rekam_medis', $peserta->no_rekam_medis) }}" required>
                             <small class="text-muted" style="font-size: 11px;">
                                 Nomor rekam medis menyertakan kode Puskesmas sebagai prefiks unik (contoh: <code>Pk-002/RM-001</code>).
                             </small>
@@ -72,7 +72,7 @@
                             </label>
                             <input type="text" name="nama_lengkap"
                                 class="form-control rounded-3 @error('nama_lengkap') is-invalid @enderror"
-                                value="{{ old('nama_lengkap', $pasien->nama_lengkap) }}" required>
+                                value="{{ old('nama_lengkap', $peserta->nama_lengkap) }}" required>
                             @error('nama_lengkap')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -86,10 +86,10 @@
                             <select name="jenis_kelamin" class="form-select rounded-3 @error('jenis_kelamin') is-invalid @enderror"
                                 required>
                                 <option value="">-- Pilih --</option>
-                                <option value="Laki-laki" {{ old('jenis_kelamin', $pasien->jenis_kelamin) == 'Laki-laki' ? 'selected' : '' }}>
+                                <option value="Laki-laki" {{ old('jenis_kelamin', $peserta->jenis_kelamin) == 'Laki-laki' ? 'selected' : '' }}>
                                     Laki-laki
                                 </option>
-                                <option value="Perempuan" {{ old('jenis_kelamin', $pasien->jenis_kelamin) == 'Perempuan' ? 'selected' : '' }}>
+                                <option value="Perempuan" {{ old('jenis_kelamin', $peserta->jenis_kelamin) == 'Perempuan' ? 'selected' : '' }}>
                                     Perempuan
                                 </option>
                             </select>
@@ -105,7 +105,7 @@
                             </label>
                             <input type="text" name="tempat_lahir"
                                 class="form-control rounded-3 @error('tempat_lahir') is-invalid @enderror"
-                                value="{{ old('tempat_lahir', $pasien->tempat_lahir) }}" required>
+                                value="{{ old('tempat_lahir', $peserta->tempat_lahir) }}" required>
                             @error('tempat_lahir')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -118,7 +118,7 @@
                             </label>
                             <input type="date" name="tanggal_lahir"
                                 class="form-control rounded-3 @error('tanggal_lahir') is-invalid @enderror"
-                                value="{{ old('tanggal_lahir', optional($pasien->tanggal_lahir)->format('Y-m-d')) }}" required>
+                                value="{{ old('tanggal_lahir', optional($peserta->tanggal_lahir)->format('Y-m-d')) }}" required>
                             @error('tanggal_lahir')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -130,7 +130,7 @@
                                 Pekerjaan <span class="text-danger">*</span>
                             </label>
                             <input type="text" name="pekerjaan" class="form-control rounded-3 @error('pekerjaan') is-invalid @enderror"
-                                value="{{ old('pekerjaan', $pasien->pekerjaan) }}" required>
+                                value="{{ old('pekerjaan', $peserta->pekerjaan) }}" required>
                             @error('pekerjaan')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -142,7 +142,7 @@
                                 Nomor Kontak / HP <span class="text-danger">*</span>
                             </label>
                             <input type="text" name="kontak" class="form-control rounded-3 @error('kontak') is-invalid @enderror"
-                                value="{{ old('kontak', $pasien->kontak) }}" required>
+                                value="{{ old('kontak', $peserta->kontak) }}" required>
                             @error('kontak')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -165,7 +165,7 @@
                                     ];
                                 @endphp
                                 @foreach($daftarKecamatan as $kec)
-                                    <option value="{{ $kec }}" {{ old('kecamatan', $pasien->kecamatan) == $kec ? 'selected' : '' }}>
+                                    <option value="{{ $kec }}" {{ old('kecamatan', $peserta->kecamatan) == $kec ? 'selected' : '' }}>
                                         {{ $kec }}
                                     </option>
                                 @endforeach
@@ -185,7 +185,7 @@
                                 <select name="puskesmas_id" class="form-select rounded-3 @error('puskesmas_id') is-invalid @enderror" required>
                                     <option value="">-- Pilih Puskesmas --</option>
                                     @foreach($puskesmas as $pkm)
-                                        <option value="{{ $pkm->id }}" {{ old('puskesmas_id', $pasien->puskesmas_id) == $pkm->id ? 'selected' : '' }}>
+                                        <option value="{{ $pkm->id }}" {{ old('puskesmas_id', $peserta->puskesmas_id) == $pkm->id ? 'selected' : '' }}>
                                             {{ $pkm->nama_puskesmas }}
                                         </option>
                                     @endforeach
@@ -207,7 +207,7 @@
                                 Alamat Lengkap <span class="text-danger">*</span>
                             </label>
                             <textarea name="alamat" rows="3" class="form-control rounded-3 @error('alamat') is-invalid @enderror"
-                                required>{{ old('alamat', $pasien->alamat) }}</textarea>
+                                required>{{ old('alamat', $peserta->alamat) }}</textarea>
                             @error('alamat')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -217,7 +217,7 @@
 
                     {{-- ================= ACTION ================= --}}
                     <div class="d-flex justify-content-end gap-2 mt-4">
-                        <a href="{{ route('petugas.pasien.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                        <a href="{{ route('petugas.peserta.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
                             <i class="bi bi-x-circle"></i> Batal
                         </a>
 

@@ -66,7 +66,7 @@
                         @forelse($data as $row)
                             <tr>
                                 <td class="ps-4">{{ $loop->iteration + ($data->currentPage() - 1) * $data->perPage() }}</td>
-                                <td class="fw-semibold">{{ optional($row->pasien)->nama_lengkap ?? '-' }}</td>
+                                <td class="fw-semibold">{{ optional($row->peserta)->nama_lengkap ?? '-' }}</td>
                                 <td class="text-muted small">
                                     {{ $row->tanggal_tindak_lanjut ? \Carbon\Carbon::parse($row->tanggal_tindak_lanjut)->format('d-m-Y') : '-' }}
                                 </td>

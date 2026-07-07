@@ -38,7 +38,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5">Tidak ada data pasien di periode ini.</td>
+                                        <td colspan="5">Tidak ada data peserta di periode ini.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

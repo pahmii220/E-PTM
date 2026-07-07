@@ -12,7 +12,7 @@
                 <i class="bi bi-shield-lock-fill"></i>
             </div>
             <div class="header-text">
-                <h1>Pengaturan Keamanan</h1>
+                <h1>Pengaturan Akun</h1>
                 <p>Kelola kredensial dan tingkatkan keamanan akun Anda dengan mudah.</p>
             </div>
         </div>

@@ -74,7 +74,7 @@
                         <td>{{ $i + 1 }}</td>
 
                         <td class="text-start">
-                            {{ $t->pasien->nama_lengkap ?? '-' }}
+                            {{ $t->peserta->nama_lengkap ?? '-' }}
                         </td>
 
                         <td>

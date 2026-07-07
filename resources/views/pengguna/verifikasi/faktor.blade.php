@@ -67,13 +67,13 @@
                         @foreach($data as $row)
                             @php
                                 $dataArray = [
-                                    "nama" => optional($row->pasien)->nama_lengkap ?? '-',
+                                    "nama" => optional($row->peserta)->nama_lengkap ?? '-',
                                 ];
                                 $amanData = base64_encode(json_encode($dataArray));
                             @endphp
                             <tr>
                                 <td class="ps-4">{{ $loop->iteration }}</td>
-                                <td class="fw-semibold text-dark">{{ optional($row->pasien)->nama_lengkap ?? '-' }}</td>
+                                <td class="fw-semibold text-dark">{{ optional($row->peserta)->nama_lengkap ?? '-' }}</td>
                                 <td>{{ $row->tanggal_pemeriksaan?->format('d-m-Y') ?? '-' }}</td>
                                 <td class="text-center">
                                     <span
@@ -90,19 +90,25 @@
                                 <td>{{ optional($row->puskesmas)->nama_puskesmas ?? '-' }}</td>
                                 <td>
                                     <span class="status-badge status-{{ $row->status_verifikasi }}">
-                                        {{ ucfirst($row->status_verifikasi) }}
+                                        @if($row->status_verifikasi === 'approved')
+                                            Diterima
+                                        @elseif($row->status_verifikasi === 'rejected')
+                                            Ditolak
+                                        @else
+                                            Tertunda
+                                        @endif
                                     </span>
                                 </td>
                                 <td class="text-end pe-4">
                                     @if ($row->status_verifikasi === 'pending')
                                         <button class="btn btn-success btn-sm rounded-circle me-1" title="Terima"
                                             data-bs-toggle="modal" data-bs-target="#verifyModal" data-id="{{ $row->id }}"
-                                            data-type="faktor" data-action="approve" data-pasien="{{ $amanData }}">
+                                            data-type="faktor" data-action="approve" data-peserta="{{ $amanData }}">
                                             <i class="bi bi-check-lg"></i>
                                         </button>
                                         <button class="btn btn-danger btn-sm rounded-circle" title="Tolak" data-bs-toggle="modal"
                                             data-bs-target="#verifyModal" data-id="{{ $row->id }}" data-type="faktor"
-                                            data-action="reject" data-pasien="{{ $amanData }}">
+                                            data-action="reject" data-peserta="{{ $amanData }}">
                                             <i class="bi bi-x-lg"></i>
                                         </button>
                                     @else
@@ -133,7 +139,7 @@
                         <input type="hidden" name="action" id="modal_action">
                         <input type="hidden" name="status" id="modal_status">
                         <p class="mb-3">Apakah Anda yakin ingin <strong id="txt_action"></strong> data <strong>faktor
-                                resiko</strong> pasien <strong id="disp_nama"></strong>?</p>
+                                resiko</strong> peserta <strong id="disp_nama"></strong>?</p>
                         <textarea name="note" id="verifyNote" rows="2" class="form-control"
                             placeholder="Tuliskan catatan verifikasi..."></textarea>
                     </div>
@@ -197,14 +203,14 @@
                         var id = button.getAttribute('data-id');
                         var type = button.getAttribute('data-type');
                         var action = button.getAttribute('data-action');
-                        var dataPasien = JSON.parse(atob(button.getAttribute('data-pasien')));
+                        var dataPeserta = JSON.parse(atob(button.getAttribute('data-peserta')));
 
                         document.getElementById('modal_id').value = id;
                         document.getElementById('modal_type').value = type;
                         document.getElementById('modal_action').value = action;
                         document.getElementById('modal_status').value = (action === 'approve') ? 'approved' : 'rejected';
                         document.getElementById('txt_action').innerText = (action === 'approve') ? 'menyetujui' : 'menolak';
-                        document.getElementById('disp_nama').innerText = dataPasien.nama;
+                        document.getElementById('disp_nama').innerText = dataPeserta.nama;
 
                         let noteInput = document.getElementById('verifyNote');
                         noteInput.value = (action === 'approve') ? "Data telah disetujui." : "";

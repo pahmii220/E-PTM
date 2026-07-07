@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use App\Models\Pasien;
+use App\Models\Peserta;
 use App\Models\DeteksiDiniPTM;
 use App\Models\FaktorResikoPTM;
 use App\Models\TindakLanjutPTM;
@@ -21,13 +21,13 @@ class VerifikasiController extends Controller
 {
     /**
  * Generic process endpoint for approve/reject from modal (AJAX or normal POST)
- * Expects: id (int), type (deteksi|pasien|faktor), action (approve|reject), note (optional)
- */
+  * Expects: id (int), type (deteksi|pasien|peserta|faktor), action (approve|reject), note (optional)
+  */
 public function process(Request $request)
 {
     $v = Validator::make($request->all(), [
         'id'     => 'required|integer',
-        'type'   => 'required|in:deteksi,pasien,faktor',
+        'type'   => 'required|in:deteksi,pasien,peserta,faktor',
         'action' => 'required|in:approve,reject',
         'note'   => 'nullable|string|max:1000',
     ]);
@@ -36,7 +36,8 @@ public function process(Request $request)
 
     $modelMap = [
         'deteksi' => DeteksiDiniPTM::class,
-        'pasien'  => Pasien::class,
+        'pasien'  => Peserta::class,
+        'peserta' => Peserta::class,
         'faktor'  => FaktorResikoPTM::class,
     ];
 
@@ -55,32 +56,9 @@ public function process(Request $request)
             return $item;
         });
 
-               // NOTIFIKASI
-        if (!empty($verifiedItem->petugas_id)) {
-            $petugasUser = null;
-
-            if ($verifiedItem instanceof \App\Models\FaktorResikoPTM) {
-                // Untuk FaktorResikoPTM, petugas_id langsung merujuk ke users.id
-                $petugasUser = User::find($verifiedItem->petugas_id);
-            } else {
-                // Untuk model lain (seperti DeteksiDiniPTM), petugas_id merujuk ke petugas.id
-                $petugas = \App\Models\Petugas::find($verifiedItem->petugas_id);
-                if ($petugas && $petugas->user_id) {
-                    $petugasUser = User::find($petugas->user_id);
-                }
-            }
-            
-            if ($petugasUser && $petugasUser->email) {
-                // Cek aksi apa yang dilakukan
-                if ($request->action === 'reject') {
-                    \Illuminate\Support\Facades\Notification::send($petugasUser, new \App\Notifications\DataPtmDitolakNotification($verifiedItem));
-                    Log::info("LOG-EMAIL: Notifikasi REJECT terkirim ke " . $petugasUser->email);
-                } 
-                elseif ($request->action === 'approve') {
-                    \Illuminate\Support\Facades\Notification::send($petugasUser, new \App\Notifications\DataPtmDisetujuiNotification($verifiedItem));
-                    Log::info("LOG-EMAIL: Notifikasi APPROVE terkirim ke " . $petugasUser->email);
-                }
-            }
+               // NOTIFIKASI HANYA UNTUK REVISI / DITOLAK
+        if ($request->action === 'reject') {
+            $this->notifyPetugasIfRejected($verifiedItem);
         }
 
         return redirect()->back()->with('success', 'Verifikasi berhasil diproses.');
@@ -95,7 +73,8 @@ public function process(Request $request)
     $this->middleware(['auth']);
 
     $this->middleware('role:pegawai')->except([
-        'printPasien',
+        'showPeserta',
+        'printPeserta',
         'printDeteksi',
         'printFaktor',
         'printTindakLanjut',
@@ -110,24 +89,24 @@ public function process(Request $request)
      */
     public function index()
     {
-        $pendingPasien = Pasien::where('status_verifikasi', 'pending')->count();
+        $pendingPeserta = Peserta::where('status_verifikasi', 'pending')->count();
         $pendingDeteksi = DeteksiDiniPTM::where('status_verifikasi', 'pending')->count();
         $pendingFaktor = FaktorResikoPTM::where('status_verifikasi', 'pending')->count();
 
-        return view('pengguna.verifikasi.index', compact('pendingPasien','pendingDeteksi','pendingFaktor'));
+        return view('pengguna.verifikasi.index', compact('pendingPeserta','pendingDeteksi','pendingFaktor'));
     }
 
 /**
-     * List pasien — mendukung filter status (approved/rejected/pending) dan filter Puskesmas
+     * List peserta — mendukung filter status (approved/rejected/pending) dan filter Puskesmas
      */
-        public function pasien(Request $request)
+        public function peserta(Request $request)
         {
             $status = $request->status ?? 'pending';
             $puskesmasId = $request->puskesmas_id ?? 'all';
              $bulan = $request->bulan ?? 'all';
 
             // Gunakan with('puskesmas') agar load datanya lebih ringan (Eager Loading)
-            $query = Pasien::with('puskesmas')->orderBy('dibuat_pada','desc');
+            $query = Peserta::with('puskesmas')->orderBy('dibuat_pada','desc');
 
             // Filter berdasarkan Status
             if ($status !== 'all') {
@@ -149,7 +128,7 @@ if ($bulan !== 'all') {
             // Ambil daftar puskesmas untuk ditampilkan di dropdown filter
             $puskesmasList = \App\Models\Puskesmas::all();
 
-            return view('pengguna.verifikasi.pasien', compact('data', 'status', 'puskesmasList','bulan'));
+            return view('pengguna.verifikasi.peserta', compact('data', 'status', 'puskesmasList','bulan'));
         }
 
 
@@ -161,7 +140,7 @@ if ($bulan !== 'all') {
         $status = $request->query('status', 'pending');
         $puskesmasId = $request->query('puskesmas_id', 'all');
 
-        $query = DeteksiDiniPTM::with(['pasien', 'petugas', 'puskesmas'])
+        $query = DeteksiDiniPTM::with(['peserta', 'petugas', 'puskesmas'])
             ->orderBy('dibuat_pada', 'desc');
 
         // Filter Status
@@ -174,9 +153,9 @@ if ($bulan !== 'all') {
             $query->where('puskesmas_id', $puskesmasId);
         }
 
-        // Filter berdasarkan Pasien ID jika disediakan di URL
-        if ($request->filled('pasien_id')) {
-            $query->where('pasien_id', $request->pasien_id);
+        // Filter berdasarkan Peserta/Pasien ID jika disediakan di URL
+        if ($request->filled('peserta_id') || $request->filled('pasien_id')) {
+            $query->where('peserta_id', $request->peserta_id ?? $request->pasien_id);
         }
 
         $data = $query->paginate(20)->appends($request->query());
@@ -195,7 +174,7 @@ if ($bulan !== 'all') {
         $status = $request->query('status', 'pending');
         $puskesmasId = $request->query('puskesmas_id', 'all');
 
-        $query = FaktorResikoPTM::with(['pasien', 'petugas', 'puskesmas'])
+        $query = FaktorResikoPTM::with(['peserta', 'petugas', 'puskesmas'])
             ->orderBy('dibuat_pada', 'desc');
 
         // Filter Status
@@ -208,9 +187,9 @@ if ($bulan !== 'all') {
             $query->where('puskesmas_id', $puskesmasId);
         }
 
-        // Filter berdasarkan Pasien ID jika disediakan di URL
-        if ($request->filled('pasien_id')) {
-            $query->where('pasien_id', $request->pasien_id);
+        // Filter berdasarkan Peserta/Pasien ID jika disediakan di URL
+        if ($request->filled('peserta_id') || $request->filled('pasien_id')) {
+            $query->where('peserta_id', $request->peserta_id ?? $request->pasien_id);
         }
 
         $data = $query->paginate(20)->appends($request->query());
@@ -220,9 +199,9 @@ if ($bulan !== 'all') {
     }
 
     /**
-     * Aksi verifikasi pasien (approve/reject) — hanya update status, kembali ke halaman sebelumnya
+     * Aksi verifikasi peserta (approve/reject) — hanya update status, kembali ke halaman sebelumnya
      */
-    public function pasienVerify(Request $request, $id)
+    public function pesertaVerify(Request $request, $id)
     {
         $v = Validator::make($request->all(), [
             'action' => 'required|in:approve,reject',
@@ -230,7 +209,7 @@ if ($bulan !== 'all') {
         ]);
         if ($v->fails()) return redirect()->back()->withErrors($v)->withInput();
 
-        $item = Pasien::findOrFail($id);
+        $item = Peserta::findOrFail($id);
         $item->diverifikasi_oleh = Auth::id();
         $item->diverifikasi_pada = Carbon::now();
         $item->status_verifikasi = $request->action === 'approve' ? 'approved' : 'rejected';
@@ -238,10 +217,13 @@ if ($bulan !== 'all') {
 
         try {
             $item->save();
-            return redirect()->back()->with('success','Verifikasi pasien berhasil.');
+            if ($request->action === 'reject') {
+                $this->notifyPetugasIfRejected($item);
+            }
+            return redirect()->back()->with('success','Verifikasi peserta berhasil.');
         } catch (\Throwable $e) {
-            Log::error('Verifikasi pasien error: '.$e->getMessage(), ['id'=>$id]);
-            return redirect()->back()->with('error','Gagal verifikasi pasien: '.$e->getMessage());
+            Log::error('Verifikasi peserta error: '.$e->getMessage(), ['id'=>$id]);
+            return redirect()->back()->with('error','Gagal verifikasi peserta: '.$e->getMessage());
         }
     }
 
@@ -264,6 +246,9 @@ if ($bulan !== 'all') {
 
         try {
             $item->save();
+            if ($request->action === 'reject') {
+                $this->notifyPetugasIfRejected($item);
+            }
             return redirect()->back()->with('success','Verifikasi deteksi berhasil.');
         } catch (\Throwable $e) {
             Log::error('Verifikasi deteksi error: '.$e->getMessage(), ['id'=>$id]);
@@ -290,10 +275,47 @@ if ($bulan !== 'all') {
 
         try {
             $item->save();
+            if ($request->action === 'reject') {
+                $this->notifyPetugasIfRejected($item);
+            }
             return redirect()->back()->with('success','Verifikasi faktor berhasil.');
         } catch (\Throwable $e) {
             Log::error('Verifikasi faktor error: '.$e->getMessage(), ['id'=>$id]);
             return redirect()->back()->with('error','Gagal verifikasi faktor: '.$e->getMessage());
+        }
+    }
+
+    private function notifyPetugasIfRejected($item)
+    {
+        $petugasUser = null;
+
+        // 1. Coba cari jika petugas_id merujuk langsung ke users.id
+        if (!empty($item->petugas_id)) {
+            $directUser = User::where('id', $item->petugas_id)->where('role_name', 'petugas')->first();
+            if ($directUser) {
+                $petugasUser = $directUser;
+            }
+        }
+
+        // 2. Jika belum ketemu, coba cari jika petugas_id merujuk ke petugas.id (yang berelasi ke user_id)
+        if (!$petugasUser && !empty($item->petugas_id)) {
+            $petugas = \App\Models\Petugas::find($item->petugas_id);
+            if ($petugas && $petugas->user_id) {
+                $petugasUser = User::find($petugas->user_id);
+            }
+        }
+
+        // 3. Fallback terakhir: jika masih belum ketemu, cari petugas mana saja dari puskesmas_id yang sama
+        if (!$petugasUser && !empty($item->puskesmas_id)) {
+            $fallbackPetugas = \App\Models\Petugas::where('puskesmas_id', $item->puskesmas_id)->first();
+            if ($fallbackPetugas && $fallbackPetugas->user_id) {
+                $petugasUser = User::find($fallbackPetugas->user_id);
+            }
+        }
+
+        if ($petugasUser) {
+            \Illuminate\Support\Facades\Notification::send($petugasUser, new \App\Notifications\DataPtmDitolakNotification($item));
+            Log::info("LOG-EMAIL & DATABASE: Notifikasi REJECT terkirim ke " . $petugasUser->email);
         }
     }
 
@@ -316,7 +338,7 @@ if ($bulan !== 'all') {
         $puskesmasId = $request->query('puskesmas_id', 'all');
 
         $query = DeteksiDiniPTM::with([
-            'pasien',
+            'peserta',
             'petugas',
             'puskesmas',
             'tindakLanjut'
@@ -340,9 +362,9 @@ if ($bulan !== 'all') {
 
 
 /**
-     * Cetak laporan: pasien
+     * Cetak laporan: peserta
      */
-    public function printPasien(Request $request)
+    public function printPeserta(Request $request)
     {
         $user = auth()->user();
 
@@ -358,7 +380,7 @@ if ($bulan !== 'all') {
         $puskesmasId = $request->query('puskesmas_id', 'all');
 
         // base query
-        $query = Pasien::with('puskesmas')->orderBy('dibuat_pada', 'desc');
+        $query = Peserta::with('puskesmas')->orderBy('dibuat_pada', 'desc');
 
         // 🔐 ROLE-BASED FILTER & PUSKESMAS FILTER
         if ($user->role_name === 'petugas') {
@@ -382,7 +404,7 @@ if ($bulan !== 'all') {
         $statusDokumen = 'Menunggu';
         $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
 
-        return view('pengguna.verifikasi.cetak_pasien', compact('items', 'status', 'qrToken', 'statusDokumen', 'kepalaAktif'));
+        return view('pengguna.verifikasi.cetak_peserta', compact('items', 'status', 'qrToken', 'statusDokumen', 'kepalaAktif'));
     }
 
 
@@ -405,7 +427,7 @@ if ($bulan !== 'all') {
         // Tangkap parameter puskesmas_id dari URL (Tambahan Baru)
         $puskesmasId = $request->query('puskesmas_id', 'all');
 
-        $query = FaktorResikoPTM::with(['pasien','petugas'])
+        $query = FaktorResikoPTM::with(['peserta','petugas'])
             ->orderBy('dibuat_pada','desc');
 
         if ($status !== 'all') {
@@ -425,7 +447,7 @@ if ($bulan !== 'all') {
     
 public function printTindakLanjut()
 {
-    $items = TindakLanjutPTM::with(['pasien','puskesmas'])
+    $items = TindakLanjutPTM::with(['peserta','puskesmas'])
         ->orderBy('tanggal_tindak_lanjut','desc')
         ->get();
 
@@ -433,11 +455,11 @@ public function printTindakLanjut()
 }
 
 
-public function showPasien($id)
+public function showPeserta($id)
 {
-    $pasien = Pasien::findOrFail($id);
+    $peserta = Peserta::findOrFail($id);
 
-    return view('pengguna.verifikasi.pasien_show', compact('pasien'));
+    return view('pengguna.verifikasi.peserta_show', compact('peserta'));
 }
 
 
@@ -445,7 +467,7 @@ public function showPasien($id)
 public function KelompokUsia()
 {
 
-    $pasien = Pasien::all();
+    $peserta = Peserta::all();
 
     $data = [
         'remaja' => 0,
@@ -454,7 +476,7 @@ public function KelompokUsia()
         'lansia' => 0
     ];
 
-    foreach ($pasien as $p) {
+    foreach ($peserta as $p) {
 
         if (!$p->tanggal_lahir) continue;
 
@@ -484,7 +506,7 @@ public function printKegiatan()
 
 public function printKelompokUsia()
 {
-    $pasien = Pasien::all();
+    $peserta = Peserta::all();
 
     // 1. Ubah nama variabel menjadi $dataUsia
     $dataUsia = [
@@ -494,7 +516,7 @@ public function printKelompokUsia()
         'lansia' => 0
     ];
 
-    foreach ($pasien as $p) {
+    foreach ($peserta as $p) {
 
         if (!$p->tanggal_lahir) continue;
 

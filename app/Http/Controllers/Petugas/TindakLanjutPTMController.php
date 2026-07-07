@@ -24,7 +24,7 @@ class TindakLanjutPTMController extends Controller
 
         // 🔹 ADMIN: lihat SEMUA data
         if ($user->role_name === 'admin') {
-            $tindakLanjut = TindakLanjutPTM::with(['pasien', 'deteksiDini'])
+            $tindakLanjut = TindakLanjutPTM::with(['peserta', 'deteksiDini'])
                 ->latest()
                 ->get();
 
@@ -41,7 +41,7 @@ class TindakLanjutPTMController extends Controller
             abort(403, 'Akun petugas belum terhubung dengan data petugas.');
         }
 
-        $tindakLanjut = TindakLanjutPTM::with(['pasien', 'deteksiDini'])
+        $tindakLanjut = TindakLanjutPTM::with(['peserta', 'deteksiDini'])
             ->where('petugas_id', $user->petugas->id)
             ->latest()
             ->get();
@@ -63,11 +63,11 @@ class TindakLanjutPTMController extends Controller
      ===================== */
     public function create($deteksi_dini_id)
     {
-        $deteksiTerpilih = DeteksiDiniPTM::with('pasien')->findOrFail($deteksi_dini_id);
+        $deteksiTerpilih = DeteksiDiniPTM::with('peserta')->findOrFail($deteksi_dini_id);
 
         // ADMIN: semua deteksi
         if (Auth::user()->role_name === 'admin') {
-            $daftarDeteksi = DeteksiDiniPTM::with('pasien')
+            $daftarDeteksi = DeteksiDiniPTM::with('peserta')
                 ->latest()
                 ->get();
         } else {
@@ -76,7 +76,7 @@ class TindakLanjutPTMController extends Controller
                 abort(403, 'Akun petugas belum terhubung dengan data petugas.');
             }
 
-            $daftarDeteksi = DeteksiDiniPTM::with('pasien')
+            $daftarDeteksi = DeteksiDiniPTM::with('peserta')
     ->where('petugas_id', auth()->user()->petugas->id)
     ->whereDoesntHave('tindakLanjut') // 🔥 KUNCI
     ->latest()
@@ -102,7 +102,7 @@ class TindakLanjutPTMController extends Controller
             'jenis_tindak_lanjut' => 'required',
         ]);
 
-        $deteksi = DeteksiDiniPTM::with('pasien')->findOrFail($request->deteksi_dini_id);
+        $deteksi = DeteksiDiniPTM::with('peserta')->findOrFail($request->deteksi_dini_id);
 
         // ADMIN tidak wajib petugas
         $petugasId = Auth::user()->role_name === 'admin'
@@ -110,7 +110,7 @@ class TindakLanjutPTMController extends Controller
             : auth()->user()->petugas->id;
 
         TindakLanjutPTM::create([
-            'pasien_id' => $deteksi->pasien->id,
+            'peserta_id' => $deteksi->peserta->id,
             'deteksi_dini_id' => $deteksi->id,
             'petugas_id' => $petugasId,
             'jenis_tindak_lanjut' => $request->jenis_tindak_lanjut,
@@ -185,7 +185,7 @@ class TindakLanjutPTMController extends Controller
 
     public function show($id)
     {
-        $tindakLanjut = TindakLanjutPTM::with(['pasien', 'deteksiDini'])->findOrFail($id);
+        $tindakLanjut = TindakLanjutPTM::with(['peserta', 'deteksiDini'])->findOrFail($id);
 
         return view('petugas.tindak_lanjut.show', compact('tindakLanjut'));
     }

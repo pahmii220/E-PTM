@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Petugas;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\FaktorResikoPTM;
-use App\Models\Pasien;
+use App\Models\Peserta;
 use App\Models\Puskesmas;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\DataPtmBaruNotification;
@@ -24,14 +24,14 @@ class FaktorResikoPTMController extends Controller
 
     if (in_array($user->role_name, ['admin', 'pegawai'])) {
         // ADMIN & pegawai: lihat semua
-        $faktor = FaktorResikoPTM::with(['pasien', 'puskesmas'])
+        $faktor = FaktorResikoPTM::with(['peserta', 'puskesmas'])
             ->latest()
             ->get();
     } else {
         // PETUGAS: hanya puskesmas sendiri
         $puskesmasId = $user->petugas->puskesmas_id;
 
-        $faktor = FaktorResikoPTM::with(['pasien', 'puskesmas'])
+        $faktor = FaktorResikoPTM::with(['peserta', 'puskesmas'])
             ->where('puskesmas_id', $puskesmasId)
             ->latest()
             ->get();
@@ -52,15 +52,15 @@ public function create()
         abort(403);
     }
 
-    // ================= PASIEN =================
+    // ================= PESERTA =================
     if ($user->role_name === 'admin') {
-        $pasien = Pasien::whereDoesntHave('faktorResikoPTM')
+        $peserta = Peserta::whereDoesntHave('faktorResikoPTM')
             ->orderBy('nama_lengkap')
             ->get();
 
         $puskesmas = Puskesmas::orderBy('nama_puskesmas')->get();
     } else {
-        $pasien = Pasien::where('puskesmas_id', $user->petugas->puskesmas_id)
+        $peserta = Peserta::where('puskesmas_id', $user->petugas->puskesmas_id)
             ->whereDoesntHave('faktorResikoPTM')
             ->orderBy('nama_lengkap')
             ->get();
@@ -69,7 +69,7 @@ public function create()
     }
 
     return view('petugas.faktor_resiko.create', compact(
-        'pasien',
+        'peserta',
         'puskesmas'
     ));
 }
@@ -84,9 +84,9 @@ public function store(Request $request)
         // ... (kode validasi dan pengecekan role tetap sama) ...
 
         $faktorBaru = FaktorResikoPTM::create([
-            'pasien_id' => $request->pasien_id,
+            'peserta_id' => $request->peserta_id ?? $request->pasien_id,
             'puskesmas_id' => Auth::user()->role_name === 'admin'
-                ? Pasien::findOrFail($request->pasien_id)->puskesmas_id
+                ? Peserta::findOrFail($request->peserta_id ?? $request->pasien_id)->puskesmas_id
                 : Auth::user()->petugas->puskesmas_id,
             'tanggal_pemeriksaan'    => $request->tanggal_pemeriksaan,
             'merokok'                => $request->merokok,
@@ -100,7 +100,7 @@ public function store(Request $request)
         // KODE NOTIFIKASI EMAIL KE DINKES
         // =======================================================
         try {
-            $faktorBaru->load('pasien'); // Memuat relasi agar nama pasien bisa dibaca
+            $faktorBaru->load('peserta'); // Memuat relasi agar nama peserta bisa dibaca
             
             $usersDinkes = User::where('role_name', 'pegawai')->get();
             
@@ -140,12 +140,12 @@ public function edit($id)
             ->with('error', 'Data sudah diverifikasi dan tidak dapat diedit.');
     }
 
-    // ✅ PASIEN
+    // ✅ PESERTA
     if ($user->role_name === 'admin') {
-        $pasien = Pasien::orderBy('nama_lengkap')->get();
+        $peserta = Peserta::orderBy('nama_lengkap')->get();
         $puskesmas = Puskesmas::orderBy('nama_puskesmas')->get();
     } else {
-        $pasien = Pasien::where('puskesmas_id', $user->petugas->puskesmas_id)
+        $peserta = Peserta::where('puskesmas_id', $user->petugas->puskesmas_id)
             ->orderBy('nama_lengkap')
             ->get();
 
@@ -155,7 +155,7 @@ public function edit($id)
 
     return view('petugas.faktor_resiko.edit', compact(
         'faktor',
-        'pasien',
+        'peserta',
         'puskesmas'
     ));
 }

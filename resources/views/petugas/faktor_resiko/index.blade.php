@@ -100,7 +100,7 @@
                         @foreach($faktor as $i => $f)
                             <tr>
                                 <td>{{ $i + 1 }}</td>
-                                <td class="text-start fw-semibold">{{ $f->pasien->nama_lengkap ?? '-' }}</td>
+                                <td class="text-start fw-semibold">{{ $f->peserta->nama_lengkap ?? '-' }}</td>
                                 <td>{{ \Carbon\Carbon::parse($f->tanggal_pemeriksaan)->format('d-m-Y') }}</td>
 
                                 <td>
@@ -167,7 +167,7 @@
                                                             style="white-space: normal; line-height: 1.6;">
                                                             <div class="mb-2 text-muted" style="font-size: 12px;">
                                                                 Pesan untuk data risiko:
-                                                                <strong>{{ $f->pasien->nama_lengkap ?? '-' }}</strong>
+                                                                <strong>{{ $f->peserta->nama_lengkap ?? '-' }}</strong>
                                                             </div>
                                                             <div class="p-3 bg-light border-start border-danger border-4 rounded">
                                                                 {{ $f->catatan_verifikasi }}

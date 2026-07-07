@@ -24,7 +24,7 @@
 
     // Query berdasarkan tab yang dipilih
     if ($tab === 'peserta') {
-        $query = \App\Models\Pasien::with('puskesmas')->orderBy('dibuat_pada', 'desc');
+        $query = \App\Models\Peserta::with('puskesmas')->orderBy('dibuat_pada', 'desc');
         if ($puskesmasId !== 'all') {
             $query->where('puskesmas_id', $puskesmasId);
         }
@@ -49,7 +49,7 @@
         $data = $query->paginate(10)->appends(request()->query());
 
     } elseif ($tab === 'deteksi') {
-        $query = \App\Models\DeteksiDiniPTM::with(['pasien', 'puskesmas'])->orderBy('tanggal_pemeriksaan', 'desc');
+        $query = \App\Models\DeteksiDiniPTM::with(['peserta', 'puskesmas'])->orderBy('tanggal_pemeriksaan', 'desc');
         if ($puskesmasId !== 'all') {
             $query->where('puskesmas_id', $puskesmasId);
         }
@@ -57,7 +57,7 @@
             $query->where('status_verifikasi', $status);
         }
         if ($search) {
-            $query->whereHas('pasien', function ($q) use ($search) {
+            $query->whereHas('peserta', function ($q) use ($search) {
                 $q->where('nama_lengkap', 'like', "%{$search}%")
                     ->orWhere('no_rekam_medis', 'like', "%{$search}%");
             });
@@ -65,7 +65,7 @@
         $data = $query->paginate(10)->appends(request()->query());
 
     } elseif ($tab === 'faktor') {
-        $query = \App\Models\FaktorResikoPTM::with(['pasien', 'puskesmas'])->orderBy('dibuat_pada', 'desc');
+        $query = \App\Models\FaktorResikoPTM::with(['peserta', 'puskesmas'])->orderBy('dibuat_pada', 'desc');
         if ($puskesmasId !== 'all') {
             $query->where('puskesmas_id', $puskesmasId);
         }
@@ -73,19 +73,19 @@
             $query->where('status_verifikasi', $status);
         }
         if ($search) {
-            $query->whereHas('pasien', function ($q) use ($search) {
+            $query->whereHas('peserta', function ($q) use ($search) {
                 $q->where('nama_lengkap', 'like', "%{$search}%");
             });
         }
         $data = $query->paginate(10)->appends(request()->query());
 
     } elseif ($tab === 'tindak_lanjut') {
-        $query = \App\Models\TindakLanjutPTM::with(['pasien', 'puskesmas'])->orderBy('tanggal_tindak_lanjut', 'desc');
+        $query = \App\Models\TindakLanjutPTM::with(['peserta', 'puskesmas'])->orderBy('tanggal_tindak_lanjut', 'desc');
         if ($puskesmasId !== 'all') {
             $query->where('puskesmas_id', $puskesmasId);
         }
         if ($search) {
-            $query->whereHas('pasien', function ($q) use ($search) {
+            $query->whereHas('peserta', function ($q) use ($search) {
                 $q->where('nama_lengkap', 'like', "%{$search}%");
             });
         }
@@ -98,7 +98,7 @@
 
     } elseif ($tab === 'puskesmas') {
         $data = \App\Models\Puskesmas::withCount([
-            'pasien as total_pasien',
+            'peserta as total_peserta',
             'deteksiDini as total_deteksi',
             'faktorResiko as total_faktor',
         ])
@@ -126,7 +126,7 @@
 
     } elseif ($tab === 'usia') {
 
-        $pasiens = \App\Models\Pasien::all();
+        $pesertas = \App\Models\Peserta::all();
         $usiaData = [
             'remaja' => 0,
             'dewasa' => 0,
@@ -136,7 +136,7 @@
 
 
 
-        foreach ($pasiens as $p) {
+        foreach ($pesertas as $p) {
             if (!$p->tanggal_lahir)
                 continue;
             $umur = \Carbon\Carbon::parse($p->tanggal_lahir)->age;
@@ -389,7 +389,7 @@
                                                             {{-- TOMBOL PRINT DINAMIS --}}
                                                             <div>
                                                                 @if($tab === 'peserta')
-                                                                    <a href="{{ route('pengguna.verifikasi.print.pasien', ['status' => $status, 'puskesmas_id' => $puskesmasId]) }}"
+                                                                    <a href="{{ route('pengguna.verifikasi.print.peserta', ['status' => $status, 'puskesmas_id' => $puskesmasId]) }}"
                                                                         target="_blank" class="btn btn-warning btn-sm rounded-pill fw-bold shadow-sm px-3"
                                                                         style="font-size: 12px;">
                                                                         <i class="bi bi-printer-fill me-1"></i> Cetak Laporan
@@ -598,7 +598,7 @@
                                                                         <thead class="table-light">
                                                                             <tr>
                                                                                 <th class="ps-4" style="width: 60px;">No</th>
-                                                                                <th>Nama Pasien</th>
+                                                                                <th>Nama Peserta</th>
                                                                                 <th class="text-center">Tekanan Darah</th>
                                                                                 <th class="text-center">Gula Darah</th>
                                                                                 <th>Puskesmas</th>
@@ -610,7 +610,7 @@
                                                                             @forelse($data as $i => $row)
                                                                                 <tr>
                                                                                     <td class="ps-4 text-muted">{{ $data->firstItem() + $i }}</td>
-                                                                                    <td class="fw-semibold text-dark">{{ optional($row->pasien)->nama_lengkap ?? '-' }}</td>
+                                                                                    <td class="fw-semibold text-dark">{{ optional($row->peserta)->nama_lengkap ?? '-' }}</td>
                                                                                     <td class="text-center fw-semibold text-danger">{{ $row->tekanan_darah ?? '-' }} mmHg
                                                                                     </td>
                                                                                     <td class="text-center fw-semibold text-warning">{{ $row->gula_darah ?? '-' }} mg/dL
@@ -644,7 +644,7 @@
                                                                         <thead class="table-light">
                                                                             <tr>
                                                                                 <th class="ps-4" style="width: 60px;">No</th>
-                                                                                <th>Nama Pasien</th>
+                                                                                <th>Nama Peserta</th>
                                                                                 <th class="text-center">Merokok</th>
                                                                                 <th class="text-center">Konsumsi Alkohol</th>
                                                                                 <th class="text-center">Kurang Fisik</th>
@@ -657,7 +657,7 @@
                                                                             @forelse($data as $i => $row)
                                                                                 <tr>
                                                                                     <td class="ps-4 text-muted">{{ $data->firstItem() + $i }}</td>
-                                                                                    <td class="fw-semibold text-dark">{{ optional($row->pasien)->nama_lengkap ?? '-' }}</td>
+                                                                                    <td class="fw-semibold text-dark">{{ optional($row->peserta)->nama_lengkap ?? '-' }}</td>
                                                                                     <td class="text-center">
                                                                                         <span
                                                                                             class="badge {{ strtolower($row->merokok) === 'ya' ? 'bg-danger' : 'bg-success' }} px-3 rounded-pill">{{ $row->merokok ?? '-' }}</span>
@@ -699,7 +699,7 @@
                                                                         <thead class="table-light">
                                                                             <tr>
                                                                                 <th class="ps-4" style="width: 60px;">No</th>
-                                                                                <th>Nama Pasien</th>
+                                                                                <th>Nama Peserta</th>
                                                                                 <th>Jenis Tindak Lanjut</th>
                                                                                 <th>Keterangan Petugas</th>
                                                                                 <th>Puskesmas</th>
@@ -710,7 +710,7 @@
                                                                             @forelse($data as $i => $row)
                                                                                 <tr>
                                                                                     <td class="ps-4 text-muted">{{ $data->firstItem() + $i }}</td>
-                                                                                    <td class="fw-semibold text-dark">{{ optional($row->pasien)->nama_lengkap ?? '-' }}</td>
+                                                                                    <td class="fw-semibold text-dark">{{ optional($row->peserta)->nama_lengkap ?? '-' }}</td>
                                                                                     <td><span
                                                                                             class="badge bg-info text-dark px-3 rounded-pill">{{ ucwords(str_replace('_', ' ', $row->jenis_tindak_lanjut)) }}</span>
                                                                                     </td>
@@ -778,7 +778,7 @@
                                                                                     <td class="text-muted">{{ $i + 1 }}</td>
                                                                                     <td class="text-start ps-4 fw-bold text-dark">{{ $row->nama_puskesmas }}</td>
                                                                                     <td><span
-                                                                                            class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill fw-bold">{{ $row->total_pasien }}</span>
+                                                                                            class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill fw-bold">{{ $row->total_peserta }}</span>
                                                                                     </td>
                                                                                     <td><span
                                                                                             class="badge bg-danger-soft text-danger px-3 py-2 rounded-pill fw-bold">{{ $row->total_deteksi }}</span>
@@ -803,7 +803,7 @@
                                                                                 <th style="width: 80px;">No</th>
                                                                                 <th class="text-start ps-4">Kategori Usia</th>
                                                                                 <th>Rentang Umur (Tahun)</th>
-                                                                                <th style="width: 250px;">Jumlah Pasien</th>
+                                                                                <th style="width: 250px;">Jumlah Peserta</th>
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
@@ -836,7 +836,7 @@
                                                                                     orang</td>
                                                                             </tr>
                                                                             <tr class="table-light fw-bold text-center">
-                                                                                <td colspan="3" class="text-end pe-5">Total Pasien Teridentifikasi Usia:</td>
+                                                                                <td colspan="3" class="text-end pe-5">Total Peserta Teridentifikasi Usia:</td>
                                                                                 <td class="text-primary" style="font-size: 15px;">{{ array_sum($usiaData) }} orang</td>
                                                                             </tr>
                                                                         </tbody>

@@ -165,12 +165,20 @@
             <h3 style="margin:0; font-size:15px;">LAPORAN TINDAK LANJUT PENYAKIT TIDAK MENULAR (PTM)</h3>
         </div>
 
+
+       
         {{-- Keterangan Bulan Sebelah Kiri --}}
         @if(isset($bulan) && isset($tahun))
             <div style="text-align: left; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
                 Bulan: {{ \Carbon\Carbon::create()->month((int) $bulan)->locale('id')->translatedFormat('F') }} {{ $tahun }}
             </div>
         @endif
+        {{-- PENJELASAN SINGKAT --}} 
+        <div
+            style="font-size: 11px; color: #444; margin-bottom: 12px; line-height: 1.4; text-align: left;"> Laporan ini berisi
+            informasi mengenai tindak lanjut peserta Penyakit Tidak Menular (PTM).
+            Data yang ditampilkan digunakan sebagai dasar pemantauan pelaksanaan tindak lanjut serta bahan evaluasi program PTM.
+        </div>
 
         <table class="grid">
             <thead>
@@ -187,7 +195,7 @@
                 @forelse($items as $i => $row)
                     <tr>
                         <td style="text-align:center">{{ $i + 1 }}</td>
-                        <td>{{ optional($row->pasien)->nama_lengkap ?? '-' }}</td>
+                        <td>{{ optional($row->peserta)->nama_lengkap ?? '-' }}</td>
                         <td style="text-align:center">
                             {{ $row->tanggal_tindak_lanjut ? \Carbon\Carbon::parse($row->tanggal_tindak_lanjut)->format('d-m-Y') : '-' }}
                         </td>

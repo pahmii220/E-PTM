@@ -172,30 +172,53 @@
             </h3>
         </div>
 
+        @php
+            $totalPemeriksaan = $data->sum('jumlah');
+        @endphp
+
         {{-- TABEL --}}
         <table class="grid">
             <thead>
                 <tr>
                     <th style="width:40px">No</th>
                     <th>Status Kesehatan</th>
-                    <th>Jumlah Peserta</th>
+                    <th style="width:120px">Jumlah Peserta</th>
+                    <th style="width:90px">Persentase</th>
+                    <th>Rekomendasi Tindak Lanjut</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($data as $i => $row)
+                    @php
+                        $persen = $totalPemeriksaan > 0 ? round(($row->jumlah / $totalPemeriksaan) * 100, 1) : 0;
+                        
+                        $statusLower = strtolower($row->hasil_skrining);
+                        $rekomendasi = 'Edukasi hidup sehat dan pemeriksaan berkala';
+                        if ($statusLower === 'normal') {
+                            $rekomendasi = 'Edukasi pola hidup sehat dan skrining berkala 1 tahun sekali';
+                        } elseif ($statusLower === 'risiko tinggi') {
+                            $rekomendasi = 'Rujukan ke Puskesmas/Rumah Sakit untuk penanganan medis';
+                        } elseif (str_contains($statusLower, 'risiko') || str_contains($statusLower, 'berisiko')) {
+                            $rekomendasi = 'Konseling faktor risiko dan pemeriksaan rutin 3-6 bulan sekali';
+                        }
+                    @endphp
                     <tr>
                         <td style="text-align:center">{{ $i + 1 }}</td>
                         <td style="text-align:center">{{ $row->hasil_skrining }}</td>
-                        <td style="text-align:center">{{ $row->jumlah }}</td>
+                        <td style="text-align:center">{{ $row->jumlah }} Orang</td>
+                        <td style="text-align:center">{{ $persen }}%</td>
+                        <td style="padding: 4px 10px;">{{ $rekomendasi }}</td>
                     </tr>
                 @endforeach
+                {{-- BARIS TOTAL --}}
+                <tr style="background-color: #f9fafb; font-weight: bold;">
+                    <td colspan="2" style="text-align:right; padding-right: 10px;">Total Keseluruhan</td>
+                    <td style="text-align:center;">{{ $totalPemeriksaan }} Orang</td>
+                    <td style="text-align:center;">100%</td>
+                    <td style="padding: 4px 10px;">-</td>
+                </tr>
             </tbody>
         </table>
-
-        {{-- TOTAL --}}
-        <div style="margin-top:10px; font-size:12px; font-weight:700;">
-            Jumlah keseluruhan peserta yang diperiksa sebanyak = {{ $data->sum('jumlah') }} orang
-        </div>
 
         {{-- TTD & QR CODE (Sudah Disinkronkan Sesuai Hak Akses Role) --}}
         <div class="ttd">

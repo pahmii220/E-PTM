@@ -32,17 +32,17 @@ public function toMail($notifiable): MailMessage
 
         if (get_class($this->item) === 'App\Models\DeteksiDiniPTM') {
             $url = url('/petugas/deteksi-dini/' . $this->item->id);
-            $namaPeserta = $this->item->pasien->nama_lengkap ?? '-';
+            $namaPeserta = $this->item->peserta->nama_lengkap ?? '-';
             $jenisData = 'Data Deteksi Dini';
             
         } elseif (get_class($this->item) === 'App\Models\FaktorResikoPTM') {
             $url = url('/petugas/faktor-resiko/' . $this->item->id);
-            $namaPeserta = $this->item->pasien->nama_lengkap ?? '-';
+            $namaPeserta = $this->item->peserta->nama_lengkap ?? '-';
             $jenisData = 'Data Faktor Risiko';
             
-        } elseif (get_class($this->item) === 'App\Models\Pasien') {
-            $url = url('/petugas/pasien/' . $this->item->id);
-            // KARENA INI DATA PASIEN, LANGSUNG PANGGIL NAMA LENGKAPNYA
+        } elseif (get_class($this->item) === 'App\Models\Peserta') {
+            $url = url('/petugas/peserta/' . $this->item->id);
+            // KARENA INI DATA PESERTA, LANGSUNG PANGGIL NAMA LENGKAPNYA
             $namaPeserta = $this->item->nama_lengkap ?? '-'; 
             $jenisData = 'Data Peserta Baru';
         }

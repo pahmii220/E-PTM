@@ -107,7 +107,7 @@
                     </li>
 
                     <li
-                        x-data="{ pemeriksaanOpen: {{ request()->routeIs('petugas.pasien.*', 'petugas.faktor_resiko.*', 'petugas.deteksi_dini.*', 'petugas.tindak_lanjut.*') ? 'true' : 'false' }} }">
+                        x-data="{ pemeriksaanOpen: {{ request()->routeIs('petugas.peserta.*', 'petugas.faktor_resiko.*', 'petugas.deteksi_dini.*', 'petugas.tindak_lanjut.*') ? 'true' : 'false' }} }">
                         <button @click="pemeriksaanOpen = !pemeriksaanOpen"
                             class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
                             <span class="flex items-center gap-3"><i class="bi bi-clipboard-pulse text-lg"></i> Pemeriksaan
@@ -116,8 +116,8 @@
                         </button>
                         <ul x-show="pemeriksaanOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden">
                             <li>
-                                <a href="{{ route('petugas.pasien.index') }}"
-                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('petugas.pasien.*') ? 'bg-green-500 text-white' : '' }}">
+                                <a href="{{ route('petugas.peserta.index') }}"
+                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('petugas.peserta.*') ? 'bg-green-500 text-white' : '' }}">
                                     <i class="bi bi-person-lines-fill me-2"></i> Data Peserta
                                 </a>
                             </li>
@@ -181,7 +181,7 @@
                 {{-- ========================================================== --}}
                 @if(in_array(Auth::user()->role_name, ['petugas']))
                     <li
-                        x-data="{ pemeriksaanOpen: {{ request()->routeIs('petugas.pasien.*', 'petugas.faktor_resiko.*', 'petugas.deteksi_dini.*', 'petugas.tindak_lanjut.*') ? 'true' : 'false' }} }">
+                        x-data="{ pemeriksaanOpen: {{ request()->routeIs('petugas.peserta.*', 'petugas.faktor_resiko.*', 'petugas.deteksi_dini.*', 'petugas.tindak_lanjut.*') ? 'true' : 'false' }} }">
                         <button @click="pemeriksaanOpen = !pemeriksaanOpen"
                             class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200">
                             <span class="flex items-center gap-3"><i class="bi bi-clipboard-pulse text-lg"></i> Pemeriksaan
@@ -190,8 +190,8 @@
                         </button>
                         <ul x-show="pemeriksaanOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden">
                             <li>
-                                <a href="{{ route('petugas.pasien.index') }}"
-                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('petugas.pasien.*') ? 'bg-green-500 text-white' : '' }}">
+                                <a href="{{ route('petugas.peserta.index') }}"
+                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('petugas.peserta.*') ? 'bg-green-500 text-white' : '' }}">
                                     <i class="bi bi-person-lines-fill me-2"></i> Data Peserta
                                 </a>
                             </li>
@@ -248,8 +248,8 @@
                         </button>
                         <ul x-show="verifikasiOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden">
                             <li>
-                                <a href="{{ route('pengguna.verifikasi.pasien') }}"
-                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('pengguna.verifikasi.pasien') ? 'bg-green-500 text-white' : '' }}">
+                                <a href="{{ route('pengguna.verifikasi.peserta') }}"
+                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('pengguna.verifikasi.peserta') ? 'bg-green-500 text-white' : '' }}">
                                     <i class="bi bi-person-check me-2"></i> Verifikasi Peserta
                                 </a>
                             </li>

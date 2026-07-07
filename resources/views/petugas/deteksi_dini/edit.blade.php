@@ -41,7 +41,7 @@
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Peserta</label>
                             <input type="text" class="form-control rounded-3 bg-light"
-                                value="{{ $deteksi->pasien->nama_lengkap }}" readonly>
+                                value="{{ $deteksi->peserta->nama_lengkap }}" readonly>
                         </div>
 
                         {{-- PUSKESMAS --}}

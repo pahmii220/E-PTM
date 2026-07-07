@@ -4,55 +4,54 @@ namespace App\Http\Controllers\Petugas;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Pasien;
+use App\Models\Peserta;
 use Illuminate\Support\Facades\Auth;
 
-class PasienController extends Controller
+class PesertaController extends Controller
 {
     /**
-     * Tampilkan daftar pasien
+     * Tampilkan daftar peserta
      */
     public function index()
     {
         $user = Auth::user();
 
         if (in_array($user->role_name, ['admin', 'pegawai'])) {
-            $pasien = Pasien::with('puskesmas')
+            $peserta = Peserta::with('puskesmas')
                 ->latest()
                 ->paginate(20);
         } else {
-            $pasien = Pasien::with('puskesmas')
+            $peserta = Peserta::with('puskesmas')
                 ->where('puskesmas_id', $user->petugas->puskesmas_id)
                 ->latest()
                 ->paginate(20);
         }
 
-        return view('petugas.pasien.index', compact('pasien'));
+        return view('petugas.peserta.index', compact('peserta'));
     }
 
     /**
-     * Form tambah pasien
+     * Form tambah peserta
      */
     public function create()
-{
-    $user = Auth::user();
+    {
+        $user = Auth::user();
 
-    if ($user->role_name === 'pegawai') {
-        abort(403);
+        if ($user->role_name === 'pegawai') {
+            abort(403);
+        }
+
+        $puskesmas = [];
+
+        if ($user->role_name === 'admin') {
+            $puskesmas = \App\Models\Puskesmas::orderBy('nama_puskesmas')->get();
+        }
+
+        return view('petugas.peserta.create', compact('puskesmas'));
     }
 
-    $puskesmas = [];
-
-    if ($user->role_name === 'admin') {
-        $puskesmas = \App\Models\Puskesmas::orderBy('nama_puskesmas')->get();
-    }
-
-    return view('petugas.pasien.create', compact('puskesmas'));
-}
-
-
-/**
-     * Simpan data pasien baru
+    /**
+     * Simpan data peserta baru
      */
     public function store(Request $request)
     {
@@ -83,11 +82,10 @@ class PasienController extends Controller
             ]);
         }
 
-        // TAMBAHKAN VALIDASI UNTUK 4 FIELD BARU
         $request->validate([
-            'nik'            => 'required|string|size:16|unique:pasien', // Harus 16 digit & unik
+            'nik'            => 'required|string|size:16|unique:peserta', // Harus 16 digit & unik
             'nama_lengkap'   => 'required|string|max:100',
-            'no_rekam_medis' => 'required|string|max:50|unique:pasien',
+            'no_rekam_medis' => 'required|string|max:50|unique:peserta',
             'tempat_lahir'   => 'required|string|max:100',
             'tanggal_lahir'  => 'required|date',
             'jenis_kelamin'  => 'required|in:Laki-laki,Perempuan',
@@ -98,7 +96,7 @@ class PasienController extends Controller
             'puskesmas_id'   => $user->role_name === 'admin' ? 'required|exists:puskesmas,id' : '',
         ]);
 
-        $pasienBaru = Pasien::create([
+        $pesertaBaru = Peserta::create([
             'puskesmas_id'      => $user->role_name === 'admin' ? $request->puskesmas_id : $user->petugas->puskesmas_id,
             'nik'               => $request->nik,
             'nama_lengkap'      => $request->nama_lengkap,
@@ -111,49 +109,47 @@ class PasienController extends Controller
             'kecamatan'         => $request->kecamatan,
             'kontak'            => $request->kontak,
             'created_by'        => $user->id,
-            'status_ptm'        => $request->status_ptm ?? null, // Tambahkan fallback null jika kosong
+            'status_ptm'        => $request->status_ptm ?? null,
             'status_verifikasi' => 'pending',
         ]); 
 
         return redirect()
-            ->route('petugas.deteksi_dini.create', ['pasien_id' => $pasienBaru->id])
-            ->with('success', 'Data Pasien tersimpan. Silakan lanjut isi form Deteksi Dini berikut.');
+            ->route('petugas.deteksi_dini.create', ['peserta_id' => $pesertaBaru->id])
+            ->with('success', 'Data Peserta tersimpan. Silakan lanjut isi form Deteksi Dini berikut.');
     }
 
-
     /**
-     * Form edit pasien
+     * Form edit peserta
      */
-public function edit($id)
-{
-    $user = Auth::user();
+    public function edit($id)
+    {
+        $user = Auth::user();
 
-    if ($user->role_name === 'pegawai') {
-        abort(403);
+        if ($user->role_name === 'pegawai') {
+            abort(403);
+        }
+
+        $peserta = $user->role_name === 'admin'
+            ? Peserta::findOrFail($id)
+            : Peserta::where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
+
+        // 🔒 hanya approved yang terkunci
+        if ($user->role_name !== 'admin' && $peserta->status_verifikasi === 'approved') {
+            return redirect()
+                ->route('petugas.peserta.index')
+                ->with('error', 'Data sudah disetujui dan tidak dapat diedit.');
+        }
+
+        $puskesmas = [];
+        if ($user->role_name === 'admin') {
+            $puskesmas = \App\Models\Puskesmas::orderBy('nama_puskesmas')->get();
+        }
+
+        return view('petugas.peserta.edit', compact('peserta', 'puskesmas'));
     }
-
-    $pasien = $user->role_name === 'admin'
-        ? Pasien::findOrFail($id)
-        : Pasien::where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
-
-    // 🔒 hanya approved yang terkunci
-    if ($user->role_name !== 'admin' && $pasien->status_verifikasi === 'approved') {
-        return redirect()
-            ->route('petugas.pasien.index')
-            ->with('error', 'Data sudah disetujui dan tidak dapat diedit.');
-    }
-
-    // ✅ TAMBAHAN PENTING
-    $puskesmas = [];
-    if ($user->role_name === 'admin') {
-        $puskesmas = \App\Models\Puskesmas::orderBy('nama_puskesmas')->get();
-    }
-
-    return view('petugas.pasien.edit', compact('pasien', 'puskesmas'));
-}
 
     /**
-     * Update data pasien
+     * Update data peserta
      */
     public function update(Request $request, $id)
     {
@@ -163,18 +159,18 @@ public function edit($id)
             abort(403);
         }
 
-        $pasien = $user->role_name === 'admin'
-            ? Pasien::findOrFail($id)
-            : Pasien::where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
+        $peserta = $user->role_name === 'admin'
+            ? Peserta::findOrFail($id)
+            : Peserta::where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
 
-        if ($user->role_name !== 'admin' && $pasien->status_verifikasi === 'approved') {
+        if ($user->role_name !== 'admin' && $peserta->status_verifikasi === 'approved') {
             return redirect()
-                ->route('petugas.pasien.index')
+                ->route('petugas.peserta.index')
                 ->with('error', 'Data sudah disetujui dan tidak dapat diubah.');
         }
 
         // Otomatis tambahkan/sesuaikan prefiks kode Puskesmas pendek ke no_rekam_medis jika belum ada
-        $puskesmasId = $user->role_name === 'admin' ? ($request->puskesmas_id ?? $pasien->puskesmas_id) : $user->petugas->puskesmas_id;
+        $puskesmasId = $user->role_name === 'admin' ? ($request->puskesmas_id ?? $peserta->puskesmas_id) : $user->petugas->puskesmas_id;
         $puskesmas = \App\Models\Puskesmas::find($puskesmasId);
         if ($puskesmas && $request->filled('no_rekam_medis')) {
             $prefix = $puskesmas->short_prefix . '/';
@@ -194,11 +190,10 @@ public function edit($id)
             ]);
         }
 
-        // TAMBAHKAN VALIDASI UNTUK 4 FIELD BARU SAAT UPDATE
         $request->validate([
-            'nik'            => 'required|string|size:16|unique:pasien,nik,' . $id, // Abaikan NIK lama milik ID ini
+            'nik'            => 'required|string|size:16|unique:peserta,nik,' . $id,
             'nama_lengkap'   => 'required|string|max:100',
-            'no_rekam_medis' => 'required|string|max:50|unique:pasien,no_rekam_medis,' . $id,
+            'no_rekam_medis' => 'required|string|max:50|unique:peserta,no_rekam_medis,' . $id,
             'tempat_lahir'   => 'required|string|max:100',
             'tanggal_lahir'  => 'nullable|date',
             'jenis_kelamin'  => 'required|in:Laki-laki,Perempuan',
@@ -221,28 +216,27 @@ public function edit($id)
             'kontak',
         ]);
 
-        // 🔒 Bandingkan dengan data lama untuk format tanggal
-        if ($request->tanggal_lahir !== optional($pasien->tanggal_lahir)->format('Y-m-d')) {
+        if ($request->tanggal_lahir !== optional($peserta->tanggal_lahir)->format('Y-m-d')) {
             $updateData['tanggal_lahir'] = $request->tanggal_lahir;
         }
 
-        // 🔁 jika sebelumnya rejected → reset ke pending
-        if ($pasien->status_verifikasi === 'rejected') {
+        // jika sebelumnya rejected → reset ke pending
+        if ($peserta->status_verifikasi === 'rejected') {
             $updateData['status_verifikasi'] = 'pending';
             $updateData['catatan_verifikasi'] = null;
             $updateData['diverifikasi_oleh'] = null;
             $updateData['diverifikasi_pada']   = null;
         }
 
-        $pasien->update($updateData);
+        $peserta->update($updateData);
 
         return redirect()
-            ->route('petugas.pasien.index')
-            ->with('success', 'Data pasien berhasil diperbarui.');
+            ->route('petugas.peserta.index')
+            ->with('success', 'Data peserta berhasil diperbarui.');
     }
 
     /**
-     * Hapus data pasien
+     * Hapus data peserta
      */
     public function destroy($id)
     {
@@ -252,22 +246,20 @@ public function edit($id)
             abort(403);
         }
 
-        $pasien = $user->role_name === 'admin'
-            ? Pasien::findOrFail($id)
-            : Pasien::where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
+        $peserta = $user->role_name === 'admin'
+            ? Peserta::findOrFail($id)
+            : Peserta::where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
 
-        if ($user->role_name !== 'admin' && $pasien->status_verifikasi === 'approved') {
+        if ($user->role_name !== 'admin' && $peserta->status_verifikasi === 'approved') {
             return redirect()
-                ->route('petugas.pasien.index')
+                ->route('petugas.peserta.index')
                 ->with('error', 'Data sudah disetujui dan tidak dapat dihapus.');
         }
 
-        $pasien->delete();
+        $peserta->delete();
 
         return redirect()
-            ->route('petugas.pasien.index')
-            ->with('success', 'Data pasien berhasil dihapus.');
+            ->route('petugas.peserta.index')
+            ->with('success', 'Data peserta berhasil dihapus.');
     }
-
-    
 }

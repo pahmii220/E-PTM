@@ -172,6 +172,19 @@
             </h3>
         </div>
 
+        {{-- PENJELASAN SINGKAT --}}
+        <div style="font-size: 11px; color: #444; margin-bottom: 12px; line-height: 1.4; text-align: left;">
+            Laporan ini menyajikan ringkasan data peserta pemeriksaan Penyakit Tidak Menular (PTM) yang dikelompokkan berdasarkan kategori usia (Remaja, Dewasa, Pra Lansia, dan Lansia) pada Dinas Kesehatan Provinsi Kalimantan Selatan.
+        </div>
+
+        @php
+            $totalRemaja = $dataUsia['remaja'] ?? 0;
+            $totalDewasa = $dataUsia['dewasa'] ?? 0;
+            $totalPraLansia = $dataUsia['pra_lansia'] ?? 0;
+            $totalLansia = $dataUsia['lansia'] ?? 0;
+            $grandTotal = $totalRemaja + $totalDewasa + $totalPraLansia + $totalLansia;
+        @endphp
+
         {{-- TABEL --}}
         <table class="grid">
             <thead>
@@ -179,43 +192,85 @@
                     <th style="width:40px">No</th>
                     <th>Kelompok Usia</th>
                     <th>Rentang Usia</th>
-                    <th>Jumlah Peserta</th>
+                    <th style="width:120px">Jumlah Peserta</th>
+                    <th style="width:90px">Persentase</th>
+                    <th style="width:150px">Proporsi (Visual)</th>
                 </tr>
             </thead>
             <tbody>
+                @php
+                    $persenRemaja = $grandTotal > 0 ? round(($totalRemaja / $grandTotal) * 100, 1) : 0;
+                @endphp
                 <tr>
                     <td style="text-align:center">1</td>
                     <td>Remaja</td>
                     <td style="text-align:center">&lt; 18 Tahun</td>
-                    <td style="text-align:center">{{ $dataUsia['remaja'] ?? 0 }}</td>
+                    <td style="text-align:center">{{ $totalRemaja }} Orang</td>
+                    <td style="text-align:center">{{ $persenRemaja }}%</td>
+                    <td style="text-align:center">
+                        <div style="background-color: #e5e7eb; border-radius: 3px; width: 100%; height: 10px; display: inline-block; overflow: hidden; vertical-align: middle;">
+                            <div style="background-color: #4b5563; height: 100%; width: {{ $persenRemaja }}%;"></div>
+                        </div>
+                    </td>
                 </tr>
+                @php
+                    $persenDewasa = $grandTotal > 0 ? round(($totalDewasa / $grandTotal) * 100, 1) : 0;
+                @endphp
                 <tr>
                     <td style="text-align:center">2</td>
                     <td>Dewasa</td>
                     <td style="text-align:center">18 – 44 Tahun</td>
-                    <td style="text-align:center">{{ $dataUsia['dewasa'] ?? 0 }}</td>
+                    <td style="text-align:center">{{ $totalDewasa }} Orang</td>
+                    <td style="text-align:center">{{ $persenDewasa }}%</td>
+                    <td style="text-align:center">
+                        <div style="background-color: #e5e7eb; border-radius: 3px; width: 100%; height: 10px; display: inline-block; overflow: hidden; vertical-align: middle;">
+                            <div style="background-color: #4b5563; height: 100%; width: {{ $persenDewasa }}%;"></div>
+                        </div>
+                    </td>
                 </tr>
+                @php
+                    $persenPraLansia = $grandTotal > 0 ? round(($totalPraLansia / $grandTotal) * 100, 1) : 0;
+                @endphp
                 <tr>
                     <td style="text-align:center">3</td>
                     <td>Pra Lansia</td>
                     <td style="text-align:center">45 – 59 Tahun</td>
-                    <td style="text-align:center">{{ $dataUsia['pra_lansia'] ?? 0 }}</td>
+                    <td style="text-align:center">{{ $totalPraLansia }} Orang</td>
+                    <td style="text-align:center">{{ $persenPraLansia }}%</td>
+                    <td style="text-align:center">
+                        <div style="background-color: #e5e7eb; border-radius: 3px; width: 100%; height: 10px; display: inline-block; overflow: hidden; vertical-align: middle;">
+                            <div style="background-color: #4b5563; height: 100%; width: {{ $persenPraLansia }}%;"></div>
+                        </div>
+                    </td>
                 </tr>
+                @php
+                    $persenLansia = $grandTotal > 0 ? round(($totalLansia / $grandTotal) * 100, 1) : 0;
+                @endphp
                 <tr>
                     <td style="text-align:center">4</td>
                     <td>Lansia</td>
                     <td style="text-align:center">≥ 60 Tahun</td>
-                    <td style="text-align:center">{{ $dataUsia['lansia'] ?? 0 }}</td>
+                    <td style="text-align:center">{{ $totalLansia }} Orang</td>
+                    <td style="text-align:center">{{ $persenLansia }}%</td>
+                    <td style="text-align:center">
+                        <div style="background-color: #e5e7eb; border-radius: 3px; width: 100%; height: 10px; display: inline-block; overflow: hidden; vertical-align: middle;">
+                            <div style="background-color: #4b5563; height: 100%; width: {{ $persenLansia }}%;"></div>
+                        </div>
+                    </td>
+                </tr>
+                {{-- BARIS TOTAL --}}
+                <tr style="background-color: #f9fafb; font-weight: bold;">
+                    <td colspan="3" style="text-align:center; padding-right: 10px;">Total Keseluruhan</td>
+                    <td style="text-align:center;">{{ $grandTotal }} Orang</td>
+                    <td style="text-align:center;">100%</td>
+                    <td style="text-align:center;">
+                        <div style="background-color: #e5e7eb; border-radius: 3px; width: 100%; height: 10px; display: inline-block; overflow: hidden; vertical-align: middle;">
+                            <div style="background-color: #4b5563; height: 100%; width: 100%;"></div>
+                        </div>
+                    </td>
                 </tr>
             </tbody>
         </table>
-
-        {{-- TOTAL --}}
-        <div style="margin-top:10px; font-size:12px; font-weight:700;">
-            Jumlah keseluruhan peserta terdaftar sebanyak =
-            {{ ($dataUsia['remaja'] ?? 0) + ($dataUsia['dewasa'] ?? 0) + ($dataUsia['pra_lansia'] ?? 0) + ($dataUsia['lansia'] ?? 0) }}
-            orang
-        </div>
 
         {{-- TTD & QR CODE --}}
         <div class="ttd">

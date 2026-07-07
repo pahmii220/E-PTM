@@ -8,12 +8,12 @@
         <br>
 
         <div class="row g-4">
-            {{-- Kartu Pasien Pending --}}
+            {{-- Kartu Peserta Pending --}}
             <div class="col-md-4">
-                <a href="{{ route('pengguna.verifikasi.pasien', ['status' => 'pending']) }}" class="text-decoration-none">
+                <a href="{{ route('pengguna.verifikasi.peserta', ['status' => 'pending']) }}" class="text-decoration-none">
                     <div class="card p-4 shadow-sm border-0 h-100 transition-hover" style="transition: transform 0.2s;">
-                        <h5>Pasien (Tertunda)</h5>
-                        <h2 class="text-primary">{{ $pendingPasien }}</h2>
+                        <h5>Peserta (Tertunda)</h5>
+                        <h2 class="text-primary">{{ $pendingPeserta }}</h2>
                         <small class="text-muted">Klik untuk lihat daftar</small>
                     </div>
                 </a>

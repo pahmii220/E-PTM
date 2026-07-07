@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Pengguna;
 
 use App\Http\Controllers\Controller;
 use App\Models\Puskesmas;
-use App\Models\Pasien;
+use App\Models\Peserta;
 use App\Models\DeteksiDiniPTM;
 use App\Models\Kegiatan;
 use Carbon\Carbon;
@@ -21,7 +21,7 @@ class RekapLaporanController extends Controller
     {
         // 1. Data Rekap Puskesmas
         $rekapPuskesmas = Puskesmas::withCount([
-            'pasien as total_pasien',
+            'peserta as total_peserta',
             'deteksiDini as total_deteksi',
             'faktorResiko as total_faktor',
         ])
@@ -34,7 +34,7 @@ class RekapLaporanController extends Controller
             ->get();
 
         // 3. Data Kelompok Usia
-        $pasien = Pasien::all();
+        $peserta = Peserta::all();
         $kelompokUsia = [
             'remaja' => 0,
             'dewasa' => 0,
@@ -42,7 +42,7 @@ class RekapLaporanController extends Controller
             'lansia' => 0
         ];
 
-        foreach ($pasien as $p) {
+        foreach ($peserta as $p) {
             if (!$p->tanggal_lahir) continue;
             $umur = Carbon::parse($p->tanggal_lahir)->age;
 

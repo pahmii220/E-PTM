@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\KepalaP2ptm;
-use App\Models\Pasien;
+use App\Models\Peserta;
 use App\Models\DeteksiDiniPTM;
 use App\Models\FaktorResikoPTM;
 use App\Models\Kegiatan;
@@ -23,15 +23,19 @@ class LaporanKepalaController extends Controller
         $bulan = $request->input('bulan', date('m'));
         $tahun = $request->input('tahun', date('Y'));
 
-        $query = DB::table('pasien')
-                    ->join('puskesmas', 'pasien.puskesmas_id', '=', 'puskesmas.id')
-                    ->select('pasien.*', 'puskesmas.nama_puskesmas')
-                    ->where('pasien.status_verifikasi', 'approved');
+        $query = DB::table('peserta')
+                    ->join('puskesmas', 'peserta.puskesmas_id', '=', 'puskesmas.id')
+                    ->select('peserta.*', 'puskesmas.nama_puskesmas')
+                    ->where('peserta.status_verifikasi', 'approved');
 
-        $query->whereMonth('pasien.dibuat_pada', $bulan)
-              ->whereYear('pasien.dibuat_pada', $tahun);
+        if ($request->input('filter_type') === 'tanggal' && $request->filled('tgl_awal') && $request->filled('tgl_akhir')) {
+            $query->whereBetween('peserta.dibuat_pada', [$request->tgl_awal . ' 00:00:00', $request->tgl_akhir . ' 23:59:59']);
+        } else {
+            $query->whereMonth('peserta.dibuat_pada', $bulan)
+                  ->whereYear('peserta.dibuat_pada', $tahun);
+        }
 
-        $data = $query->orderBy('pasien.dibuat_pada', 'desc')->paginate(10);
+        $data = $query->orderBy('peserta.dibuat_pada', 'desc')->paginate(10);
         $data->appends($request->all());
 
         return view('kepala_p2ptm.laporan.peserta', compact('data', 'request', 'bulan', 'tahun'));
@@ -42,16 +46,27 @@ class LaporanKepalaController extends Controller
         $bulan = $request->input('bulan', date('m'));
         $tahun = $request->input('tahun', date('Y'));
 
-        $items = Pasien::with('puskesmas')
-                    ->where('status_verifikasi', 'approved')
-                    ->whereMonth('dibuat_pada', $bulan)
-                    ->whereYear('dibuat_pada', $tahun)
-                    ->get();
+        $query = Peserta::with('puskesmas')
+                    ->where('status_verifikasi', 'approved');
+
+        if ($request->input('filter_type') === 'tanggal' && $request->filled('tgl_awal') && $request->filled('tgl_akhir')) {
+            $query->whereBetween('dibuat_pada', [$request->tgl_awal . ' 00:00:00', $request->tgl_akhir . ' 23:59:59']);
+        } else {
+            $query->whereMonth('dibuat_pada', $bulan)
+                  ->whereYear('dibuat_pada', $tahun);
+        }
+
+        $items = $query->get();
         
         $kepalaAktif = KepalaP2ptm::where('status', 'aktif')->first();
-        $qrToken = "LAPORAN-PTM-" . $bulan . "-" . $tahun . "-" . uniqid();
 
-        return view('pengguna.verifikasi.cetak_pasien', [
+        if ($request->input('filter_type') === 'tanggal') {
+            $qrToken = "LAPORAN-PTM-RANGE-" . str_replace('-', '', $request->tgl_awal) . "-" . str_replace('-', '', $request->tgl_akhir) . "-" . uniqid();
+        } else {
+            $qrToken = "LAPORAN-PTM-" . $bulan . "-" . $tahun . "-" . uniqid();
+        }
+
+        return view('pengguna.verifikasi.cetak_peserta', [
             'items'         => $items,
             'kepalaAktif'   => $kepalaAktif,
             'statusDokumen' => 'Disahkan',
@@ -69,11 +84,15 @@ class LaporanKepalaController extends Controller
         $bulan = $request->input('bulan', date('m'));
         $tahun = $request->input('tahun', date('Y'));
 
-        $query = DeteksiDiniPTM::with(['pasien', 'puskesmas'])
+        $query = DeteksiDiniPTM::with(['peserta', 'puskesmas'])
                     ->where('status_verifikasi', 'approved');
 
-        $query->whereMonth('tanggal_pemeriksaan', $bulan)
-              ->whereYear('tanggal_pemeriksaan', $tahun);
+        if ($request->input('filter_type') === 'tanggal' && $request->filled('tgl_awal') && $request->filled('tgl_akhir')) {
+            $query->whereBetween('tanggal_pemeriksaan', [$request->tgl_awal, $request->tgl_akhir]);
+        } else {
+            $query->whereMonth('tanggal_pemeriksaan', $bulan)
+                  ->whereYear('tanggal_pemeriksaan', $tahun);
+        }
 
         $data = $query->orderBy('tanggal_pemeriksaan', 'desc')->paginate(10);
         $data->appends($request->all());
@@ -86,14 +105,27 @@ class LaporanKepalaController extends Controller
         $bulan = $request->input('bulan', date('m'));
         $tahun = $request->input('tahun', date('Y'));
 
-        $items = DeteksiDiniPTM::with(['pasien', 'puskesmas'])
-                    ->where('status_verifikasi', 'approved')
-                    ->whereMonth('tanggal_pemeriksaan', $bulan)
-                    ->whereYear('tanggal_pemeriksaan', $tahun)
-                    ->get();
+        $query = DeteksiDiniPTM::with(['peserta', 'puskesmas'])
+                    ->where('status_verifikasi', 'approved');
+
+        if ($request->input('filter_type') === 'tanggal' && $request->filled('tgl_awal') && $request->filled('tgl_akhir')) {
+            $query->whereBetween('tanggal_pemeriksaan', [$request->tgl_awal, $request->tgl_akhir]);
+            $isRange = true;
+        } else {
+            $query->whereMonth('tanggal_pemeriksaan', $bulan)
+                  ->whereYear('tanggal_pemeriksaan', $tahun);
+            $isRange = false;
+        }
+
+        $items = $query->get();
         
         $kepalaAktif = KepalaP2ptm::where('status', 'aktif')->first();
-        $qrToken = "DETEKSI-DINI-" . $bulan . "-" . $tahun . "-" . uniqid();
+
+        if ($isRange) {
+            $qrToken = "DETEKSI-DINI-RANGE-" . str_replace('-', '', $request->tgl_awal) . "-" . str_replace('-', '', $request->tgl_akhir) . "-" . uniqid();
+        } else {
+            $qrToken = "DETEKSI-DINI-" . $bulan . "-" . $tahun . "-" . uniqid();
+        }
 
        return view('pengguna.verifikasi.print.deteksi', [
             'items'         => $items,
@@ -115,11 +147,15 @@ class LaporanKepalaController extends Controller
         $bulan = $request->input('bulan', date('m'));
         $tahun = $request->input('tahun', date('Y'));
 
-        $query = FaktorResikoPTM::with(['pasien', 'puskesmas'])
+        $query = FaktorResikoPTM::with(['peserta', 'puskesmas'])
                     ->where('status_verifikasi', 'approved');
 
-        $query->whereMonth('tanggal_pemeriksaan', $bulan)
-              ->whereYear('tanggal_pemeriksaan', $tahun);
+        if ($request->input('filter_type') === 'tanggal' && $request->filled('tgl_awal') && $request->filled('tgl_akhir')) {
+            $query->whereBetween('tanggal_pemeriksaan', [$request->tgl_awal, $request->tgl_akhir]);
+        } else {
+            $query->whereMonth('tanggal_pemeriksaan', $bulan)
+                  ->whereYear('tanggal_pemeriksaan', $tahun);
+        }
 
         $data = $query->orderBy('tanggal_pemeriksaan', 'desc')->paginate(10);
         $data->appends($request->all());
@@ -132,14 +168,27 @@ class LaporanKepalaController extends Controller
         $bulan = $request->input('bulan', date('m'));
         $tahun = $request->input('tahun', date('Y'));
 
-        $items = FaktorResikoPTM::with(['pasien', 'puskesmas'])
-                    ->where('status_verifikasi', 'approved')
-                    ->whereMonth('tanggal_pemeriksaan', $bulan)
-                    ->whereYear('tanggal_pemeriksaan', $tahun)
-                    ->get();
+        $query = FaktorResikoPTM::with(['peserta', 'puskesmas'])
+                    ->where('status_verifikasi', 'approved');
+
+        if ($request->input('filter_type') === 'tanggal' && $request->filled('tgl_awal') && $request->filled('tgl_akhir')) {
+            $query->whereBetween('tanggal_pemeriksaan', [$request->tgl_awal, $request->tgl_akhir]);
+            $isRange = true;
+        } else {
+            $query->whereMonth('tanggal_pemeriksaan', $bulan)
+                  ->whereYear('tanggal_pemeriksaan', $tahun);
+            $isRange = false;
+        }
+
+        $items = $query->get();
         
         $kepalaAktif = KepalaP2ptm::where('status', 'aktif')->first();
-        $qrToken = "FAKTOR-RESIKO-" . $bulan . "-" . $tahun . "-" . uniqid();
+
+        if ($isRange) {
+            $qrToken = "FAKTOR-RESIKO-RANGE-" . str_replace('-', '', $request->tgl_awal) . "-" . str_replace('-', '', $request->tgl_akhir) . "-" . uniqid();
+        } else {
+            $qrToken = "FAKTOR-RESIKO-" . $bulan . "-" . $tahun . "-" . uniqid();
+        }
 
         return view('pengguna.verifikasi.print.faktor', [
             'items'         => $items,
@@ -161,7 +210,7 @@ class LaporanKepalaController extends Controller
         $bulan = $request->input('bulan', date('m'));
         $tahun = $request->input('tahun', date('Y'));
 
-        $query = \App\Models\TindakLanjutPTM::with(['pasien', 'puskesmas']);
+        $query = \App\Models\TindakLanjutPTM::with(['peserta', 'puskesmas']);
 
         $query->whereMonth('tanggal_tindak_lanjut', $bulan)
               ->whereYear('tanggal_tindak_lanjut', $tahun);
@@ -177,7 +226,7 @@ class LaporanKepalaController extends Controller
         $bulan = $request->input('bulan', date('m'));
         $tahun = $request->input('tahun', date('Y'));
 
-        $items = \App\Models\TindakLanjutPTM::with(['pasien', 'puskesmas'])
+        $items = \App\Models\TindakLanjutPTM::with(['peserta', 'puskesmas'])
                     ->whereMonth('tanggal_tindak_lanjut', $bulan)
                     ->whereYear('tanggal_tindak_lanjut', $tahun)
                     ->get();
@@ -204,7 +253,7 @@ class LaporanKepalaController extends Controller
     {
         // --- DATA TAB 1: REKAP PUSKESMAS ---
         $dataPuskesmas = \App\Models\Puskesmas::withCount([
-            'pasien as total_peserta',
+            'peserta as total_peserta',
             'deteksiDini as total_skrining', 
             'faktorResiko as total_risiko',
             'tindakLanjut as total_tindak_lanjut'
@@ -212,10 +261,10 @@ class LaporanKepalaController extends Controller
 
         // --- DATA TAB 2: KELOMPOK USIA ---
         $dataUsia = [
-            'remaja'     => \App\Models\Pasien::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) < 18')->count(),
-            'dewasa'     => \App\Models\Pasien::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 18 AND 44')->count(),
-            'pra_lansia' => \App\Models\Pasien::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 45 AND 59')->count(),
-            'lansia'     => \App\Models\Pasien::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 60')->count(),
+            'remaja'     => \App\Models\Peserta::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) < 18')->count(),
+            'dewasa'     => \App\Models\Peserta::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 18 AND 44')->count(),
+            'pra_lansia' => \App\Models\Peserta::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 45 AND 59')->count(),
+            'lansia'     => \App\Models\Peserta::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 60')->count(),
         ];
 
         // --- DATA TAB 3: SKRINING ---
@@ -251,7 +300,7 @@ class LaporanKepalaController extends Controller
     public function cetakPuskesmas(Request $request)
     {
         $rekapPuskesmas = \App\Models\Puskesmas::withCount([
-            'pasien as total_pasien',
+            'peserta as total_peserta',
             'deteksiDini as total_deteksi',
             'faktorResiko as total_faktor'
         ])->get();
@@ -265,10 +314,10 @@ class LaporanKepalaController extends Controller
     public function cetakUsia(Request $request)
     {
         $dataUsia = [
-            'remaja'     => \App\Models\Pasien::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) < 18')->count(),
-            'dewasa'     => \App\Models\Pasien::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 18 AND 44')->count(),
-            'pra_lansia' => \App\Models\Pasien::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 45 AND 59')->count(),
-            'lansia'     => \App\Models\Pasien::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 60')->count(),
+            'remaja'     => \App\Models\Peserta::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) < 18')->count(),
+            'dewasa'     => \App\Models\Peserta::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 18 AND 44')->count(),
+            'pra_lansia' => \App\Models\Peserta::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 45 AND 59')->count(),
+            'lansia'     => \App\Models\Peserta::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 60')->count(),
         ];
 
         $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();

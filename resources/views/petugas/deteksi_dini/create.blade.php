@@ -24,20 +24,20 @@
 
                     <div class="row g-4">
 
-                        {{-- PASIEN --}}
+                        {{-- PESERTA --}}
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">
                                 Peserta <span class="text-danger">*</span>
                             </label>
-                            <select name="pasien_id" class="form-control" required>
-                                <option value="">-- Pilih Pasien --</option>
-                                @foreach($pasien as $p)
-                                    <option value="{{ $p->id }}" {{ request('pasien_id') == $p->id ? 'selected' : '' }}>
+                            <select name="peserta_id" class="form-control" required>
+                                <option value="">-- Pilih Peserta --</option>
+                                @foreach($peserta as $p)
+                                    <option value="{{ $p->id }}" {{ request('peserta_id') == $p->id ? 'selected' : '' }}>
                                         {{ $p->nama_lengkap }} - {{ $p->no_rekam_medis }}
                                     </option>
                                 @endforeach
                             </select>
-                            @error('pasien_id')
+                            @error('peserta_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>

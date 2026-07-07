@@ -26,7 +26,7 @@ class RekapPuskesmasController extends Controller
 public function index()
 {
     $rekapPuskesmas = Puskesmas::withCount([
-        'pasien as total_pasien',
+        'peserta as total_peserta',
         'deteksiDini as total_deteksi',
         'faktorResiko as total_faktor',
     ])
@@ -47,7 +47,7 @@ public function index()
 public function print()
 {
     $rekapPuskesmas = Puskesmas::withCount([
-        'pasien as total_pasien',
+        'peserta as total_peserta',
         'deteksiDini as total_deteksi',
         'faktorResiko as total_faktor',
     ])

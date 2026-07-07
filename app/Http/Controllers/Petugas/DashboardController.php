@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Carbon\Carbon;
 
-use App\Models\Pasien;
+use App\Models\Peserta;
 use App\Models\DeteksiDiniPTM;
 use App\Models\FaktorResikoPtM;
 
@@ -25,7 +25,6 @@ class DashboardController extends Controller
         /* =====================
             DEFAULT VALUE & INITIALIZATION
         ====================== */
-        $totalPasien   = 0;
         $totalDeteksi  = 0;
         $totalFaktor   = 0;
         $highRiskCount = 0;
@@ -33,15 +32,15 @@ class DashboardController extends Controller
 
         // Grafik Tren
         $monthLabels   = collect();
-        $monthPasien   = collect();
+        $monthPeserta  = collect();
         $monthDeteksi  = collect();
         $monthFaktor   = collect();
         $weeklyLabels  = collect();
-        $weeklyPasien  = collect();
+        $weeklyPeserta = collect();
         $weeklyDeteksi = collect();
         $weeklyFaktor  = collect();
         $dailyLabels   = collect();
-        $dailyPasien   = collect();
+        $dailyPeserta  = collect();
         $dailyDeteksi  = collect();
         $dailyFaktor   = collect();
 
@@ -68,63 +67,62 @@ class DashboardController extends Controller
             // ==========================================
             // KODE TRACKING DATA VERIFIKASI (MENGGABUNGKAN PASIEN, DETEKSI DINI, DAN FAKTOR RISIKO)
             // ==========================================
-            if (class_exists(DeteksiDiniPTM::class) && class_exists(Pasien::class) && class_exists(\App\Models\FaktorResikoPTM::class)) {
-                $queryPasien = Pasien::query();
-                $queryDeteksi = DeteksiDiniPTM::with(['pasien']);
-                $queryFaktor = \App\Models\FaktorResikoPTM::with(['pasien']);
+            if (class_exists(DeteksiDiniPTM::class) && class_exists(Peserta::class) && class_exists(\App\Models\FaktorResikoPTM::class)) {
+                $queryPeserta = Peserta::query();
+                $queryDeteksi = DeteksiDiniPTM::with(['peserta']);
+                $queryFaktor = \App\Models\FaktorResikoPTM::with(['peserta']);
 
                 if ($petugas && $petugas->puskesmas_id) {
-                    $queryPasien->where('puskesmas_id', $petugas->puskesmas_id);
+                    $queryPeserta->where('puskesmas_id', $petugas->puskesmas_id);
                     $queryDeteksi->where('puskesmas_id', $petugas->puskesmas_id);
                     $queryFaktor->where('puskesmas_id', $petugas->puskesmas_id);
                 }
 
-                $pasienTrack = $queryPasien->orderBy('dibuat_pada', 'desc')->take(5)->get();
+                $pesertaTrack = $queryPeserta->orderBy('dibuat_pada', 'desc')->take(5)->get();
                 $deteksiTrack = $queryDeteksi->orderBy('dibuat_pada', 'desc')->take(5)->get();
                 $faktorTrack = $queryFaktor->orderBy('dibuat_pada', 'desc')->take(5)->get();
 
                 // Gabungkan semua data pelacakan
                 $trackingData = collect()
-                    ->concat($pasienTrack)
+                    ->concat($pesertaTrack)
                     ->concat($deteksiTrack)
                     ->concat($faktorTrack)
                     ->sortByDesc('dibuat_pada')
                     ->take(5);
 
                 // Hitung total pending, approved, dan rejected secara akumulatif
-                $queryCountPasien = Pasien::query();
+                $queryCountPeserta = Peserta::query();
                 $queryCountDeteksi = DeteksiDiniPTM::query();
                 $queryCountFaktor = \App\Models\FaktorResikoPTM::query();
 
                 if ($petugas && $petugas->puskesmas_id) {
-                    $queryCountPasien->where('puskesmas_id', $petugas->puskesmas_id);
+                    $queryCountPeserta->where('puskesmas_id', $petugas->puskesmas_id);
                     $queryCountDeteksi->where('puskesmas_id', $petugas->puskesmas_id);
                     $queryCountFaktor->where('puskesmas_id', $petugas->puskesmas_id);
                 }
 
-                $trackPending = (clone $queryCountPasien)->where('status_verifikasi', 'pending')->count()
+                $trackPending = (clone $queryCountPeserta)->where('status_verifikasi', 'pending')->count()
                               + (clone $queryCountDeteksi)->where('status_verifikasi', 'pending')->count()
                               + (clone $queryCountFaktor)->where('status_verifikasi', 'pending')->count();
 
-                $trackApproved = (clone $queryCountPasien)->where('status_verifikasi', 'approved')->count()
+                $trackApproved = (clone $queryCountPeserta)->where('status_verifikasi', 'approved')->count()
                                + (clone $queryCountDeteksi)->where('status_verifikasi', 'approved')->count()
                                + (clone $queryCountFaktor)->where('status_verifikasi', 'approved')->count();
 
-                $trackRevisi = (clone $queryCountPasien)->where('status_verifikasi', 'rejected')->count()
+                $trackRevisi = (clone $queryCountPeserta)->where('status_verifikasi', 'rejected')->count()
                              + (clone $queryCountDeteksi)->where('status_verifikasi', 'rejected')->count()
                              + (clone $queryCountFaktor)->where('status_verifikasi', 'rejected')->count();
             }
 
             /* =====================
-               PASIEN
+               PESERTA
             ====================== */
-            if (class_exists(Pasien::class)) {
-                $queryPasienCount = Pasien::query();
+            if (class_exists(Peserta::class)) {
+                $queryPesertaCount = Peserta::query();
                 if ($petugas && $petugas->puskesmas_id) {
-                    $queryPasienCount->where('puskesmas_id', $petugas->puskesmas_id);
+                    $queryPesertaCount->where('puskesmas_id', $petugas->puskesmas_id);
                 }
-                $totalPasien  = $queryPasienCount->count();
-                $totalPeserta = $totalPasien;
+                $totalPeserta = $queryPesertaCount->count();
             }
 
             /* =====================
@@ -176,15 +174,15 @@ class DashboardController extends Controller
                 return Carbon::create()->month($m)->translatedFormat('F');
             });
 
-            // Pasien Bulanan
-            $monthlyPasienData = Pasien::select(DB::raw('MONTH(dibuat_pada) as bulan'), DB::raw('COUNT(*) as total'))
+            // Peserta Bulanan
+            $monthlyPesertaData = Peserta::select(DB::raw('MONTH(dibuat_pada) as bulan'), DB::raw('COUNT(*) as total'))
                 ->whereYear('dibuat_pada', $year)
                 ->when($petugas && $petugas->puskesmas_id, function($q) use ($petugas) {
                     $q->where('puskesmas_id', $petugas->puskesmas_id);
                 })
                 ->groupBy('bulan')->get();
-            $monthPasien = collect(range(1, 12))->map(function ($m) use ($monthlyPasienData) {
-                return $monthlyPasienData->firstWhere('bulan', $m)->total ?? 0;
+            $monthPeserta = collect(range(1, 12))->map(function ($m) use ($monthlyPesertaData) {
+                return $monthlyPesertaData->firstWhere('bulan', $m)->total ?? 0;
             });
 
             // Deteksi Dini Bulanan
@@ -215,10 +213,10 @@ class DashboardController extends Controller
                 $date = Carbon::today()->subDays($i);
                 $weeklyLabels->push($date->translatedFormat('D'));
 
-                // Pasien
-                $qWPasien = Pasien::whereDate('dibuat_pada', $date);
-                if ($petugas && $petugas->puskesmas_id) $qWPasien->where('puskesmas_id', $petugas->puskesmas_id);
-                $weeklyPasien->push($qWPasien->count());
+                // Peserta
+                $qWPeserta = Peserta::whereDate('dibuat_pada', $date);
+                if ($petugas && $petugas->puskesmas_id) $qWPeserta->where('puskesmas_id', $petugas->puskesmas_id);
+                $weeklyPeserta->push($qWPeserta->count());
 
                 // Deteksi Dini
                 $qWDeteksi = DeteksiDiniPTM::whereDate('dibuat_pada', $date);
@@ -236,10 +234,10 @@ class DashboardController extends Controller
             for ($i = 0; $i < 24; $i++) {
                 $dailyLabels->push(sprintf('%02d:00', $i));
 
-                // Pasien
-                $qDPasien = Pasien::whereDate('dibuat_pada', today())->whereRaw('HOUR(dibuat_pada) = ?', [$i]);
-                if ($petugas && $petugas->puskesmas_id) $qDPasien->where('puskesmas_id', $petugas->puskesmas_id);
-                $dailyPasien->push($qDPasien->count());
+                // Peserta
+                $qDPeserta = Peserta::whereDate('dibuat_pada', today())->whereRaw('HOUR(dibuat_pada) = ?', [$i]);
+                if ($petugas && $petugas->puskesmas_id) $qDPeserta->where('puskesmas_id', $petugas->puskesmas_id);
+                $dailyPeserta->push($qDPeserta->count());
 
                 // Deteksi Dini
                 $qDDeteksi = DeteksiDiniPTM::whereDate('dibuat_pada', today())->whereRaw('HOUR(dibuat_pada) = ?', [$i]);
@@ -304,23 +302,22 @@ class DashboardController extends Controller
         // SATU-SATUNYA RETURN VIEW YANG DIEKSEKUSI DI AKHIR FUNGSI
         return view('petugas.dashboard', compact(
             // Statistik Utama
-            'totalPasien',
+            'totalPeserta',
             'totalDeteksi',
             'totalFaktor',
             'highRiskCount',
-            'totalPeserta',
 
             // Grafik Tren
             'monthLabels',
-            'monthPasien',
+            'monthPeserta',
             'monthDeteksi',
             'monthFaktor',
             'weeklyLabels',
-            'weeklyPasien',
+            'weeklyPeserta',
             'weeklyDeteksi',
             'weeklyFaktor',
             'dailyLabels',
-            'dailyPasien',
+            'dailyPeserta',
             'dailyDeteksi',
             'dailyFaktor',
 

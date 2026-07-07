@@ -39,12 +39,12 @@
                         {{-- DETEKSI DINI --}}
                         <div class="col-12">
                             <label class="form-label fw-semibold">
-                                Peserta / Pasien
+                                Peserta
                             </label>
                             <select name="deteksi_dini_id" class="form-select rounded-3" required>
                                 @foreach ($daftarDeteksi as $d)
                                     <option value="{{ $d->id }}" {{ $d->id == $deteksiTerpilih->id ? 'selected' : '' }}>
-                                        {{ $d->pasien->nama_lengkap }}
+                                        {{ $d->peserta->nama_lengkap }}
                                         • {{ \Carbon\Carbon::parse($d->tanggal_pemeriksaan)->format('d-m-Y') }}
                                         • {{ ucfirst(str_replace('_', ' ', $d->status_risiko)) }}
                                     </option>

@@ -184,12 +184,20 @@
             </h3>
         </div>
 
-        {{-- INFO BULAN --}}
-        @if(isset($bulan) && isset($tahun))
-            <div style="text-align: left; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+        {{-- INFO BULAN / PERIODE --}}
+        <div style="text-align: left; margin-bottom: 8px; font-size: 13px; font-weight: bold;">
+            @if(request('filter_type') === 'tanggal' && request('tgl_awal') && request('tgl_akhir'))
+                Periode: {{ \Carbon\Carbon::parse(request('tgl_awal'))->format('d/m/Y') }} s/d {{ \Carbon\Carbon::parse(request('tgl_akhir'))->format('d/m/Y') }}
+            @elseif(isset($bulan) && isset($tahun))
                 Bulan: {{ \Carbon\Carbon::create()->month((int) $bulan)->locale('id')->translatedFormat('F') }} {{ $tahun }}
-            </div>
-        @endif
+            @endif
+        </div>
+
+        {{-- PENJELASAN SINGKAT --}}
+        <div style="font-size: 11px; color: #444; margin-bottom: 12px; line-height: 1.4; text-align: left;">
+            Laporan ini berisi data hasil pemeriksaan deteksi dini Penyakit Tidak Menular (PTM) yang dilakukan pada peserta
+            .
+        </div>
 
         {{-- TABEL DATA --}}
         <table class="grid">
@@ -211,7 +219,7 @@
                             {{ (isset($items) && is_object($items) && method_exists($items, 'firstItem')) ? $items->firstItem() + $i : $i + 1 }}
                         </td>
                         <td>
-                            {{ optional($row->pasien)->nama_lengkap ?? ($row->nama_pasien ?? '-') }}
+                            {{ optional($row->peserta)->nama_lengkap ?? ($row->nama_peserta ?? '-') }}
                         </td>
                         <td style="text-align:center;">
                             {{ $row->tanggal_pemeriksaan ? \Carbon\Carbon::parse($row->tanggal_pemeriksaan)->format('d-m-Y') : '-' }}
@@ -236,8 +244,12 @@
                         </td>
                     </tr>
                 @endforelse
-            </tbody>
         </table>
+
+        {{-- TOTAL --}}
+        <div style="margin-top:6px; font-size:12px; font-weight:700;">
+            Jumlah keseluruhan pemeriksaan sebanyak = {{ $items->count() }} data
+        </div>
 
         {{-- BAGIAN TANDA TANGAN & QR CODE --}}
         <div class="ttd">
@@ -278,14 +290,18 @@
                                 <div class="qr-container">
                                     @if(!empty($qrToken))
                                         @php
-                    $bulanAngka = (int) request('bulan', now()->month);
-                    $tahun = request('tahun', now()->year);
-                    $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
-                    $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
+        if (request('filter_type') === 'tanggal' && request('tgl_awal') && request('tgl_akhir')) {
+            $periode = \Carbon\Carbon::parse(request('tgl_awal'))->format('d/m/Y') . ' - ' . \Carbon\Carbon::parse(request('tgl_akhir'))->format('d/m/Y');
+        } else {
+            $bulanAngka = (int) request('bulan', now()->month);
+            $tahun = request('tahun', now()->year);
+            $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
+        }
+        $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
 
-                    // Ambil nama dan NIP untuk dikirim ke QR Code
-                    $namaPejabat = $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah';
-                    $nipPejabat = $kepalaAktif->nip ?? '1973062022006041016';
+        // Ambil nama dan NIP untuk dikirim ke QR Code
+        $namaPejabat = $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah';
+        $nipPejabat = $kepalaAktif->nip ?? '1973062022006041016';
                                         @endphp
 
                                         {!! QrCode::size(85)->generate(url('/verifikasi-laporan?judul=Laporan%20Deteksi%20Dini%20PTM&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah) . '&nama_kepala=' . urlencode($namaPejabat) . '&nip=' . urlencode($nipPejabat))) !!}

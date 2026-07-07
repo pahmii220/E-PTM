@@ -15,8 +15,7 @@
                     <input type="hidden" name="action" id="modal_action">
                     <input type="hidden" name="status" id="modal_status">
 
-                    <p class="mb-3">Apakah Anda yakin ingin <strong id="txt_action"></strong> data faktor risiko pasien
-                        ini?</p>
+                    <p class="mb-3">Apakah Anda yakin ingin <strong id="txt_action"></strong> data ini?</p>
 
                     <textarea name="note" id="verifyNote" rows="2" class="form-control"
                         placeholder="Tuliskan catatan verifikasi (opsional)..."></textarea>

@@ -247,20 +247,20 @@
             </thead>
             <tbody>
                 @php
-$totalPasien = 0;
-$totalFaktor = 0;
-$totalDeteksi = 0;
+                    $totalPeserta = 0;
+                    $totalFaktor = 0;
+                    $totalDeteksi = 0;
                 @endphp
                 @foreach($statistikBulanan as $i => $row)
                     @php
-    $totalPasien += $row['total_pasien'];
-    $totalFaktor += $row['total_faktor'];
-    $totalDeteksi += $row['total_deteksi'];
+                        $totalPeserta += $row['total_peserta'];
+                        $totalFaktor += $row['total_faktor'];
+                        $totalDeteksi += $row['total_deteksi'];
                     @endphp
                     <tr>
                         <td style="text-align:center">{{ $i + 1 }}</td>
                         <td style="font-weight: bold; text-align: left;">{{ $row['nama_bulan'] }}</td>
-                        <td style="text-align:center">{{ $row['total_pasien'] }}</td>
+                        <td style="text-align:center">{{ $row['total_peserta'] }}</td>
                         <td style="text-align:center">{{ $row['total_faktor'] }}</td>
                         <td style="text-align:center">{{ $row['total_deteksi'] }}</td>
                     </tr>
@@ -269,7 +269,7 @@ $totalDeteksi = 0;
             <tfoot>
                 <tr style="font-weight: bold; background: #f8f9fa;">
                     <td colspan="2" style="text-align: center;">TOTAL KESELURUHAN</td>
-                    <td style="text-align: center;">{{ $totalPasien }}</td>
+                    <td style="text-align: center;">{{ $totalPeserta }}</td>
                     <td style="text-align: center;">{{ $totalFaktor }}</td>
                     <td style="text-align: center;">{{ $totalDeteksi }}</td>
                 </tr>
@@ -325,7 +325,7 @@ $totalDeteksi = 0;
                     datasets: [
                         {
                             label: 'Peserta',
-                            data: {!! json_encode($pasienBulanan) !!},
+                            data: {!! json_encode($pesertaBulanan) !!},
                             backgroundColor: '#3b82f6', // Biru
                             borderColor: '#2563eb',
                             borderWidth: 1,

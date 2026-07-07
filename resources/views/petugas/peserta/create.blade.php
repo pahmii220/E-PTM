@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title', 'Tambah Data Pasien')
+@section('title', 'Tambah Data Peserta')
 
 @section('content')
     <div class="container-fluid py-4" style="max-width:1100px">
@@ -19,7 +19,7 @@
         <div class="card border-0 shadow-sm rounded-4">
             <div class="card-body p-4">
 
-                <form action="{{ route('petugas.pasien.store') }}" method="POST">
+                <form action="{{ route('petugas.peserta.store') }}" method="POST">
                     @csrf
 
                         <div class="row g-3">
@@ -150,7 +150,7 @@
 
                     {{-- ================= ACTION ================= --}}
                     <div class="d-flex justify-content-end gap-2 mt-4">
-                        <a href="{{ route('petugas.pasien.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                        <a href="{{ route('petugas.peserta.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
                             <i class="bi bi-arrow-left"></i> Kembali
                         </a>
 
