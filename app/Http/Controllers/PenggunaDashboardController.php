@@ -24,7 +24,7 @@ class PenggunaDashboardController extends Controller
         $r = strtolower(trim((string) $raw));
 
         // Variasi literal umum (tambahkan jika dataset mu punya istilah lain)
-        $approvedVariants = ['approved','approve','ya','ok','sudah','verified','verified_by_dinkes','approved_by_dinkes','approve_by_dinkes'];
+        $approvedVariants = ['approved','approve','ya','ok','sudah','verified','verified_by_dinkes','approved_by_dinkes','approve_by_dinkes','terverifikasi'];
         $rejectedVariants  = ['rejected','reject','tolak','no','rejected_by_dinkes','rejected_by_admin'];
         $pendingVariants   = ['pending','wait','menunggu','waiting','baru','', null, 'null'];
 
@@ -148,7 +148,7 @@ foreach ($tables as $tbl) {
 
         foreach ($rows as $r) {
             $raw = strtolower(trim((string)$r->status_verifikasi));
-            if (in_array($raw, ['approved','approve','ya','ok','sudah','verified','1'], true)) {
+            if (in_array($raw, ['approved','approve','ya','ok','sudah','verified','1','terverifikasi'], true)) {
                 $verifCounts['approved'] += (int)$r->cnt;
             } elseif (in_array($raw, ['rejected','reject','tolak','no','0'], true)) {
                 $verifCounts['rejected'] += (int)$r->cnt;
@@ -203,14 +203,49 @@ $pendingTotal = $verifCounts['pending'];
     ->get();
 
             // -----------------------
-            // Return view (semua variabel dipasok)
+            // Kepatuhan Pelaporan Puskesmas (Dengan Filter)
             // -----------------------
+            $filterKepatuhanBulan = $request->input('kepatuhan_bulan', Carbon::now()->format('m'));
+            $filterKepatuhanTahun = $request->input('kepatuhan_tahun', Carbon::now()->format('Y'));
+
+            // Konversi ke Carbon
+            $waktuKepatuhan = Carbon::createFromDate($filterKepatuhanTahun, $filterKepatuhanBulan, 1);
+            $startDateCur   = $waktuKepatuhan->copy()->startOfMonth()->toDateString();
+            $endDateCur     = $waktuKepatuhan->copy()->endOfMonth()->toDateString();
+
+            $rekapKepatuhan = DB::table('puskesmas')
+                ->select(
+                    'puskesmas.id',
+                    'puskesmas.nama_puskesmas',
+                    'puskesmas.kecamatan',
+                    DB::raw("(
+                        SELECT COUNT(*) 
+                        FROM deteksi_dini_ptm 
+                        WHERE deteksi_dini_ptm.puskesmas_id = puskesmas.id 
+                        AND deteksi_dini_ptm.tanggal_pemeriksaan BETWEEN '{$startDateCur}' AND '{$endDateCur}'
+                    ) as total_skrining_bulan_ini"),
+                    DB::raw("(
+                        SELECT COUNT(*) 
+                        FROM deteksi_dini_ptm 
+                        WHERE deteksi_dini_ptm.puskesmas_id = puskesmas.id 
+                        AND deteksi_dini_ptm.tanggal_pemeriksaan BETWEEN '{$startDateCur}' AND '{$endDateCur}'
+                        AND deteksi_dini_ptm.status_verifikasi IN ('pending', 'approved', 'rejected')
+                    ) as total_dilaporkan_bulan_ini")
+                )
+                ->orderBy('puskesmas.nama_puskesmas')
+                ->get();
+
+            // Query untuk peta sebaran puskesmas
+            $puskesmasList = \App\Models\Puskesmas::whereNotNull('latitude')->whereNotNull('longitude')->withCount(['peserta', 'deteksiDini'])->get();
+
+            // Return view (semua variabel dipasok)
             return view('pengguna.dashboard', compact(
                 'totalPeserta','totalDeteksi','totalFaktor',
                 'pendingPeserta','pendingDeteksi','pendingFaktor','pendingTotal',
                 'recentDeteksi','topPetugas','allDeteksi',
                 'verifCounts','chartLabels','chartData','chartDeteksi','chartFaktor','avgPerDay','weeklyTotal','lastUpdatedAt',
-                'statusFilter', 'rekapPuskesmas'
+                'statusFilter', 'rekapPuskesmas', 'rekapKepatuhan', 'filterKepatuhanBulan', 'filterKepatuhanTahun', 'waktuKepatuhan',
+                'puskesmasList'
             ));
         } catch (\Exception $e) {
             Log::error('Pengguna dashboard error: ' . $e->getMessage(), [
@@ -219,5 +254,53 @@ $pendingTotal = $verifCounts['pending'];
             ]);
             return abort(500, 'Terjadi kesalahan saat memuat dashboard. Periksa log untuk detail.');
         }
+    }
+
+    /**
+     * Send Reminder Notification to Petugas Puskesmas
+     */
+    public function sendReminder(Request $request)
+    {
+        $request->validate([
+            'puskesmas_id' => 'required|exists:puskesmas,id',
+            'bulan_nama'   => 'required|string'
+        ]);
+
+        $puskesmasId = $request->puskesmas_id;
+        $bulanNama   = $request->bulan_nama;
+        $puskesmas   = \App\Models\Puskesmas::findOrFail($puskesmasId);
+
+        // Ambil user petugas di puskesmas ini
+        $petugasUsers = \App\Models\User::where('role_name', 'petugas')
+            ->whereHas('petugas', function($q) use ($puskesmasId) {
+                $q->where('puskesmas_id', $puskesmasId);
+            })->get();
+
+        if ($petugasUsers->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengirim pengingat. Tidak ada Petugas terdaftar di ' . $puskesmas->nama_puskesmas
+            ], 404);
+        }
+
+        foreach ($petugasUsers as $user) {
+            // Simpan data notifikasi langsung ke DB untuk keandalan instan
+            $user->notifications()->create([
+                'id' => \Illuminate\Support\Str::uuid(),
+                'type' => 'App\Notifications\TagihanLaporanNotification',
+                'data' => [
+                    'title' => 'Tagihan Laporan PTM',
+                    'message' => 'Peringatan Dinkes: Laporan Register PTM periode ' . $bulanNama . ' belum dikirimkan. Harap segera lengkapi & kirim.',
+                    'url' => route('petugas.laporan.index'),
+                    'type' => 'warning'
+                ],
+                'read_at' => null,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => '🔔 Berhasil mengirimkan pengingat laporan bulanan ke ' . $puskesmas->nama_puskesmas
+        ]);
     }
 }

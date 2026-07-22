@@ -3,12 +3,14 @@
 @section('content')
     <div class="container-fluid py-4" style="max-width:1400px">
 
-        {{-- ================= HEADER ================= --}}
-        <div class="card border-0 shadow-sm mb-4 rounded-4" style="background:linear-gradient(135deg,#eef2ff,#f8fafc)">
+        {{-- ================= TABS ================= --}}
+        @include('pengguna.verifikasi.tabs')
+
+        {{-- ================= HEADER & FILTER ================= --}}
+        <div class="card border-0 shadow-sm mb-4 rounded-4 bg-white">
             <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
-                    <h4 class="fw-bold mb-0">Verifikasi Data Peserta</h4>
-                    <small class="text-muted">Fokus pada persetujuan data identitas dasar peserta</small>
+                    <h5 class="fw-bold mb-0 text-dark">Data Peserta</h5>
                 </div>
                 <div class="d-flex gap-2 align-items-center">
                     <a href="{{ route('pengguna.verifikasi.print.peserta', ['status' => $status, 'puskesmas_id' => request('puskesmas_id')]) }}"
@@ -16,10 +18,10 @@
                         <i class="bi bi-printer"></i> Cetak
                     </a>
 
-                    {{-- Form Filter Ditambah Puskesmas --}}
+                    {{-- Form Filter --}}
                     <form method="GET" class="d-flex gap-2">
                         {{-- Filter Puskesmas --}}
-                        <select name="puskesmas_id" class="form-select form-select-sm rounded-pill shadow-sm"
+                        <select name="puskesmas_id" class="form-select form-select-sm rounded-pill shadow-sm bg-light border-0"
                             onchange="this.form.submit()" style="min-width: 160px;">
                             <option value="all">Semua Puskesmas</option>
                             @foreach($puskesmasList ?? [] as $p)
@@ -29,26 +31,26 @@
                             @endforeach
                         </select>
 
-                         {{-- Filter Bulan --}}
-    <select name="bulan"
-        class="form-select form-select-sm rounded-pill shadow-sm"
-        onchange="this.form.submit()"
-        style="min-width: 140px;">
-        <option value="all">Semua Bulan</option>
-        @foreach([
-            1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',
-            5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',
-            9=>'September',10=>'Oktober',11=>'November',12=>'Desember'
-        ] as $key => $nama)
-            <option value="{{ $key }}"
-                {{ request('bulan') == $key ? 'selected' : '' }}>
-                {{ $nama }}
-            </option>
-        @endforeach
-    </select>
+                        {{-- Filter Bulan --}}
+                        <select name="bulan"
+                            class="form-select form-select-sm rounded-pill shadow-sm bg-light border-0"
+                            onchange="this.form.submit()"
+                            style="min-width: 140px;">
+                            <option value="all">Semua Bulan</option>
+                            @foreach([
+                                1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',
+                                5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',
+                                9=>'September',10=>'Oktober',11=>'November',12=>'Desember'
+                            ] as $key => $nama)
+                                <option value="{{ $key }}"
+                                    {{ request('bulan') == $key ? 'selected' : '' }}>
+                                    {{ $nama }}
+                                </option>
+                            @endforeach
+                        </select>
 
                         {{-- Filter Status --}}
-                        <select name="status" class="form-select form-select-sm rounded-pill shadow-sm"
+                        <select name="status" class="form-select form-select-sm rounded-pill shadow-sm bg-light border-0"
                             onchange="this.form.submit()" style="min-width: 130px;">
                             <option value="pending" {{ $status == 'pending' ? 'selected' : '' }}>Tertunda</option>
                             <option value="approved" {{ $status == 'approved' ? 'selected' : '' }}>Diterima</option>

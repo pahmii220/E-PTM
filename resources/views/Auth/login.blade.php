@@ -79,18 +79,23 @@
                         </div>
 
                         <!-- Submit -->
-                        <button type="submit" class="btn btn-success w-100 rounded-3 py-2 fw-semibold">
+                        <button type="submit" class="btn btn-success w-100 rounded-3 py-2 fw-semibold mb-2">
                             Login
                         </button>
+
+                        <!-- Kembali ke Landing Page -->
+                        <a href="{{ route('frontend.home') }}" class="btn btn-outline-secondary w-100 rounded-3 py-2 fw-semibold">
+                            <i class="bi bi-arrow-left me-1"></i> Kembali ke Beranda
+                        </a>
                     </form>
                 </div>
 
-                <div class="card-footer text-center bg-transparent border-0">
+                <!-- <div class="card-footer text-center bg-transparent border-0">
                     <small class="text-muted">
                         Belum punya akun?
                         <a href="{{ route('register') }}" class="text-decoration-none text-success fw-semibold">Registrasi</a>
                     </small>
-                </div>
+                </div> -->
             </div>
         </div>
 
@@ -116,13 +121,14 @@
         @if (session('success'))
     <script>
     Swal.fire({
-        toast: true,
-        position: 'top-end',
+        toast: false,
+        position: 'center',
         icon: 'success',
-        title: "{{ session('success') }}",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
+        title: 'Pemberitahuan',
+        text: "{{ session('success') }}",
+        showConfirmButton: true,
+        confirmButtonText: 'Tutup',
+        confirmButtonColor: '#198754'
     })
     </script>
     @endif

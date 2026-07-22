@@ -20,7 +20,20 @@ class StatusVerifikasiNotification extends Notification
 
     public function via($notifiable)
     {
-        return ['mail'];
+        return ['database'];
+    }
+
+    public function toDatabase($notifiable)
+    {
+        $status = $this->dataPtm->status_verifikasi; 
+        $labelStatus = ($status == 'verified' || $status == 'disetujui' || $status == 'approved') ? 'Telah Diverifikasi ✅' : 'Perlu Direvisi/Ditolak ❌';
+
+        return [
+            'title' => 'Status Verifikasi Laporan',
+            'message' => 'Laporan PTM Anda ' . $labelStatus . '. Catatan: ' . ($this->dataPtm->catatan_verifikasi ?? 'Tidak ada catatan.'),
+            'url' => route('petugas.laporan.index'),
+            'type' => ($status == 'verified' || $status == 'disetujui' || $status == 'approved') ? 'success' : 'danger'
+        ];
     }
 
     public function toMail($notifiable)

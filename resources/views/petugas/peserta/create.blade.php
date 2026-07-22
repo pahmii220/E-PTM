@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title', 'Tambah Data Peserta')
+@section('title', 'Tambah Data Pasien')
 
 @section('content')
     <div class="container-fluid py-4" style="max-width:1100px">
@@ -8,9 +8,9 @@
         {{-- ================= HEADER ================= --}}
         <div class="card border-0 shadow-sm mb-4 rounded-4" style="background:linear-gradient(135deg,#22c55e,#16a34a)">
             <div class="card-body text-white">
-                <h4 class="fw-bold mb-0">Tambah Data Peserta</h4>
+                <h4 class="fw-bold mb-0">Tambah Data Pasien</h4>
                 <small class="opacity-75">
-                    Lengkapi data peserta dengan benar sebelum disimpan
+                    Lengkapi data pasien dengan benar sebelum disimpan
                 </small>
             </div>
         </div>
@@ -49,7 +49,7 @@
                                 <label class="form-label fw-semibold">
                                     Nama Lengkap <span class="text-danger">*</span>
                                 </label>
-                                <input type="text" name="nama_lengkap" class="form-control rounded-3" placeholder="Nama lengkap peserta"
+                                <input type="text" name="nama_lengkap" class="form-control rounded-3" placeholder="Nama lengkap pasien"
                                     required>
                             </div>
 
@@ -100,28 +100,32 @@
 
                             {{-- KECAMATAN (BARU) --}}
                             {{-- KECAMATAN (DROPDOWN) --}}
+                            @php
+                                $defaultKecamatan = '';
+                                if (auth()->check() && auth()->user()->role_name === 'petugas' && auth()->user()->petugas && auth()->user()->petugas->puskesmas) {
+                                    $defaultKecamatan = trim(auth()->user()->petugas->puskesmas->kecamatan);
+                                }
+                            @endphp
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">
                                     Kecamatan <span class="text-danger">*</span>
                                 </label>
                                 <select name="kecamatan" class="form-select rounded-3" required>
                                     <option value="">-- Pilih Kecamatan --</option>
-                                    <option value="Banjarmasin Barat">Banjarmasin Barat</option>
-                                    <option value="Banjarmasin Selatan">Banjarmasin Selatan</option>
-                                    <option value="Banjarmasin Tengah">Banjarmasin Tengah</option>
-                                    <option value="Banjarmasin Timur">Banjarmasin Timur</option>
-                                    <option value="Banjarmasin Utara">Banjarmasin Utara</option>
-                                    {{-- Silakan tambah atau ubah daftar kecamatan di atas sesuai kebutuhan --}}
+                                    <option value="Banjarmasin Barat" {{ old('kecamatan', $defaultKecamatan) == 'Banjarmasin Barat' ? 'selected' : '' }}>Banjarmasin Barat</option>
+                                    <option value="Banjarmasin Selatan" {{ old('kecamatan', $defaultKecamatan) == 'Banjarmasin Selatan' ? 'selected' : '' }}>Banjarmasin Selatan</option>
+                                    <option value="Banjarmasin Tengah" {{ old('kecamatan', $defaultKecamatan) == 'Banjarmasin Tengah' ? 'selected' : '' }}>Banjarmasin Tengah</option>
+                                    <option value="Banjarmasin Timur" {{ old('kecamatan', $defaultKecamatan) == 'Banjarmasin Timur' ? 'selected' : '' }}>Banjarmasin Timur</option>
+                                    <option value="Banjarmasin Utara" {{ old('kecamatan', $defaultKecamatan) == 'Banjarmasin Utara' ? 'selected' : '' }}>Banjarmasin Utara</option>
                                 </select>
                             </div>
 
-                            {{-- PUSKESMAS --}}
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">
-                                    Puskesmas <span class="text-danger">*</span>
-                                </label>
-
-                                @if(auth()->user()->role_name === 'admin')
+                            @if(auth()->user()->role_name === 'admin')
+                                {{-- PUSKESMAS --}}
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        Puskesmas <span class="text-danger">*</span>
+                                    </label>
                                     <select name="puskesmas_id" class="form-select rounded-3" required>
                                         <option value="">-- Pilih Puskesmas --</option>
                                         @foreach($puskesmas as $pkm)
@@ -130,12 +134,10 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                @else
-                                    <input type="text" class="form-control rounded-3 bg-light"
-                                        value="{{ auth()->user()->petugas->puskesmas->nama_puskesmas ?? '-' }}" readonly>
-                                    <input type="hidden" name="puskesmas_id" value="{{ auth()->user()->petugas->puskesmas_id }}">
-                                @endif
-                            </div>
+                                </div>
+                            @else
+                                <input type="hidden" name="puskesmas_id" value="{{ auth()->user()->petugas->puskesmas_id }}">
+                            @endif
 
                             {{-- ALAMAT --}}
                             <div class="col-12">

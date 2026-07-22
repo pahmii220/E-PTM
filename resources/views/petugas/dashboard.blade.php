@@ -50,11 +50,32 @@
             </div>
 
             {{-- ================= STATISTIK UTAMA (GRID) ================= --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+
+                {{-- Total Peserta --}}
+                <div class="group bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden ring-1 ring-black/5 flex flex-col justify-between h-[140px] animate-fade-in-up"
+                    style="animation-delay: 0.1s;">
+                    <div
+                        class="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-emerald-50 opacity-50 group-hover:scale-150 transition-transform duration-700">
+                    </div>
+                    <div class="relative flex justify-between items-start z-10">
+                        <div>
+                            <div class="text-slate-400 text-sm font-semibold mb-1 uppercase tracking-wider">Total Pasien
+                            </div>
+                            <div class="text-4xl font-black text-slate-800 tracking-tight">
+                                {{ number_format($totalPeserta ?? 0) }}
+                            </div>
+                        </div>
+                        <div
+                            class="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-200 group-hover:-translate-y-1 transition-transform">
+                            <i class="bi bi-people-fill text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
 
                 {{-- Deteksi Dini --}}
                 <div class="group bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden ring-1 ring-black/5 flex flex-col justify-between h-[140px] animate-fade-in-up"
-                    style="animation-delay: 0.1s;">
+                    style="animation-delay: 0.2s;">
                     <div
                         class="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-indigo-50 opacity-50 group-hover:scale-150 transition-transform duration-700">
                     </div>
@@ -67,25 +88,6 @@
                         <div
                             class="w-12 h-12 rounded-2xl bg-indigo-500 text-white flex items-center justify-center shadow-md shadow-indigo-200 group-hover:-translate-y-1 transition-transform">
                             <i class="bi bi-activity text-2xl"></i>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Faktor Risiko --}}
-                <div class="group bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden ring-1 ring-black/5 flex flex-col justify-between h-[140px] animate-fade-in-up"
-                    style="animation-delay: 0.2s;">
-                    <div
-                        class="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-amber-50 opacity-50 group-hover:scale-150 transition-transform duration-700">
-                    </div>
-                    <div class="relative flex justify-between items-start z-10">
-                        <div>
-                            <div class="text-slate-400 text-sm font-semibold mb-1 uppercase tracking-wider">Faktor Risiko
-                            </div>
-                            <div class="text-4xl font-black text-slate-800 tracking-tight">{{ $totalFaktor ?? 0 }}</div>
-                        </div>
-                        <div
-                            class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-200 group-hover:-translate-y-1 transition-transform">
-                            <i class="bi bi-exclamation-triangle-fill text-2xl"></i>
                         </div>
                     </div>
                 </div>
@@ -109,27 +111,6 @@
                     </div>
                 </div>
 
-                {{-- Total Peserta --}}
-                <div class="group bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 relative overflow-hidden ring-1 ring-black/5 flex flex-col justify-between h-[140px] animate-fade-in-up"
-                    style="animation-delay: 0.4s;">
-                    <div
-                        class="absolute -right-6 -top-6 w-32 h-32 rounded-full bg-emerald-50 opacity-50 group-hover:scale-150 transition-transform duration-700">
-                    </div>
-                    <div class="relative flex justify-between items-start z-10">
-                        <div>
-                            <div class="text-slate-400 text-sm font-semibold mb-1 uppercase tracking-wider">Total Peserta
-                            </div>
-                            <div class="text-4xl font-black text-slate-800 tracking-tight">
-                                {{ number_format($totalPeserta ?? 0) }}
-                            </div>
-                        </div>
-                        <div
-                            class="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-200 group-hover:-translate-y-1 transition-transform">
-                            <i class="bi bi-people-fill text-2xl"></i>
-                        </div>
-                    </div>
-                </div>
-
             </div>
 
             {{-- ================= ROW: GRAFIK TREN & FAKTOR RISIKO ================= --}}
@@ -140,33 +121,21 @@
                     style="animation-delay: 0.6s;">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                         <div>
-                            <h4 class="text-xl font-bold text-slate-800">Tren Kasus Penyakit Tidak Menular</h4>
-                            <p class="text-sm text-slate-500 mt-1">Grafik perkembangan input data kesehatan peserta</p>
-                        </div>
-                        <div class="relative">
-                            <select id="filterRange"
-                                class="appearance-none bg-slate-50 border border-slate-200 text-slate-700 font-medium text-sm rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 py-2.5 pl-4 pr-10 cursor-pointer hover:bg-slate-100 transition-colors outline-none shadow-sm">
-                                <option value="monthly">Data Bulanan</option>
-                                <option value="weekly">Data Mingguan</option>
-                                <option value="daily">Data Harian</option>
-                            </select>
-                            <div
-                                class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
-                                <i class="bi bi-chevron-down text-xs"></i>
-                            </div>
+                            <h4 class="text-xl font-bold text-slate-800">Jumlah Temuan Kasus Penyakit PTM</h4>
+                            <p class="text-sm text-slate-500 mt-1">Total temuan kasus penyakit tidak menular berdasarkan hasil skrining</p>
                         </div>
                     </div>
-                    <div class="relative w-full h-[350px]">
+                    <div class="relative w-full h-[540px]">
                         <canvas id="trendChart"></canvas>
                     </div>
                 </div>
 
-                {{-- KANAN: Grafik Faktor Risiko --}}
+                {{-- KANAN: Grafik Demografi --}}
                 <div class="xl:col-span-1 bg-white rounded-3xl shadow-sm hover:shadow-md ring-1 ring-black/5 p-6 md:p-8 transition-all duration-300 flex flex-col animate-fade-in-up"
                     style="animation-delay: 0.7s;">
                     <div class="mb-6">
-                        <h4 class="text-xl font-bold text-slate-800">Distribusi Faktor Risiko</h4>
-                        <p class="text-sm text-slate-500 mt-1">Proporsi indikasi risiko dari peserta yang di-skrining</p>
+                        <h4 class="text-xl font-bold text-slate-800">Demografi Usia Pasien</h4>
+                        <p class="text-sm text-slate-500 mt-1">Proporsi rentang umur seluruh pasien yang terdaftar</p>
                     </div>
 
                     <div class="relative w-full h-[320px] flex justify-center items-center my-auto">
@@ -179,7 +148,7 @@
                                     class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white shadow-sm mb-4">
                                     <i class="bi bi-pie-chart text-3xl text-slate-300"></i>
                                 </div>
-                                <p class="text-slate-500 font-medium">Belum ada data faktor risiko yang diinput.</p>
+                                <p class="text-slate-500 font-medium">Belum ada data pasien yang diinput.</p>
                             </div>
                         @endif
                     </div>
@@ -265,62 +234,49 @@
             const chartData = {
                 monthly: {
                     labels: {!! json_encode($monthLabels ?? []) !!},
-                    peserta: {!! json_encode($monthPeserta ?? []) !!},
-                    deteksi: {!! json_encode($monthDeteksi ?? []) !!},
-                    faktor: {!! json_encode($monthFaktor ?? []) !!}
+                    hipertensi: {!! json_encode($monthHipertensi ?? []) !!},
+                    diabetes: {!! json_encode($monthDiabetes ?? []) !!},
+                    obesitas: {!! json_encode($monthObesitas ?? []) !!}
                 },
                 weekly: {
                     labels: {!! json_encode($weeklyLabels ?? []) !!},
-                    peserta: {!! json_encode($weeklyPeserta ?? []) !!},
-                    deteksi: {!! json_encode($weeklyDeteksi ?? []) !!},
-                    faktor: {!! json_encode($weeklyFaktor ?? []) !!}
+                    hipertensi: {!! json_encode($weeklyHipertensi ?? []) !!},
+                    diabetes: {!! json_encode($weeklyDiabetes ?? []) !!},
+                    obesitas: {!! json_encode($weeklyObesitas ?? []) !!}
                 },
                 daily: {
                     labels: {!! json_encode($dailyLabels ?? []) !!},
-                    peserta: {!! json_encode($dailyPeserta ?? []) !!},
-                    deteksi: {!! json_encode($dailyDeteksi ?? []) !!},
-                    faktor: {!! json_encode($dailyFaktor ?? []) !!}
+                    hipertensi: {!! json_encode($dailyHipertensi ?? []) !!},
+                    diabetes: {!! json_encode($dailyDiabetes ?? []) !!},
+                    obesitas: {!! json_encode($dailyObesitas ?? []) !!}
                 }
             };
 
             // =========================
-            // 1. GRAFIK TREN PTM (Grouped Bar Chart - Aesthetic)
+            // 1. GRAFIK JUMLAH KASUS PENYAKIT PTM (Vertical Bar Chart - Premium)
             // =========================
             const trendCtx = document.getElementById('trendChart');
             if (trendCtx) {
                 const ctx = trendCtx.getContext('2d');
 
-                const trendChart = new Chart(ctx, {
+                // Gradient vertikal
+                let gradientPTM = ctx.createLinearGradient(0, 350, 0, 0);
+                gradientPTM.addColorStop(0, '#6366f1'); // Indigo
+                gradientPTM.addColorStop(1, '#818cf8'); // Indigo terang
+
+                new Chart(ctx, {
                     type: 'bar',
                     data: {
-                        labels: chartData.monthly.labels,
+                        labels: {!! json_encode($ptmLabels ?? []) !!},
                         datasets: [
                             {
-                                label: 'Faktor Risiko',
-                                data: chartData.monthly.faktor,
-                                backgroundColor: '#ef4444',
-                                hoverBackgroundColor: '#dc2626',
-                                borderRadius: 6,
+                                label: 'Jumlah Temuan Kasus',
+                                data: {!! json_encode($ptmValues ?? []) !!},
+                                backgroundColor: gradientPTM,
+                                hoverBackgroundColor: '#4f46e5',
+                                borderRadius: 8,
                                 borderSkipped: 'bottom',
-                                maxBarThickness: 15
-                            },
-                            {
-                                label: 'Deteksi Dini',
-                                data: chartData.monthly.deteksi,
-                                backgroundColor: '#22c55e',
-                                hoverBackgroundColor: '#16a34a',
-                                borderRadius: 6,
-                                borderSkipped: 'bottom',
-                                maxBarThickness: 15
-                            },
-                            {
-                                label: 'Peserta',
-                                data: chartData.monthly.peserta,
-                                backgroundColor: '#3b82f6',
-                                hoverBackgroundColor: '#2563eb',
-                                borderRadius: 6,
-                                borderSkipped: 'bottom',
-                                maxBarThickness: 15
+                                maxBarThickness: 24
                             }
                         ]
                     },
@@ -329,19 +285,16 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: {
-                                display: true,
-                                position: 'bottom',
-                                alignment: 'center',
-                                labels: {
-                                    boxWidth: 10,
-                                    usePointStyle: true,
-                                    pointStyle: 'circle',
-                                    padding: 20,
-                                    font: { size: 12, weight: '600' }
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return ' ' + context.formattedValue + ' kasus terdata';
+                                    }
                                 }
                             }
                         },
-                        interaction: { mode: 'index', intersect: false },
                         scales: {
                             y: {
                                 beginAtZero: true,
@@ -352,20 +305,15 @@
                             x: {
                                 border: { display: false },
                                 grid: { display: false },
-                                ticks: { padding: 10, font: { weight: '600' } }
+                                ticks: { 
+                                    padding: 10, 
+                                    maxRotation: 45,
+                                    minRotation: 45,
+                                    font: { weight: '600', size: 9.5 } 
+                                }
                             }
                         }
                     }
-                });
-
-                // Update data grafik saat dropdown berubah
-                document.getElementById('filterRange').addEventListener('change', function () {
-                    const key = this.value;
-                    trendChart.data.labels = chartData[key].labels;
-                    trendChart.data.datasets[0].data = chartData[key].faktor;
-                    trendChart.data.datasets[1].data = chartData[key].deteksi;
-                    trendChart.data.datasets[2].data = chartData[key].peserta;
-                    trendChart.update();
                 });
             }
 
@@ -483,11 +431,10 @@
                         datasets: [{
                             data: {!! json_encode($faktorTotals ?? []) !!},
                             backgroundColor: [
-                                '#f43f5e', // rose-500
-                                '#f59e0b', // amber-500
-                                '#0ea5e9', // sky-500
-                                '#10b981', // emerald-500
-                                '#8b5cf6'  // violet-500
+                                '#3b82f6', // Biru (Remaja)
+                                '#10b981', // Hijau (Dewasa)
+                                '#f59e0b', // Orange (Pra Lansia)
+                                '#ef4444'  // Merah (Lansia)
                             ],
                             borderWidth: 4,
                             borderColor: '#ffffff', // Jarak putih antar chart

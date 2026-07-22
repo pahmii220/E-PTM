@@ -22,7 +22,13 @@
             <ul class="nav nav-tabs border-0 flex-nowrap overflow-x-auto" id="rekapTab" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active py-3 px-4 border-0 rounded-0 fw-semibold text-gray-700 d-flex align-items-center gap-2" 
-                        id="puskesmas-tab" data-bs-toggle="tab" data-bs-target="#puskesmas" type="button" role="tab" aria-controls="puskesmas" aria-selected="true">
+                        id="eksekutif-tab" data-bs-toggle="tab" data-bs-target="#eksekutif" type="button" role="tab" aria-controls="eksekutif" aria-selected="true">
+                        <i class="bi bi-grid-3x3-gap-fill text-indigo-600 fs-5" style="color: #4f46e5;"></i> Matriks Eksekutif
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link py-3 px-4 border-0 rounded-0 fw-semibold text-gray-700 d-flex align-items-center gap-2" 
+                        id="puskesmas-tab" data-bs-toggle="tab" data-bs-target="#puskesmas" type="button" role="tab" aria-controls="puskesmas" aria-selected="false">
                         <i class="bi bi-building text-green-600 fs-5"></i> Rekap Puskesmas
                     </button>
                 </li>
@@ -51,8 +57,105 @@
         <div class="card-body p-4 bg-light bg-opacity-25">
             <div class="tab-content" id="rekapTabContent">
 
+                {{-- TAB 0: MATRIKS EKSEKUTIF --}}
+                <div class="tab-pane fade show active" id="eksekutif" role="tabpanel" aria-labelledby="eksekutif-tab">
+                    
+                    {{-- Form Filter Bulan --}}
+                    <div class="card bg-white shadow-sm border-0 mb-4 rounded-xl">
+                        <div class="card-body p-3">
+                            <form action="{{ route('pengguna.rekap.index') }}" method="GET" class="d-flex align-items-center gap-3">
+                                <label for="bulan" class="fw-bold text-gray-700 mb-0 ms-2"><i class="bi bi-calendar-month me-1"></i> Periode Laporan:</label>
+                                <input type="month" name="bulan" id="bulan" class="form-control form-control-sm w-auto border-gray-300" value="{{ $filterBulan }}">
+                                <button type="submit" class="btn btn-sm btn-primary px-4 fw-semibold shadow-sm" style="background-color: #4f46e5; border: none;">Filter Laporan</button>
+                                <a href="{{ route('pengguna.rekap.index') }}" class="btn btn-sm btn-light fw-semibold text-gray-600 border">Reset</a>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <div>
+                            <h5 class="fw-bold text-gray-800 mb-0">Laporan Eksekutif Kategori (Bulan: {{ \Carbon\Carbon::parse($filterBulan)->translatedFormat('F Y') }})</h5>
+                            <p class="text-muted small mb-0">Matriks data riil distribusi PTM berdasarkan Wilayah, Kelompok Usia, dan Jenis Penyakit.</p>
+                        </div>
+                        <button onclick="window.print()" class="btn btn-danger fw-semibold shadow-sm">
+                            <i class="bi bi-printer me-1"></i> Cetak Matriks
+                        </button>
+                    </div>
+
+                    <div class="table-responsive bg-white rounded-xl shadow-sm border p-1" style="max-height: 600px; overflow-y: auto;">
+                        <table class="table table-hover table-bordered text-center align-middle mb-0" style="font-size: 0.9rem;">
+                            <thead class="sticky-top" style="background-color: #f8fafc; z-index: 2;">
+                                <tr>
+                                    <th rowspan="2" class="align-middle" style="background-color: #4f46e5; color: white; border-color: #4338ca; width: 5%;">No</th>
+                                    <th rowspan="2" class="align-middle text-start" style="background-color: #4f46e5; color: white; border-color: #4338ca; min-width: 150px;">Wilayah Puskesmas</th>
+                                    <th colspan="4" style="background-color: #0ea5e9; color: white; border-color: #0284c7;">Berdasarkan Kelompok Usia</th>
+                                    <th colspan="{{ count($penyakitList) }}" style="background-color: #f59e0b; color: white; border-color: #d97706;">Berdasarkan Jenis Penyakit Terdeteksi</th>
+                                    <th rowspan="2" class="align-middle" style="background-color: #10b981; color: white; border-color: #059669;">Total Pasien</th>
+                                </tr>
+                                <tr>
+                                    <th style="background-color: #e0f2fe; color: #0369a1; min-width: 80px;">Remaja</th>
+                                    <th style="background-color: #e0f2fe; color: #0369a1; min-width: 80px;">Dewasa</th>
+                                    <th style="background-color: #e0f2fe; color: #0369a1; min-width: 80px;">Pra Lansia</th>
+                                    <th style="background-color: #e0f2fe; color: #0369a1; min-width: 80px;">Lansia</th>
+                                    
+                                    @foreach($penyakitList as $p)
+                                        <th style="background-color: #fef3c7; color: #b45309; min-width: 100px;">{{ $p }}</th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($matriksLaporan as $row)
+                                    <tr>
+                                        <td class="fw-semibold text-gray-500">{{ $loop->iteration }}</td>
+                                        <td class="text-start fw-bold text-gray-800">{{ $row['puskesmas'] }}</td>
+                                        <td>{{ $row['remaja'] }}</td>
+                                        <td>{{ $row['dewasa'] }}</td>
+                                        <td>{{ $row['pra_lansia'] }}</td>
+                                        <td class="fw-semibold text-danger">{{ $row['lansia'] }}</td>
+                                        
+                                        @foreach($penyakitList as $p)
+                                            <td class="text-gray-600 {{ $row['ptm'][$p] > 0 ? 'fw-bold text-rose-600 bg-rose-50' : '' }}">{{ $row['ptm'][$p] }}</td>
+                                        @endforeach
+                                        
+                                        <td class="fw-bold fs-6 text-green-700 bg-light">{{ $row['total_pasien'] }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="{{ 6 + count($penyakitList) + 1 }}" class="text-muted py-5 text-center">
+                                            <i class="bi bi-inbox fs-1 text-gray-300 d-block mb-2"></i>
+                                            Belum ada data skrining PTM yang masuk pada periode ini.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                            @if(count($matriksLaporan) > 0)
+                            <tfoot class="fw-bold sticky-bottom" style="background-color: #f1f5f9;">
+                                <tr>
+                                    <td colspan="2" class="text-end py-3">TOTAL KESELURUHAN WILAYAH :</td>
+                                    <td class="text-primary">{{ $matriksLaporan->sum('remaja') }}</td>
+                                    <td class="text-primary">{{ $matriksLaporan->sum('dewasa') }}</td>
+                                    <td class="text-primary">{{ $matriksLaporan->sum('pra_lansia') }}</td>
+                                    <td class="text-danger">{{ $matriksLaporan->sum('lansia') }}</td>
+                                    
+                                    @foreach($penyakitList as $p)
+                                        @php
+                                            $totalPenyakit = $matriksLaporan->sum(function($row) use ($p) {
+                                                return $row['ptm'][$p] ?? 0;
+                                            });
+                                        @endphp
+                                        <td class="{{ $totalPenyakit > 0 ? 'text-rose-600 fs-6' : 'text-gray-500' }}">{{ $totalPenyakit }}</td>
+                                    @endforeach
+
+                                    <td class="fs-5 text-green-700 bg-green-50">{{ $matriksLaporan->sum('total_pasien') }}</td>
+                                </tr>
+                            </tfoot>
+                            @endif
+                        </table>
+                    </div>
+                </div>
+
                 {{-- TAB 1: REKAP PUSKESMAS --}}
-                <div class="tab-pane fade show active" id="puskesmas" role="tabpanel" aria-labelledby="puskesmas-tab">
+                <div class="tab-pane fade" id="puskesmas" role="tabpanel" aria-labelledby="puskesmas-tab">
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                         <h5 class="fw-bold text-gray-800 mb-0">Rekapitulasi Data PTM Per Puskesmas</h5>
                         <a href="{{ route('pengguna.rekap.puskesmas.print') }}" target="_blank" class="btn btn-danger fw-semibold shadow-sm">

@@ -19,8 +19,28 @@
             </div>
 
             <div class="d-flex align-items-center gap-3 flex-wrap">
-                {{-- SEARCH --}}
-                <form method="GET" action="{{ url()->current() }}" class="m-0">
+                {{-- SEARCH & FILTER --}}
+                <form method="GET" action="{{ url()->current() }}" class="m-0 d-flex gap-2">
+                    <select name="kecamatan" class="form-select border-0 shadow-sm rounded-pill px-3" style="font-size: 0.9rem; min-width: 150px;" onchange="this.form.submit()">
+                        <option value="">Semua Kecamatan</option>
+                        @foreach($kecamatanList as $kec)
+                            @if($kec)
+                                <option value="{{ $kec }}" {{ request('kecamatan') == $kec ? 'selected' : '' }}>
+                                    Kec. {{ $kec }}
+                                </option>
+                            @endif
+                        @endforeach
+                    </select>
+
+                    <select name="puskesmas_id" class="form-select border-0 shadow-sm rounded-pill px-3" style="font-size: 0.9rem; min-width: 200px;" onchange="this.form.submit()">
+                        <option value="">Semua Puskesmas</option>
+                        @foreach($puskesmasList as $pkm)
+                            <option value="{{ $pkm->id }}" {{ request('puskesmas_id') == $pkm->id ? 'selected' : '' }}>
+                                {{ $pkm->nama_puskesmas }}
+                            </option>
+                        @endforeach
+                    </select>
+
                     <div class="search-box">
                         <i class="bi bi-search search-icon"></i>
                         <input type="text" name="q" value="{{ request('q') }}" class="search-input"
@@ -63,17 +83,6 @@
                                                             <{{-- IDENTITAS --}}
                             <td>
                                 <div class="d-flex align-items-center gap-3">
-                                    {{-- LOGIKA FOTO --}}
-                                    @if($p->foto)
-                                        <img src="{{ asset('storage/' . $p->foto) }}" 
-                                             alt="Foto Petugas" 
-                                             style="width: 42px; height: 42px; object-fit: cover; border-radius: 12px; border: 1px solid #e2e8f0;">
-                                    @else
-                                        <div class="avatar-placeholder">
-                                            <i class="bi bi-person-fill"></i>
-                                        </div>
-                                    @endif
-
                                     <div>
                                         <div class="fw-bold text-dark mb-1">
                                             {{ $p->nama_pegawai }}
@@ -123,8 +132,8 @@
                                                                     <span
                                                                         class="status-badge {{ $p->user->status_aktif ? 'status-active' : 'status-inactive' }}">
                                                                         <i
-                                                                            class="bi {{ $p->user->status_aktif ? 'bi-check-circle-fill' : 'bi-x-circle-fill' }}"></i>
-                                                                        {{ $p->user->status_aktif ? 'Aktif' : 'Nonaktif' }}
+                                                                            class="bi {{ $p->user->status_aktif ? 'bi-check-circle-fill' : 'bi-hourglass-split' }}"></i>
+                                                                        {{ $p->user->status_aktif ? 'Aktif' : 'Menunggu Verifikasi' }}
                                                                     </span>
                                                                     <div class="text-muted small mt-2 fw-medium text-uppercase"
                                                                         style="font-size: 11px; letter-spacing: 0.5px;">
@@ -141,6 +150,20 @@
                                                             {{-- AKSI --}}
                                                             <td class="text-center">
                                                                 <div class="d-flex justify-content-center gap-2">
+                                                                    {{-- TOMBOL AKTIFKAN CEPAT (ONE-CLICK) --}}
+                                                                    @if($p->user && $p->user->status_aktif == 0)
+                                                                        <form action="{{ route('admin.data_petugas.update', $p->id) }}" method="POST" class="m-0" onsubmit="return confirm('Aktifkan akun petugas ini sekarang?');">
+                                                                            @csrf
+                                                                            @method('PUT')
+                                                                            <input type="hidden" name="update_account_only" value="1">
+                                                                            <input type="hidden" name="role_name" value="{{ $p->user->role_name }}">
+                                                                            <input type="hidden" name="status_aktif" value="1">
+                                                                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm" title="Aktifkan Akun">
+                                                                                <i class="bi bi-check2-circle me-1"></i> Setujui
+                                                                            </button>
+                                                                        </form>
+                                                                    @endif
+
                                                                     <a href="{{ route('admin.data_petugas.edit', $p->id) }}" class="btn-icon btn-edit"
                                                                         title="Edit Data">
                                                                         <i class="bi bi-pencil-square"></i>

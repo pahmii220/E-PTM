@@ -139,7 +139,8 @@
             text-align: right;
         }
 
-        .no-print button, .no-print a {
+        .no-print button,
+        .no-print a {
             padding: 8px 12px;
             font-size: 13px;
             font-weight: bold;
@@ -211,7 +212,7 @@
         {{-- ========================================================== --}}
         {{-- HALAMAN 1: KOP, JUDUL, DESKRIPSI & GRAFIK HORIZONTAL --}}
         {{-- ========================================================== --}}
-        
+
         {{-- KOP SURAT --}}
         <div class="kop">
             <div class="left"><img src="{{ asset('images/dinkes.png') }}" alt="logo" style="width:65px;"></div>
@@ -228,19 +229,22 @@
         {{-- JUDUL --}}
         <div style="text-align:center; margin-bottom:10px;">
             <h3 style="margin:0; font-size:15px; letter-spacing:0.6px; text-transform: uppercase;">
-                Laporan Hasil Survei Kepuasan Pengguna Sistem
+                Laporan Hasil Survei Kepuasan Pengguna Sistem (Petugas Puskesmas)
             </h3>
         </div>
 
         {{-- DESKRIPSI SINGKAT --}}
         <div style="text-align:center; margin-bottom:15px;">
             <p style="margin:0 auto; font-size:12px; line-height:1.5; max-width:850px; color:#333;">
-                Berikut merupakan hasil rata-rata survei terhadap kepuasan pelayanan sistem E-PTM Dinas Kesehatan Provinsi Kalimantan Selatan, berdasarkan jawaban dari 10 pertanyaan inti System Usability Scale (SUS) yang diajukan kepada pegawai.
+                Berikut merupakan hasil rata-rata survei terhadap kepuasan pelayanan sistem E-PTM Dinas Kesehatan
+                Provinsi Kalimantan Selatan, berdasarkan jawaban dari 10 pertanyaan inti System Usability Scale (SUS)
+                yang diajukan kepada pegawai.
             </p>
         </div>
 
         {{-- KANVAS GRAFIK BATANG HORIZONTAL --}}
-        <div style="text-align: center; font-weight: bold; font-size: 13px; margin-top: 5px;">Grafik Rata-rata Hasil Survei (Skala 1 - 5)</div>
+        <div style="text-align: center; font-weight: bold; font-size: 13px; margin-top: 5px;">Grafik Rata-rata Hasil
+            Survei (Skala 1 - 5)</div>
         <div class="chart-container">
             <canvas id="susChartHorizontal"></canvas>
         </div>
@@ -261,7 +265,8 @@
                 <tr>
                     <td><strong>Rata-rata Skor SUS Akhir</strong></td>
                     <td>:</td>
-                    <td><strong>{{ $rataRataSkor }} / 100</strong> (Tingkat Penerimaan: <span style="color: #198754; font-weight: bold;">{{ $predikat }}</span>)</td>
+                    <td><strong>{{ $rataRataSkor }} / 100</strong> (Tingkat Penerimaan: <span
+                            style="color: #198754; font-weight: bold;">{{ $predikat }}</span>)</td>
                 </tr>
                 <tr>
                     <td><strong>Kesimpulan</strong></td>

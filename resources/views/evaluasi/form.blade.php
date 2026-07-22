@@ -19,7 +19,7 @@
                     <p class="text-muted small">Aplikasi telah mencatat respons data evaluasi dari akun Anda.</p>
                 </div>
             @else
-                <form action="{{ route('pengguna.evaluasi.simpan') }}" method="POST">
+                <form action="{{ route('petugas.evaluasi.simpan') }}" method="POST">
                     @csrf
 
                     @php

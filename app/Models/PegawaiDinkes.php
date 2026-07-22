@@ -22,10 +22,11 @@ class PegawaiDinkes extends Model
         'tgl_lahir',
         'alamat',
         'jabatan',
+        'golongan',
         'bidang',
         'telepon',
-        'provinsi',        // <--- TAMBAHAN BARU
-        'kabupaten_kota',  // <--- TAMBAHAN BARU
+        'provinsi',
+        'kabupaten_kota',
         'foto',
     ];
 

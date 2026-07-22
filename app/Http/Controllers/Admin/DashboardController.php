@@ -98,6 +98,11 @@ class DashboardController extends Controller
         $labelsWilayah = $wilayahStats->pluck('nama_puskesmas')->toArray();
         $dataWilayah   = $wilayahStats->pluck('total')->toArray();
 
+        // ===============================
+        // 5. PETA SEBARAN PUSKESMAS
+        // ===============================
+        $mapPuskesmasData = \App\Models\Puskesmas::whereNotNull('latitude')->whereNotNull('longitude')->withCount(['peserta', 'deteksiDini'])->get();
+
         return view('admin.dashboard', compact(
             'totalPengguna',
             'totalPetugas',
@@ -108,7 +113,8 @@ class DashboardController extends Controller
             'labelsGender',
             'dataGender',
             'labelsWilayah',
-            'dataWilayah'
+            'dataWilayah',
+            'mapPuskesmasData'
         ));
     }
 }

@@ -28,8 +28,7 @@ use App\Http\Controllers\Admin\PetugasController;
 use App\Http\Controllers\Admin\DataPuskesmasController;
 use App\Http\Controllers\Admin\ResetPasswordRequestController;
 use App\Http\Controllers\Admin\PenggunaController;
-
-
+use App\Http\Controllers\Admin\MasterPenggunaController;
 /*
 |--------------------------------------------------------------------------
 | PETUGAS CONTROLLERS
@@ -56,6 +55,8 @@ use App\Http\Controllers\Pengguna\RekapPuskesmasController;
 use App\Http\Controllers\Pengguna\PegawaiDinkesController;
 use App\Http\Controllers\Pengguna\LaporanStatusPTMController;
 use App\Http\Controllers\Pengguna\RekapLaporanController;
+use App\Http\Controllers\Pengguna\VerifikasiLaporanController;
+use App\Http\Controllers\Pengguna\MonitoringLaporanController;
 use App\Http\Controllers\NotificationController;
 
 
@@ -80,6 +81,10 @@ Route::get('/profil', [HomeController::class, 'profil'])->name('frontend.profil'
 
 // 3. HALAMAN STRUKTUR (INI YANG TADI ERROR)
 Route::get('/struktur', [HomeController::class, 'struktur'])->name('frontend.struktur');
+
+// 4. CEK HASIL SKRINING PTM PASIEN (PUBLIC)
+Route::post('/cek-riwayat-ptm', [HomeController::class, 'cekRiwayatPTM'])->name('frontend.cek_riwayat');
+Route::get('/cek-riwayat-ptm/{id}/cetak', [HomeController::class, 'cetakSkriningPublic'])->name('frontend.cetak_skrining');
 
 /*
 |--------------------------------------------------------------------------
@@ -179,6 +184,10 @@ Route::prefix('admin')
     Route::get('/dashboard/print', [KepalaP2ptmController::class, 'printStatistik'])
         ->name('dashboard.print');
 
+    // Profil Khusus Administrator
+    Route::get('/profil', [\App\Http\Controllers\Admin\AdminProfileController::class, 'index'])->name('profil');
+    Route::put('/profil', [\App\Http\Controllers\Admin\AdminProfileController::class, 'update'])->name('profil.update');
+
     // Petugas
     Route::get('data_petugas/print', [PetugasController::class,'print'])
         ->name('data_petugas.print');
@@ -198,6 +207,10 @@ Route::prefix('admin')
 
     Route::resource('data_puskesmas', DataPuskesmasController::class);
 
+    // Master Pengguna (All Roles)
+    Route::resource('master_pengguna', MasterPenggunaController::class);
+    Route::put('master_pengguna/{id}/akses', [MasterPenggunaController::class, 'updateAccess'])
+        ->name('master_pengguna.updateAccess');
     // Laporan
     Route::get('/laporan', fn () => view('laporan.index'))
         ->name('laporan.index');
@@ -275,25 +288,46 @@ Route::prefix('petugas')
     ->middleware([
         'auth',
         'active',
-        'role:petugas,admin', // Admin diizinkan masuk untuk cek data
-        CheckPetugasProfile::class, // Middleware cerdas yang sudah kita update
+        'role:petugas', // Hanya Petugas yang bisa masuk (Pemisahan Tugas/Data Governance)
+        CheckPetugasProfile::class,
     ])
     ->group(function () {
 
     Route::get('/dashboard', [PetugasDashboardController::class,'index'])
         ->name('dashboard');
 
+    Route::get('/faq', function () {
+        return view('petugas.faq.index');
+    })->name('faq');
+    Route::post('/faq/contact', [\App\Http\Controllers\Petugas\DashboardController::class, 'sendContactEmail'])->name('faq.contact');
+
     Route::resource('peserta', PesertaController::class);
+    Route::get('deteksi_dini_riwayat', [DeteksiDiniPTMController::class, 'riwayat'])->name('deteksi_dini.riwayat');
     Route::resource('deteksi_dini', DeteksiDiniPTMController::class);
     Route::resource('faktor_resiko', FaktorResikoPTMController::class);
     Route::resource('kegiatan', KegiatanPTMController::class);
     Route::resource('tindak_lanjut', TindakLanjutPTMController::class)
         ->except(['create','show']);
 
+    // Route Akses untuk Petugas Puskesmas (Mengisi Survei SUS)
+    Route::get('/evaluasi-aplikasi', [\App\Http\Controllers\EvaluasiController::class, 'tampilkanForm'])->name('evaluasi.form');
+    Route::post('/evaluasi-aplikasi/simpan', [\App\Http\Controllers\EvaluasiController::class, 'simpanJawaban'])->name('evaluasi.simpan');
+
     Route::get(
-        'tindak_lanjut/create/{deteksi_dini_id}',
+        'tindak_lanjut/create/{deteksi_dini_id?}',
         [TindakLanjutPTMController::class, 'create']
     )->name('tindak_lanjut.create');
+
+    Route::get(
+        'tindak_lanjut/{id}/cetak',
+        [TindakLanjutPTMController::class, 'cetak']
+    )->name('tindak_lanjut.cetak');
+
+    // ==========================================
+    // LAPORAN & PENGAJUAN (PETUGAS)
+    // ==========================================
+    Route::get('laporan', [\App\Http\Controllers\Petugas\LaporanController::class, 'index'])->name('laporan.index');
+    Route::post('laporan/ajukan', [\App\Http\Controllers\Petugas\LaporanController::class, 'ajukan'])->name('laporan.ajukan');
 
     // ==========================================
     // PROFIL & PENGATURAN
@@ -333,9 +367,48 @@ Route::prefix('pengguna')
         ->name('dashboard');
 
     Route::get('/verifikasi', [VerifikasiController::class,'index'])->name('verifikasi.index');
+
+    // ===== VERIFIKASI LAPORAN PER PUSKESMAS (BARU) =====
+    Route::get('/verifikasi-laporan', [VerifikasiLaporanController::class, 'index'])->name('verifikasi_laporan.index');
+    Route::get('/verifikasi-laporan/export-excel', [VerifikasiLaporanController::class, 'exportExcel'])->name('verifikasi_laporan.export_excel');
+    Route::get('/verifikasi-laporan/cetak-pdf', [VerifikasiLaporanController::class, 'cetakPdf'])->name('verifikasi_laporan.cetak_pdf');
+    Route::get('/verifikasi-laporan/{puskesmas}', [VerifikasiLaporanController::class, 'show'])->name('verifikasi_laporan.show');
+    Route::post('/verifikasi-laporan/{puskesmas}/approve', [VerifikasiLaporanController::class, 'approve'])->name('verifikasi_laporan.approve');
+    Route::post('/verifikasi-laporan/{puskesmas}/reject', [VerifikasiLaporanController::class, 'reject'])->name('verifikasi_laporan.reject');
+    
+    // Rute Notifikasi Pengingat Laporan
+    Route::post('/verifikasi-laporan/pengingat/{puskesmas}', [VerifikasiLaporanController::class, 'kirimPengingat'])->name('verifikasi_laporan.pengingat');
+    Route::post('/reminder/send', [PenggunaDashboardController::class, 'sendReminder'])->name('reminder.send');
+
+    // ===== MONITORING LAPORAN PER PUSKESMAS =====
+    
+    // ===== DISTRIBUSI LOGISTIK PUSKESMAS =====
+    Route::get('/logistik', [\App\Http\Controllers\Pengguna\LogistikController::class, 'index'])->name('logistik.index');
+    Route::get('/logistik/create', [\App\Http\Controllers\Pengguna\LogistikController::class, 'create'])->name('logistik.create');
+    Route::post('/logistik', [\App\Http\Controllers\Pengguna\LogistikController::class, 'store'])->name('logistik.store');
+    Route::get('/logistik/{id}/edit', [\App\Http\Controllers\Pengguna\LogistikController::class, 'edit'])->name('logistik.edit');
+    Route::put('/logistik/{id}', [\App\Http\Controllers\Pengguna\LogistikController::class, 'update'])->name('logistik.update');
+    Route::delete('/logistik/{id}', [\App\Http\Controllers\Pengguna\LogistikController::class, 'destroy'])->name('logistik.destroy');
+    Route::get('/logistik/{id}/cetak', [\App\Http\Controllers\Pengguna\LogistikController::class, 'cetakBast'])->name('logistik.cetak');
+
+    // ===== CRUD DATA LOGISTIK / PERLENGKAPAN PTM =====
+    Route::get('/perlengkapan', [\App\Http\Controllers\Pengguna\PerlengkapanKegiatanController::class, 'index'])->name('perlengkapan.index');
+    Route::get('/perlengkapan/{surat_tugas_id}/create', [\App\Http\Controllers\Pengguna\PerlengkapanKegiatanController::class, 'create'])->name('perlengkapan.create');
+    Route::post('/perlengkapan/{surat_tugas_id}', [\App\Http\Controllers\Pengguna\PerlengkapanKegiatanController::class, 'store'])->name('perlengkapan.store');
+    Route::get('/perlengkapan/{id}/print', [\App\Http\Controllers\Pengguna\PerlengkapanKegiatanController::class, 'print'])->name('perlengkapan.print');
+
+    // ===== LAPORAN MONITORING (PEGAWAI -> KEPALA) =====
+    Route::get('/laporan-monitoring', [\App\Http\Controllers\Pengguna\LaporanMonitoringController::class, 'index'])->name('laporan_monitoring.index');
+    Route::post('/laporan-monitoring', [\App\Http\Controllers\Pengguna\LaporanMonitoringController::class, 'store'])->name('laporan_monitoring.store');
+    Route::get('/laporan-monitoring/{id}/cetak', [\App\Http\Controllers\Pengguna\LaporanMonitoringController::class, 'cetak'])->name('laporan_monitoring.cetak');
+    Route::put('/laporan-monitoring/{id}', [\App\Http\Controllers\Pengguna\LaporanMonitoringController::class, 'update'])->name('laporan_monitoring.update');
+    Route::delete('/laporan-monitoring/{id}', [\App\Http\Controllers\Pengguna\LaporanMonitoringController::class, 'destroy'])->name('laporan_monitoring.destroy');
+
+    Route::get('/monitoring', [MonitoringLaporanController::class, 'index'])->name('monitoring.index');
     Route::get('/verifikasi/peserta', [VerifikasiController::class,'peserta'])->name('verifikasi.peserta');
     Route::get('/verifikasi/deteksi', [VerifikasiController::class,'deteksiPending'])->name('verifikasi.deteksi');
     Route::get('/verifikasi/faktor', [VerifikasiController::class,'faktorPending'])->name('verifikasi.faktor');
+    
     Route::get(
     '/verifikasi/print/tindak-lanjut',
     [VerifikasiController::class, 'printTindakLanjut']
@@ -403,6 +476,10 @@ Route::get(
             [\App\Http\Controllers\Pengguna\PengaturanAkunController::class, 'updateUsername']
         )->name('ganti.username');
 
+        Route::put('/ganti-email',
+            [\App\Http\Controllers\Pengguna\PengaturanAkunController::class, 'updateEmail']
+        )->name('ganti.email');
+
         Route::put('/ganti-password',
             [\App\Http\Controllers\Pengguna\PengaturanAkunController::class, 'updatePassword']
         )->name('ganti.password');
@@ -411,12 +488,15 @@ Route::get(
             [VerifikasiController::class, 'massVerify']
         )->name('peserta.mass');
 
-        // Route Akses untuk Pegawai (Mengisi Survei)
-    Route::get('/evaluasi-aplikasi', [EvaluasiController::class, 'tampilkanForm'])->name('evaluasi.form');
-    Route::post('/evaluasi-aplikasi/simpan', [EvaluasiController::class, 'simpanJawaban'])->name('evaluasi.simpan');
 
-    Route::get('/evaluasi-laporan', [EvaluasiController::class, 'laporanEvaluasi'])->name('evaluasi.report');
+        // Pengajuan Tugas Luar
+        Route::get('/surat-tugas', [\App\Http\Controllers\Pengguna\SuratTugasPegawaiController::class, 'index'])->name('surat_tugas.index');
+        Route::post('/surat-tugas', [\App\Http\Controllers\Pengguna\SuratTugasPegawaiController::class, 'store'])->name('surat_tugas.store');
+        Route::get('/surat-tugas/{id}/print', [\App\Http\Controllers\Pengguna\SuratTugasPegawaiController::class, 'print'])->name('surat_tugas.print');
+        Route::put('/surat-tugas/{id}', [\App\Http\Controllers\Pengguna\SuratTugasPegawaiController::class, 'update'])->name('surat_tugas.update');
+        Route::delete('/surat-tugas/{id}', [\App\Http\Controllers\Pengguna\SuratTugasPegawaiController::class, 'destroy'])->name('surat_tugas.destroy');
 
+        Route::get('/evaluasi-laporan', [EvaluasiController::class, 'laporanEvaluasi'])->name('evaluasi.report');
         Route::get('/evaluasi-laporan/cetak', [EvaluasiController::class, 'cetakLaporan'])->name('evaluasi.cetak');
         
 
@@ -433,7 +513,7 @@ Route::middleware(['auth', 'active', 'role:kepala_p2ptm'])->prefix('kepala-p2ptm
     Route::get('/dashboard', [KepalaP2ptmController::class, 'dashboard'])->name('kepala.dashboard');
     Route::get('/dashboard/print', [KepalaP2ptmController::class, 'printStatistik'])->name('kepala.dashboard.print');
 
-    
+
     // ====================================================================
     // GROUP LAPORAN KEPALA P2PTM
     // ====================================================================
@@ -465,15 +545,34 @@ Route::middleware(['auth', 'active', 'role:kepala_p2ptm'])->prefix('kepala-p2ptm
         Route::get('/eksekutif', [LaporanKepalaController::class, 'eksekutif'])->name('eksekutif');
 
         Route::get('/eksekutif/cetak-puskesmas', [LaporanKepalaController::class, 'cetakPuskesmas'])->name('eksekutif.cetak_puskesmas');
+        Route::get('/eksekutif/cetak-wilayah', [LaporanKepalaController::class, 'cetakWilayah'])->name('eksekutif.cetak_wilayah');
 
         Route::get('/eksekutif/cetak-usia', [LaporanKepalaController::class, 'cetakUsia'])->name('eksekutif.cetak_usia');
 
-        Route::get('/eksekutif/cetak-skrining', [LaporanKepalaController::class, 'cetakSkrining'])->name('eksekutif.cetak_skrining');
-
+        Route::get('/eksekutif/cetak-status-ptm', [LaporanKepalaController::class, 'cetakStatusPTM'])->name('eksekutif.cetak_status_ptm');
+        Route::get('/eksekutif/cetak-skrining-penyakit', [LaporanKepalaController::class, 'cetakSkriningPenyakit'])->name('eksekutif.cetak_skrining_penyakit');
+        Route::get('/eksekutif/cetak-pegawai', [LaporanKepalaController::class, 'cetakPegawai'])->name('eksekutif.cetak_pegawai');
+        
         Route::get('/kegiatan/print', [LaporanKepalaController::class, 'cetakKegiatan'])->name('kepala.kegiatan.print');
 
+        Route::get('/evaluasi', [LaporanKepalaController::class, 'evaluasi'])->name('evaluasi');
+        Route::get('/evaluasi/cetak', [LaporanKepalaController::class, 'cetakEvaluasi'])->name('evaluasi.cetak');
+        Route::get('/perlengkapan-tugas', [LaporanKepalaController::class, 'perlengkapanTugas'])->name('perlengkapan_tugas');
+        Route::get('/perlengkapan-tugas/{id}/cetak', [LaporanKepalaController::class, 'cetakPerlengkapanTugas'])->name('perlengkapan_tugas.cetak');
     });
+    
+    // Validasi Tugas Luar Pegawai
+    Route::get('/validasi-tugas', [\App\Http\Controllers\KepalaP2ptm\VerifikasiTugasLuarController::class, 'index'])->name('kepala.surat_tugas.index');
+    Route::post('/validasi-tugas/{id}/setujui', [\App\Http\Controllers\KepalaP2ptm\VerifikasiTugasLuarController::class, 'setujui'])->name('kepala.surat_tugas.setujui');
+    Route::post('/validasi-tugas/{id}/tolak', [\App\Http\Controllers\KepalaP2ptm\VerifikasiTugasLuarController::class, 'tolak'])->name('kepala.surat_tugas.tolak');
+    Route::delete('/validasi-tugas/{id}', [\App\Http\Controllers\KepalaP2ptm\VerifikasiTugasLuarController::class, 'destroy'])->name('kepala.surat_tugas.destroy');
 
+    // Validasi Laporan Hasil Monitoring dari Pegawai
+    Route::get('/validasi-monitoring', [KepalaP2ptmController::class, 'tinjauLaporanMonitoring'])->name('kepala.laporan_monitoring.index');
+    Route::get('/validasi-monitoring/cetak-semua', [KepalaP2ptmController::class, 'cetakSemuaLaporanMonitoring'])->name('kepala.laporan_monitoring.cetak_semua');
+    Route::post('/validasi-monitoring/{id}/acc', [KepalaP2ptmController::class, 'accLaporanMonitoring'])->name('kepala.laporan_monitoring.acc');
+    Route::get('/validasi-monitoring/{id}/cetak', [KepalaP2ptmController::class, 'cetakLaporanMonitoring'])->name('kepala.laporan_monitoring.cetak');
+    
 });
 
 // Letakkan berjejer seperti ini di bagian paling luar/bawah routes/web.php:
@@ -482,5 +581,5 @@ Route::get('/cek-token/{token}', function($token) {
     return "BERHASIL! Route jalan. Token Anda adalah: " . $token;
 });
 
-// Tambahkan ini di bagian bawah web.php
+// ROUTE LAINNYA
 Route::get('/verifikasi-laporan', [App\Http\Controllers\KepalaP2ptmController::class, 'verifikasiLaporan'])->name('verifikasi.laporan');

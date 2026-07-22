@@ -12,6 +12,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Swiper CSS untuk Slider -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <!-- Flatpickr CSS (Format dd/mm/yyyy) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        .flatpickr-calendar {
+            border-radius: 1rem !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+            border: 1px solid #e5e7eb !important;
+        }
+        .flatpickr-day.selected, .flatpickr-day.selected:hover {
+            background: #059669 !important;
+            border-color: #059669 !important;
+        }
+    </style>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -107,14 +120,16 @@
                                     class="px-5 py-3 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 hover:pl-6 transition-all duration-200 border-t border-gray-50">
                                     <i class="fa-solid fa-sitemap w-5"></i> Struktur Organisasi
                                 </a>
-                                <a href="{{ route('frontend.profil') }}#kinerja"
+                                 <a href="{{ route('frontend.profil') }}#tugas-fungsi"
                                     class="px-5 py-3 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600 hover:pl-6 transition-all duration-200">
-                                    <i class="fa-solid fa-file-contract w-5"></i> Perjanjian Kinerja
+                                    <i class="fa-solid fa-list-check w-5"></i> Perjanjian kinerja
                                 </a>
                             </div>
                         </div>
                     </div>
 
+                    <a href="#cek-ptm"
+                        class="text-white font-semibold hover:text-emerald-300 transition drop-shadow-md nav-link">Cek Hasil PTM</a>
                     <a href="#layanan"
                         class="text-white font-semibold hover:text-emerald-300 transition drop-shadow-md nav-link">Layanan
                         PTM</a>
@@ -169,12 +184,15 @@
                         class="text-emerald-100 hover:text-white text-sm py-1">
                         <i class="fa-solid fa-sitemap w-5"></i> Struktur Organisasi
                     </a>
-                    <a href="{{ route('frontend.profil') }}#kinerja" @click="mobileMenuOpen = false"
+                    <a href="{{ route('frontend.profil') }}#tugas-fungsi" @click="mobileMenuOpen = false"
                         class="text-emerald-100 hover:text-white text-sm py-1">
-                        <i class="fa-solid fa-file-contract w-5"></i> Perjanjian Kinerja
+                        <i class="fa-solid fa-list-check w-5"></i> Perjanjian Kinerja
                     </a>
                 </div>
             </div>
+
+            <a href="#cek-ptm" @click="mobileMenuOpen = false"
+                class="text-white font-semibold text-lg hover:text-emerald-300 transition py-2 border-b border-white/10">Cek Hasil PTM</a>
 
             <a href="#layanan" @click="mobileMenuOpen = false"
                 class="text-white font-semibold text-lg hover:text-emerald-300 transition py-2 border-b border-white/10">Layanan
@@ -296,6 +314,240 @@
                 </svg>
             </div>
 
+        </div>
+    </section>
+
+    <!-- SECTION CEK HASIL SKRINING PTM PASIEN (PUBLIC) -->
+    <section id="cek-ptm" class="py-16 bg-gradient-to-b from-emerald-50 via-teal-50/30 to-white border-y border-emerald-100/60 relative">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-8">
+                <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-100/80 text-emerald-800 font-bold text-xs uppercase tracking-widest rounded-full mb-3 border border-emerald-200">
+                    <i class="fa-solid fa-notes-medical"></i> Portal Pasien
+                </span>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Cek Hasil Skrining PTM Pasien</h2>
+                <p class="text-gray-600 mt-2 text-sm md:text-base max-w-xl mx-auto">Masukkan NIK dan Tanggal Lahir Anda sesuai KTP untuk melihat riwayat dan hasil pemeriksaan kesehatan PTM.</p>
+            </div>
+
+            <!-- Card Form Pencarian -->
+            <div class="bg-white rounded-2xl shadow-xl border border-emerald-100 p-6 md:p-8 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none"></div>
+
+                <form action="{{ route('frontend.cek_riwayat') }}" method="POST" class="space-y-4">
+                    @csrf
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Input NIK -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nomor Induk Kependudukan (NIK)</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                                    <i class="fa-solid fa-id-card"></i>
+                                </div>
+                                <input type="text" name="nik" value="{{ old('nik') }}" maxlength="16" oninput="this.value = this.value.replace(/[^0-9]/g, '');" placeholder="Contoh: 6371012345670001" required
+                                    class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition text-gray-800 font-medium">
+                            </div>
+                            @error('nik')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Input Tanggal Lahir -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Tanggal Lahir <span class="text-xs text-emerald-600 font-normal">(pilih tanggal)</span></label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                                    <i class="fa-solid fa-calendar-day"></i>
+                                </div>
+                                <input type="text" id="tanggal_lahir_input" name="tanggal_lahir" value="{{ old('tanggal_lahir') }}" placeholder="Pilih tanggal lahir Anda" required readonly
+                                    class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition text-gray-800 font-medium bg-white cursor-pointer">
+                            </div>
+                            @error('tanggal_lahir')
+                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-emerald-600/30 transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <span>Cek Hasil Skrining Saya</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- TAMPILAN NOTIFIKASI TIDAK DITEMUKAN -->
+            @if(session('status_pencarian') === 'not_found')
+                <div class="mt-6 bg-amber-50 border border-amber-200 rounded-2xl p-5 text-amber-800 flex items-start space-x-3 shadow-sm">
+                    <i class="fa-solid fa-circle-exclamation text-xl text-amber-500 mt-0.5"></i>
+                    <div>
+                        <h4 class="font-bold text-sm md:text-base">Data Pasien Tidak Ditemukan</h4>
+                        <p class="text-xs md:text-sm mt-1 text-amber-700">Kombinasi NIK dan Tanggal Lahir yang Anda masukkan belum terdaftar dalam sistem atau belum pernah melakukan pemeriksaan PTM. Silakan kunjungi Puskesmas terdekat untuk melakukan skrining kesehatan gratis.</p>
+                    </div>
+                </div>
+            @endif
+
+            <!-- MODAL POPUP HASIL SKRINING PASIEN (FORMAT OFFICIAL SURAT KEDINASAN PEMERINTAHAN) -->
+            @if(session('hasilPeserta'))
+                @php
+                    $p = session('hasilPeserta');
+                    $deteksi = $p->deteksiDiniPTM;
+                    $faktor = $p->faktorResikoPTM;
+                    $tindakLanjut = $p->tindakLanjutPTM->first();
+
+                    // Ambil Nama Petugas Pemeriksa
+                    $namaPetugas = '-';
+                    if ($deteksi && $deteksi->petugas) {
+                        $namaPetugas = $deteksi->petugas->nama_pegawai ?? '-';
+                    } elseif ($tindakLanjut && $tindakLanjut->petugas) {
+                        $namaPetugas = $tindakLanjut->petugas->nama_pegawai ?? '-';
+                    }
+
+                    // Penentuan Status Hasil Skrining / Diagnosa
+                    $status = $deteksi->hasil_skrining ?? $deteksi->diagnosa_penyakit ?? $deteksi->status_risiko ?? ($tindakLanjut->diagnosa ?? 'Normal');
+                @endphp
+
+                <div id="modalHasilSkrining" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-gray-900/80 backdrop-blur-md transition-all duration-300 animate-fadeIn">
+                    <!-- Container Boks Modal Formal Kertas Surat Kedinasan -->
+                    <div class="bg-white rounded-2xl shadow-2xl border border-gray-300 max-w-3xl w-full max-h-[94vh] overflow-y-auto relative flex flex-col justify-between p-6 sm:p-10 font-serif text-gray-900">
+                        <!-- Tombol Close Modal (X) -->
+                        <button onclick="closeModalHasil()" class="absolute top-4 right-4 z-20 bg-gray-100 hover:bg-gray-200 text-gray-700 w-9 h-9 rounded-full flex items-center justify-center transition focus:outline-none border border-gray-300 shadow-sm font-sans" title="Tutup Pop Up">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
+
+                        <!-- Content Lembar Surat Dinas -->
+                        <div class="space-y-6">
+                            <!-- KOP SURAT RESMI PEMERINTAHAN -->
+                            <div class="border-b-4 border-double border-gray-900 pb-3 mb-6 text-center">
+                                <h4 class="text-xs sm:text-sm font-bold uppercase tracking-widest text-gray-800">PEMERINTAH PROVINSI KALIMANTAN SELATAN</h4>
+                                <h3 class="text-sm sm:text-base font-bold uppercase text-gray-900 tracking-wider">DINAS KESEHATAN</h3>
+                                <h2 class="text-base sm:text-xl font-bold uppercase text-gray-900 tracking-wide mt-0.5">{{ strtoupper($p->puskesmas->nama_puskesmas ?? 'PUSKESMAS TERMINAL') }}</h2>
+                                <p class="text-[11px] text-gray-600 font-sans italic mt-0.5">Alamat: {{ $p->puskesmas->alamat ?? 'Fasilitas Pelayanan Kesehatan Skrining PTM' }}</p>
+                            </div>
+
+                            <!-- JUDUL SURAT RESMI KEDINASAN -->
+                            <div class="text-center my-4 font-serif">
+                                <h3 class="text-base sm:text-lg font-bold text-gray-900 uppercase underline decoration-2 underline-offset-4 tracking-wide">LAPORAN DETEKSI DINI PENYAKIT TIDAK MENULAR (PTM)</h3>
+                                <p class="text-xs text-gray-600 font-sans mt-1">Surat Keterangan Hasil Skrining & Pemeriksaan Kesehatan Mandiri</p>
+                            </div>
+
+                            <!-- BIODATA RESMI KEDINASAN (TITIK DUA SEJAJAR) -->
+                            <div class="font-serif text-xs sm:text-sm space-y-3">
+                                <p class="text-gray-800 leading-relaxed">Yang bertanda tangan di bawah ini, Petugas Pemeriksa pada <strong>{{ $p->puskesmas->nama_puskesmas ?? 'Puskesmas' }}</strong>, dengan ini menerangkan bahwa:</p>
+
+                                <table class="w-full font-serif text-xs sm:text-sm border-separate border-spacing-y-1.5">
+                                    <tr>
+                                        <td class="w-48 text-gray-700 font-semibold align-top">Nama Lengkap</td>
+                                        <td class="w-4 font-bold text-gray-900 align-top">:</td>
+                                        <td class="font-bold text-gray-900 align-top">{{ $p->nama_lengkap }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-gray-700 font-semibold align-top">Nomor Induk Kependudukan</td>
+                                        <td class="font-bold text-gray-900 align-top">:</td>
+                                        <td class="font-mono font-bold text-gray-900 align-top">{{ $p->nik }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-gray-700 font-semibold align-top">Jenis Kelamin</td>
+                                        <td class="font-bold text-gray-900 align-top">:</td>
+                                        <td class="text-gray-900 align-top">{{ $p->jenis_kelamin ?? '-' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-gray-700 font-semibold align-top">Tanggal Lahir / Umur</td>
+                                        <td class="font-bold text-gray-900 align-top">:</td>
+                                        <td class="text-gray-900 align-top">{{ ($p->tanggal_lahir ? $p->tanggal_lahir->translatedFormat('d F Y') : '-') . ' (' . (\Carbon\Carbon::parse($p->tanggal_lahir)->age ?? '-') . ' Tahun)' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-gray-700 font-semibold align-top">Alamat Tempat Tinggal</td>
+                                        <td class="font-bold text-gray-900 align-top">:</td>
+                                        <td class="text-gray-900 align-top">{{ $p->alamat ?? '-' }}{{ !empty($p->kecamatan) ? ', Kec. ' . $p->kecamatan : '' }}</td>
+                                    </tr>
+                                </table>
+
+                                <p class="text-gray-800 leading-relaxed pt-2">Telah melakukan pemeriksaan kesehatan / Skrining Penyakit Tidak Menular (PTM) pada tanggal <strong>{{ !empty($deteksi->tanggal_pemeriksaan) ? \Carbon\Carbon::parse($deteksi->tanggal_pemeriksaan)->translatedFormat('d F Y') : now()->translatedFormat('d F Y') }}</strong>, dengan hasil pemeriksaan klinis sebagai berikut:</p>
+                            </div>
+
+                            <!-- TABEL FORMAL RESULT (BLACK BORDER TABLE HASIL KLINIS) -->
+                            <div class="font-sans my-4">
+                                <table class="w-full text-xs sm:text-sm border-collapse border border-gray-900">
+                                    <thead>
+                                        <tr class="bg-gray-100 font-bold text-gray-900 text-left border-b border-gray-900">
+                                            <th class="border border-gray-900 px-4 py-2.5 w-1/2">Parameter Pemeriksaan</th>
+                                            <th class="border border-gray-900 px-4 py-2.5 w-1/2">Hasil Pemeriksaan Klinis</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-900">
+                                        <tr>
+                                            <td class="border border-gray-900 px-4 py-2 font-medium">Tekanan Darah</td>
+                                            <td class="border border-gray-900 px-4 py-2 font-bold">{{ $deteksi->tekanan_darah ?? '-' }} mmHg</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="border border-gray-900 px-4 py-2 font-medium">Gula Darah Sewaktu</td>
+                                            <td class="border border-gray-900 px-4 py-2 font-bold">{{ $deteksi->gula_darah ?? '-' }} mg/dL</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="border border-gray-900 px-4 py-2 font-medium">Kolesterol Total</td>
+                                            <td class="border border-gray-900 px-4 py-2 font-bold">{{ $deteksi->kolesterol ?? '-' }} mg/dL</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="border border-gray-900 px-4 py-2 font-medium">Indeks Massa Tubuh (IMT)</td>
+                                            <td class="border border-gray-900 px-4 py-2 font-bold">{{ $deteksi->imt ?? '-' }} ({{ ($deteksi->berat_badan ?? '-') . ' kg / ' . ($deteksi->tinggi_badan ?? '-') . ' cm' }})</td>
+                                        </tr>
+                                        <tr class="bg-emerald-50/50">
+                                            <td class="border border-gray-900 px-4 py-2.5 font-bold text-gray-900">Diagnosa / Hasil Skrining</td>
+                                            <td class="border border-gray-900 px-4 py-2.5 font-extrabold text-emerald-800 uppercase">{{ $status }}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- CATATAN MEDIS & REKOMENDASI PETUGAS -->
+                            @php
+                                $catatanText = $tindakLanjut->catatan_petugas ?? $tindakLanjut->saran ?? 'Pertahankan pola hidup sehat CERDIK dan lakukan pemeriksaan rutin setiap bulan.';
+                            @endphp
+                            <div class="font-serif text-xs sm:text-sm space-y-3 pt-2">
+                                <p class="font-bold text-gray-900">Catatan Medis & Rekomendasi Tindak Lanjut:</p>
+                                <div class="border border-gray-400 p-4 rounded-lg bg-gray-50/60 font-sans text-xs text-gray-800 leading-relaxed whitespace-pre-line">
+                                    {{ $catatanText }}
+                                </div>
+
+                                <p class="text-gray-800 leading-relaxed pt-2">Demikian surat keterangan hasil skrining kesehatan ini dibuat dengan sebenarnya, untuk dapat dipergunakan sebagaimana mestinya.</p>
+                            </div>
+
+                            <!-- PENGESAHAN TANDA TANGAN PETUGAS PEMERIKSA -->
+                            <div class="flex justify-end pt-6 font-sans text-xs">
+                                <div class="text-center w-64">
+                                    <p class="text-gray-800">{{ $p->puskesmas->nama_puskesmas ?? 'Puskesmas' }}, {{ now()->translatedFormat('d F Y') }}</p>
+                                    <p class="font-bold text-gray-900 mt-1">Petugas Pemeriksa Kesehatan,</p>
+                                    <div class="h-16"></div>
+                                    <p class="font-bold text-gray-900 underline text-sm">{{ $namaPetugas }}</p>
+                                    <p class="text-gray-600 text-xs">Petugas Skrining PTM</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer Action Buttons -->
+                        <div class="mt-8 pt-4 border-t border-gray-300 flex flex-col sm:flex-row justify-between items-center gap-3 font-sans">
+                            <a href="{{ route('frontend.cetak_skrining', $p->id) }}" target="_blank" class="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-6 py-3 rounded-xl shadow transition flex items-center justify-center space-x-2 text-xs sm:text-sm">
+                                <i class="fa-solid fa-file-pdf"></i>
+                                <span>Cetak Dokumen PDF Resmi</span>
+                            </a>
+
+                            <button onclick="closeModalHasil()" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-xl transition flex items-center justify-center space-x-2 text-xs sm:text-sm">
+                                <i class="fa-solid fa-xmark"></i>
+                                <span>Tutup Pop Up</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    function closeModalHasil() {
+                        const modal = document.getElementById('modalHasilSkrining');
+                        if (modal) {
+                            modal.classList.add('hidden');
+                        }
+                    }
+                </script>
+            @endif
         </div>
     </section>
 
@@ -524,7 +776,7 @@
                                 01</span>
                             <h3 class="text-lg font-bold text-gray-900 mb-2">Pemeriksaan Awal</h3>
                             <p class="text-gray-600 text-sm leading-relaxed">Warga melakukan skrining kesehatan (tekanan
-                                darah, gula darah, berat badan) di Posbindu PTM atau Puskesmas.</p>
+                                darah, gula darah, berat badan) di Puskesmas Terdekat.</p>
                         </div>
                     </div>
 
@@ -551,14 +803,13 @@
                         <div>
                             <div
                                 class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-emerald-600 group-hover:text-white transition duration-300 shadow-inner">
-                                <i class="fa-solid fa-user-shield text-xl"></i>
+                                <i class="fa-solid fa-microchip text-xl"></i>
                             </div>
                             <span
                                 class="text-xs font-bold text-emerald-600 tracking-widest uppercase block mb-1">Langkah
                                 03</span>
-                            <h3 class="text-lg font-bold text-gray-900 mb-2">Verifikasi Dinas</h3>
-                            <p class="text-gray-600 text-sm leading-relaxed">Pegawai Dinas Kesehatan memvalidasi data
-                                untuk memastikan akurasi data masukan dari setiap Puskesmas.</p>
+                            <h3 class="text-lg font-bold text-gray-900 mb-2">Analisis Sistem (DSS)</h3>
+                            <p class="text-gray-600 text-sm leading-relaxed">Sistem cerdas menganalisis data secara real-time untuk mendeteksi lonjakan kasus PTM berisiko tinggi secara otomatis.</p>
                         </div>
                     </div>
 
@@ -568,14 +819,13 @@
                         <div>
                             <div
                                 class="w-16 h-16 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-emerald-600 group-hover:text-white transition duration-300 shadow-inner">
-                                <i class="fa-solid fa-chart-line text-xl"></i>
+                                <i class="fa-solid fa-map-location-dot text-xl"></i>
                             </div>
                             <span
                                 class="text-xs font-bold text-emerald-600 tracking-widest uppercase block mb-1">Langkah
                                 04</span>
                             <h3 class="text-lg font-bold text-gray-900 mb-2">Monitoring & Intervensi</h3>
-                            <p class="text-gray-600 text-sm leading-relaxed">Kepala P2PTM memantau laporan eksekutif
-                                untuk mengambil tindakan preventif dan intervensi rujukan lanjutan.</p>
+                            <p class="text-gray-600 text-sm leading-relaxed">Berdasarkan rekomendasi sistem, Pegawai Dinkes diterjunkan untuk monitoring, dan Kepala P2PTM mengambil kebijakan preventif.</p>
                         </div>
                     </div>
                 </div>
@@ -919,12 +1169,30 @@
         const navSubtitle = document.getElementById('nav-subtitle');
 
         window.addEventListener('scroll', () => {
-            if (window.scrollY > 50) {
-                navbar.classList.add('bg-emerald-900', 'shadow-lg', 'border-b-emerald-800');
-                navbar.classList.remove('bg-transparent', 'border-transparent');
+            if (window.scrollY > 30) {
+                navbar.classList.remove('bg-transparent', 'border-transparent', 'py-4');
+                navbar.classList.add('bg-emerald-950/95', 'backdrop-blur-md', 'shadow-xl', 'py-3', 'border-b', 'border-emerald-800/60');
             } else {
-                navbar.classList.add('bg-transparent', 'border-transparent');
-                navbar.classList.remove('bg-emerald-900', 'shadow-lg', 'border-b-emerald-800');
+                navbar.classList.add('bg-transparent', 'border-transparent', 'py-4');
+                navbar.classList.remove('bg-emerald-950/95', 'backdrop-blur-md', 'shadow-xl', 'py-3', 'border-b', 'border-emerald-800/60');
+            }
+        });
+    </script>
+
+    <!-- Flatpickr JS (Format dd/mm/yyyy Indonesia) -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const elTgl = document.getElementById('tanggal_lahir_input');
+            if (elTgl) {
+                flatpickr(elTgl, {
+                    dateFormat: "d/m/Y",
+                    allowInput: false,
+                    locale: "id",
+                    maxDate: "today",
+                    disableMobile: false
+                });
             }
         });
     </script>

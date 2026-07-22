@@ -85,15 +85,11 @@ public function process(Request $request)
 
 
     /**
-     * Halaman utama - ringkasan (jumlah pending per tipe)
+     * Halaman utama - redirect ke tab peserta
      */
     public function index()
     {
-        $pendingPeserta = Peserta::where('status_verifikasi', 'pending')->count();
-        $pendingDeteksi = DeteksiDiniPTM::where('status_verifikasi', 'pending')->count();
-        $pendingFaktor = FaktorResikoPTM::where('status_verifikasi', 'pending')->count();
-
-        return view('pengguna.verifikasi.index', compact('pendingPeserta','pendingDeteksi','pendingFaktor'));
+        return redirect()->route('pengguna.verifikasi.peserta');
     }
 
 /**

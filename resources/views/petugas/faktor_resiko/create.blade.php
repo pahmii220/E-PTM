@@ -10,7 +10,7 @@
             <div class="card-body text-white">
                 <h4 class="fw-bold mb-0">Tambah Faktor Risiko PTM</h4>
                 <small class="opacity-75">
-                    Input data faktor risiko peserta berdasarkan hasil pemeriksaan
+                    Input data faktor risiko Peserta berdasarkan hasil pemeriksaan
                 </small>
             </div>
         </div>
@@ -25,10 +25,10 @@
                     {{-- PESERTA --}}
                     <div class="mb-3">
                         <label class="form-label fw-semibold">
-                            Nama Peserta <span class="text-danger">*</span>
+                            Nama Pasien <span class="text-danger">*</span>
                         </label>
                         <select name="peserta_id" class="form-control" required>
-                            <option value="">-- Pilih Peserta --</option>
+                            <option value="">-- Pilih Pasien --</option>
                             @foreach($peserta as $p)
                                 <option value="{{ $p->id }}" {{ request('peserta_id') == $p->id ? 'selected' : '' }}>
                                     {{ $p->nama_lengkap }} - {{ $p->no_rekam_medis }}
@@ -91,10 +91,10 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold">Alkohol</label>
-                            <select name="alkohol" class="form-select rounded-3" required>
-                                <option value="Tidak">Tidak</option>
-                                <option value="Ya">Ya</option>
+                            <label class="form-label fw-semibold">Riwayat PTM Keluarga</label>
+                            <select name="riwayat_keluarga" class="form-select rounded-3" required>
+                                <option value="Tidak" {{ old('riwayat_keluarga') == 'Tidak' ? 'selected' : '' }}>Tidak</option>
+                                <option value="Ya" {{ old('riwayat_keluarga') == 'Ya' ? 'selected' : '' }}>Ya</option>
                             </select>
                         </div>
 

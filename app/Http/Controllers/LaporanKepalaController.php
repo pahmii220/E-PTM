@@ -251,33 +251,288 @@ class LaporanKepalaController extends Controller
     */
     public function eksekutif(Request $request)
     {
+        // ------------------------------------------------------------------
+        // FILTER GLOBAL (BERLAKU UNTUK PUSKESMAS, USIA, SKRINING, PENYAKIT)
+        // ------------------------------------------------------------------
+        $filterKota = $request->kota;
+        $filterKec = $request->kecamatan;
+        $filterPusk = $request->puskesmas_id;
+        $filterWaktu = $request->filter_waktu;
+        $filterBulan = $request->bulan;
+        $filterTglAwal = $request->tgl_awal;
+        $filterTglAkhir = $request->tgl_akhir;
+
+        // Bantuan Closure untuk menyaring rentang waktu pada tabel terkait
+        $waktuDibuatPada = function($q) use ($filterWaktu, $filterBulan, $filterTglAwal, $filterTglAkhir) {
+            if ($filterWaktu == 'bulan' && $filterBulan) {
+                $q->where(function($query) use ($filterBulan) {
+                    $query->whereMonth('dibuat_pada', $filterBulan)->whereYear('dibuat_pada', date('Y'))
+                          ->orWhereHas('deteksiDini', function($sub) use ($filterBulan) {
+                              $sub->whereMonth('tanggal_pemeriksaan', $filterBulan)->whereYear('tanggal_pemeriksaan', date('Y'));
+                          });
+                });
+            } elseif ($filterWaktu == 'tanggal' && $filterTglAwal && $filterTglAkhir) {
+                $q->where(function($query) use ($filterTglAwal, $filterTglAkhir) {
+                    $query->whereBetween('dibuat_pada', [$filterTglAwal . ' 00:00:00', $filterTglAkhir . ' 23:59:59'])
+                          ->orWhereHas('deteksiDini', function($sub) use ($filterTglAwal, $filterTglAkhir) {
+                              $sub->whereBetween('tanggal_pemeriksaan', [$filterTglAwal, $filterTglAkhir]);
+                          });
+                });
+            }
+        };
+
+        $waktuPemeriksaan = function($q) use ($filterWaktu, $filterBulan, $filterTglAwal, $filterTglAkhir) {
+            if ($filterWaktu == 'bulan' && $filterBulan) {
+                $q->whereMonth('tanggal_pemeriksaan', $filterBulan)->whereYear('tanggal_pemeriksaan', date('Y'));
+            } elseif ($filterWaktu == 'tanggal' && $filterTglAwal && $filterTglAkhir) {
+                $q->whereBetween('tanggal_pemeriksaan', [$filterTglAwal, $filterTglAkhir]);
+            }
+        };
+
+        $waktuTindakLanjut = function($q) use ($filterWaktu, $filterBulan, $filterTglAwal, $filterTglAkhir) {
+            if ($filterWaktu == 'bulan' && $filterBulan) {
+                $q->whereMonth('tanggal_tindak_lanjut', $filterBulan)->whereYear('tanggal_tindak_lanjut', date('Y'));
+            } elseif ($filterWaktu == 'tanggal' && $filterTglAwal && $filterTglAkhir) {
+                $q->whereBetween('tanggal_tindak_lanjut', [$filterTglAwal, $filterTglAkhir]);
+            }
+        };
+
         // --- DATA TAB 1: REKAP PUSKESMAS ---
-        $dataPuskesmas = \App\Models\Puskesmas::withCount([
-            'peserta as total_peserta',
-            'deteksiDini as total_skrining', 
-            'faktorResiko as total_risiko',
-            'tindakLanjut as total_tindak_lanjut'
-        ])->get();
+        $dataPuskesmasQuery = \App\Models\Puskesmas::query();
+        if ($filterKota) $dataPuskesmasQuery->where('nama_kabupaten', $filterKota);
+        if ($filterKec) $dataPuskesmasQuery->where('kecamatan', $filterKec);
+        if ($filterPusk) $dataPuskesmasQuery->where('id', $filterPusk);
+
+        $dataPuskesmas = $dataPuskesmasQuery->withCount([
+            'peserta as total_peserta' => function($q) use ($waktuDibuatPada) {
+                $q->whereIn('status_verifikasi', ['approved', 'terverifikasi']);
+                $waktuDibuatPada($q);
+            },
+            'deteksiDini as total_skrining' => $waktuPemeriksaan,
+            'deteksiDini as total_risiko' => function($q) use ($waktuPemeriksaan) {
+                $waktuPemeriksaan($q);
+                $q->where('hasil_skrining', 'Risiko Tinggi');
+            },
+            'tindakLanjut as total_tindak_lanjut' => $waktuTindakLanjut
+        ])->with(['deteksiDini' => function($q) use ($waktuPemeriksaan) {
+            $waktuPemeriksaan($q);
+            $q->whereNotNull('diagnosa_penyakit')->where('diagnosa_penyakit', '!=', '')->where('diagnosa_penyakit', '!=', 'Sehat');
+        }])->get();
+
+        // --- DATA TAB BARU: REKAP PER WILAYAH (KECAMATAN) ---
+        $dataWilayah = $dataPuskesmas->groupBy('kecamatan')->map(function($items, $kecamatan) {
+            return (object) [
+                'kecamatan' => $kecamatan ?: 'Tidak Diketahui',
+                'nama_kabupaten' => $items->first()->nama_kabupaten ?: '-',
+                'jumlah_puskesmas' => $items->count(),
+                'total_peserta' => $items->sum('total_peserta'),
+                'total_skrining' => $items->sum('total_skrining'),
+                'total_risiko' => $items->sum('total_risiko'),
+                'total_tindak_lanjut' => $items->sum('total_tindak_lanjut'),
+            ];
+        })->values();
+
+        // Bantuan Closure untuk menyaring Puskesmas pada data Peserta/Skrining
+        $filterLokasiPuskesmas = function($q) use ($filterKota, $filterKec, $filterPusk) {
+            if ($filterKota) $q->where('nama_kabupaten', $filterKota);
+            if ($filterKec) $q->where('kecamatan', $filterKec);
+            if ($filterPusk) $q->where('id', $filterPusk);
+        };
 
         // --- DATA TAB 2: KELOMPOK USIA ---
+        $usiaQuery = \App\Models\Peserta::whereIn('status_verifikasi', ['approved', 'terverifikasi']);
+        if ($filterKota || $filterKec || $filterPusk) {
+            $usiaQuery->whereHas('puskesmas', $filterLokasiPuskesmas);
+        }
+        $waktuDibuatPada($usiaQuery); // Terapkan filter waktu ke query usia
+
         $dataUsia = [
-            'remaja'     => \App\Models\Peserta::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) < 18')->count(),
-            'dewasa'     => \App\Models\Peserta::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 18 AND 44')->count(),
-            'pra_lansia' => \App\Models\Peserta::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 45 AND 59')->count(),
-            'lansia'     => \App\Models\Peserta::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 60')->count(),
+            'remaja'     => (clone $usiaQuery)->whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) < 18')->count(),
+            'dewasa'     => (clone $usiaQuery)->whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 18 AND 44')->count(),
+            'pra_lansia' => (clone $usiaQuery)->whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 45 AND 59')->count(),
+            'lansia'     => (clone $usiaQuery)->whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 60')->count(),
         ];
 
-        // --- DATA TAB 3: SKRINING ---
-        $dataSkrining = \App\Models\DeteksiDiniPTM::selectRaw('hasil_skrining, COUNT(*) as jumlah')
-            ->groupBy('hasil_skrining')
-            ->get();
+        // --- DATA TAB 3 & BARU: SKRINING & JENIS PENYAKIT ---
+        $skriningQuery = \App\Models\DeteksiDiniPTM::whereHas('peserta', function($q) {
+            $q->whereIn('status_verifikasi', ['approved', 'terverifikasi']);
+        });
+        if ($filterKota || $filterKec || $filterPusk) {
+            $skriningQuery->whereHas('puskesmas', $filterLokasiPuskesmas);
+        }
+        $waktuPemeriksaan($skriningQuery); // Terapkan filter waktu ke query skrining
 
-        // --- DATA TAB 4: KEGIATAN ---
-        $kegiatan = Kegiatan::with('puskesmas')->orderBy('tanggal', 'desc')->get();
-
-        // 👇 TAMBAHAN BARU: DATA TAB 5 (EVALUASI SISTEM) 👇
-        $semuaData = EvaluasiSus::with('user.pegawaiDinkes')->orderBy('created_at', 'desc')->get();
+        $dataSkrining = (clone $skriningQuery)->selectRaw('hasil_skrining, COUNT(*) as jumlah')->groupBy('hasil_skrining')->get();
         
+        $dataPenyakit = (clone $skriningQuery)->whereNotNull('diagnosa_penyakit')
+                                              ->where('diagnosa_penyakit', '!=', '')
+                                              ->where('diagnosa_penyakit', '!=', 'Sehat')
+                                              ->where('diagnosa_penyakit', '!=', 'Normal')
+                                              ->selectRaw('diagnosa_penyakit, COUNT(*) as jumlah')
+                                              ->groupBy('diagnosa_penyakit')
+                                              ->orderBy('jumlah', 'desc')
+                                              ->get();
+
+
+        // --- DATA DETAIL PASIEN PUSKESMAS ---
+        $queryDetail = \App\Models\DeteksiDiniPTM::with(['peserta', 'tindakLanjut', 'puskesmas']);
+        $puskesmasTerpilih = null;
+        if ($filterPusk) {
+            $queryDetail->where('puskesmas_id', $filterPusk);
+            $puskesmasTerpilih = \App\Models\Puskesmas::find($filterPusk);
+        } elseif ($filterKec) {
+            $queryDetail->whereHas('puskesmas', function($q) use ($filterKec) { $q->where('kecamatan', $filterKec); });
+        } elseif ($filterKota) {
+            $queryDetail->whereHas('puskesmas', function($q) use ($filterKota) { $q->where('nama_kabupaten', $filterKota); });
+        }
+
+        $waktuPemeriksaan($queryDetail);
+        $detailPasienPuskesmas = $queryDetail->orderBy('tanggal_pemeriksaan', 'desc')->get();
+
+        $puskIds = $detailPasienPuskesmas->pluck('puskesmas_id')->unique()->filter()->toArray();
+        $faktorList = count($puskIds) > 0 ? \App\Models\FaktorResikoPTM::whereIn('puskesmas_id', $puskIds)->get() : collect();
+        foreach ($detailPasienPuskesmas as $row) {
+            $row->faktorRisiko = $faktorList
+                ->where('peserta_id', $row->peserta_id)
+                ->where('tanggal_pemeriksaan', $row->tanggal_pemeriksaan)
+                ->first();
+        }
+
+        // --- DATA TAB 7: PEGAWAI DINKES ---
+        $dataPegawai = \App\Models\PegawaiDinkes::with('user')->get();
+
+        // --- MASTER DATA DROPDOWN ---
+        $semuaPuskesmasMaster = \App\Models\Puskesmas::select('id', 'nama_puskesmas', 'kecamatan', 'nama_kabupaten')->get();
+
+        return view('kepala_p2ptm.laporan.eksekutif', compact(
+            'dataPuskesmas', 'dataWilayah', 'dataUsia', 'dataSkrining', 'dataPenyakit',
+            'dataPegawai', 'semuaPuskesmasMaster', 'request', 'detailPasienPuskesmas', 'puskesmasTerpilih'
+        ));
+    }
+
+    public function cetakWilayah(Request $request)
+    {
+        $filterKota = $request->kota;
+        $filterKec = $request->kecamatan;
+        $filterPusk = $request->puskesmas_id;
+        $filterWaktu = $request->filter_waktu;
+        $filterBulan = $request->bulan;
+        $filterTglAwal = $request->tgl_awal;
+        $filterTglAkhir = $request->tgl_akhir;
+
+        $waktuDibuatPada = function($q) use ($filterWaktu, $filterBulan, $filterTglAwal, $filterTglAkhir) {
+            if ($filterWaktu == 'bulan' && $filterBulan) {
+                $q->where(function($query) use ($filterBulan) {
+                    $query->whereMonth('dibuat_pada', $filterBulan)->whereYear('dibuat_pada', date('Y'))
+                          ->orWhereHas('deteksiDini', function($sub) use ($filterBulan) {
+                              $sub->whereMonth('tanggal_pemeriksaan', $filterBulan)->whereYear('tanggal_pemeriksaan', date('Y'));
+                          });
+                });
+            } elseif ($filterWaktu == 'tanggal' && $filterTglAwal && $filterTglAkhir) {
+                $q->where(function($query) use ($filterTglAwal, $filterTglAkhir) {
+                    $query->whereBetween('dibuat_pada', [$filterTglAwal . ' 00:00:00', $filterTglAkhir . ' 23:59:59'])
+                          ->orWhereHas('deteksiDini', function($sub) use ($filterTglAwal, $filterTglAkhir) {
+                              $sub->whereBetween('tanggal_pemeriksaan', [$filterTglAwal, $filterTglAkhir]);
+                          });
+                });
+            }
+        };
+
+        $waktuPemeriksaan = function($q) use ($filterWaktu, $filterBulan, $filterTglAwal, $filterTglAkhir) {
+            if ($filterWaktu == 'bulan' && $filterBulan) {
+                $q->whereMonth('tanggal_pemeriksaan', $filterBulan)->whereYear('tanggal_pemeriksaan', date('Y'));
+            } elseif ($filterWaktu == 'tanggal' && $filterTglAwal && $filterTglAkhir) {
+                $q->whereBetween('tanggal_pemeriksaan', [$filterTglAwal, $filterTglAkhir]);
+            }
+        };
+
+        $waktuTindakLanjut = function($q) use ($filterWaktu, $filterBulan, $filterTglAwal, $filterTglAkhir) {
+            if ($filterWaktu == 'bulan' && $filterBulan) {
+                $q->whereMonth('tanggal_tindak_lanjut', $filterBulan)->whereYear('tanggal_tindak_lanjut', date('Y'));
+            } elseif ($filterWaktu == 'tanggal' && $filterTglAwal && $filterTglAkhir) {
+                $q->whereBetween('tanggal_tindak_lanjut', [$filterTglAwal, $filterTglAkhir]);
+            }
+        };
+
+        $dataPuskesmasQuery = \App\Models\Puskesmas::query();
+        if ($filterKota) $dataPuskesmasQuery->where('nama_kabupaten', $filterKota);
+        if ($filterKec) $dataPuskesmasQuery->where('kecamatan', $filterKec);
+        if ($filterPusk) $dataPuskesmasQuery->where('id', $filterPusk);
+
+        $dataPuskesmas = $dataPuskesmasQuery->withCount([
+            'peserta as total_peserta' => $waktuDibuatPada,
+            'deteksiDini as total_skrining' => $waktuPemeriksaan,
+            'deteksiDini as total_risiko' => function($q) use ($waktuPemeriksaan) {
+                $waktuPemeriksaan($q);
+                $q->where('hasil_skrining', 'Risiko Tinggi');
+            },
+            'tindakLanjut as total_tindak_lanjut' => $waktuTindakLanjut,
+            'deteksiDini as total_hipertensi' => function($q) use ($waktuPemeriksaan) { clone $q; $waktuPemeriksaan($q); $q->where('diagnosa_penyakit', 'LIKE', '%Hipertensi%'); },
+            'deteksiDini as total_diabetes' => function($q) use ($waktuPemeriksaan) { clone $q; $waktuPemeriksaan($q); $q->where(function($sub){ $sub->where('diagnosa_penyakit', 'LIKE', '%Diabetes%')->orWhere('diagnosa_penyakit', 'LIKE', '%DM%'); }); },
+            'deteksiDini as total_kolesterol' => function($q) use ($waktuPemeriksaan) { clone $q; $waktuPemeriksaan($q); $q->where('diagnosa_penyakit', 'LIKE', '%Kolesterol%'); },
+        ])->get();
+
+        $dataWilayah = $dataPuskesmas->groupBy('kecamatan')->map(function($items, $kecamatan) {
+            $sumHipertensi = $items->sum('total_hipertensi');
+            $sumDiabetes   = $items->sum('total_diabetes');
+            $sumKolesterol = $items->sum('total_kolesterol');
+            $sumRisiko     = $items->sum('total_risiko');
+            $sumPeserta    = $items->sum('total_peserta');
+            $sumTindakLanjut = $items->sum('total_tindak_lanjut');
+
+            // Hitung penyakit dominan
+            $penyakitMap = [
+                'Hipertensi' => $sumHipertensi,
+                'Diabetes Melitus' => $sumDiabetes,
+                'Kolesterol' => $sumKolesterol,
+            ];
+            arsort($penyakitMap);
+            $topPenyakit = array_key_first($penyakitMap);
+            $maxVal = reset($penyakitMap);
+            $penyakitDominan = ($maxVal > 0) ? $topPenyakit . " ({$maxVal})" : "Nihil / Normal";
+
+            // Status Risiko Wilayah
+            if ($sumRisiko > 10) {
+                $statusRisiko = "Risiko Tinggi";
+            } elseif ($sumRisiko > 0) {
+                $statusRisiko = "Risiko Sedang";
+            } else {
+                $statusRisiko = "Aman / Rendah";
+            }
+
+            return (object) [
+                'kecamatan' => $kecamatan ?: 'Tidak Diketahui',
+                'nama_kabupaten' => $items->first()->nama_kabupaten ?: '-',
+                'jumlah_puskesmas' => $items->count(),
+                'total_peserta' => $sumPeserta,
+                'total_skrining' => $items->sum('total_skrining'),
+                'total_risiko' => $sumRisiko,
+                'total_tindak_lanjut' => $sumTindakLanjut,
+                'penyakit_dominan' => $penyakitDominan,
+                'status_risiko' => $statusRisiko,
+            ];
+        })->values();
+
+        $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
+        $qrToken = "REKAP-WILAYAH-" . date('m-Y') . "-" . strtoupper(uniqid());
+
+        // Mengambil view untuk dicetak
+        return view('pengguna.laporan.print_wilayah', compact('dataWilayah', 'qrToken', 'kepalaAktif'));
+    }
+
+    public function cetakPegawai(Request $request)
+    {
+        $dataPegawai = \App\Models\PegawaiDinkes::with('user')->get();
+
+        $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
+        $qrToken = "REKAP-PEGAWAI-" . date('m-Y') . "-" . strtoupper(uniqid());
+
+        return view('pengguna.laporan.print_pegawai', compact('dataPegawai', 'qrToken', 'kepalaAktif'));
+    }
+
+    public function evaluasi(Request $request)
+    {
+        $semuaData = \App\Models\EvaluasiSus::with('user.pegawaiDinkes')->orderBy('created_at', 'desc')->get();
         $totalResponden = $semuaData->count();
         $rataRataSkor = $totalResponden > 0 ? round($semuaData->avg('skor_sus'), 1) : 0;
 
@@ -290,34 +545,229 @@ class LaporanKepalaController extends Controller
             $predikat = 'Acceptable (Cukup Layak)';
         }
 
-        // Memasukkan variabel tambahan ke dalam compact()
-        return view('kepala_p2ptm.laporan.eksekutif', compact(
-            'dataPuskesmas', 'dataUsia', 'dataSkrining', 'kegiatan',
-            'semuaData', 'totalResponden', 'rataRataSkor', 'predikat'
-        ));
+        return view('kepala_p2ptm.laporan.evaluasi', compact('semuaData', 'totalResponden', 'rataRataSkor', 'predikat'));
+    }
+
+    public function cetakEvaluasi(Request $request)
+    {
+        $semuaData = \App\Models\EvaluasiSus::with('user.pegawaiDinkes')->orderBy('created_at', 'desc')->get();
+        $totalResponden = $semuaData->count();
+        $rataRataSkor = $totalResponden > 0 ? round($semuaData->avg('skor_sus'), 1) : 0;
+
+        $predikat = 'Kurang Baik';
+        if ($rataRataSkor >= 80.8) {
+            $predikat = 'Excellent (Sangat Mudah)';
+        } elseif ($rataRataSkor >= 71.4) {
+            $predikat = 'Good (Mudah Digunakan)';
+        } elseif ($rataRataSkor >= 50.9) {
+            $predikat = 'Acceptable (Cukup Layak)';
+        }
+
+        $keterangan = 'Sistem perlu banyak perbaikan agar dapat digunakan dengan baik.';
+        if ($rataRataSkor >= 80.8) {
+            $keterangan = 'Sistem sangat mudah digunakan dan diterima dengan sangat baik oleh pengguna.';
+        } elseif ($rataRataSkor >= 71.4) {
+            $keterangan = 'Sistem mudah digunakan dan diterima dengan baik oleh pengguna.';
+        } elseif ($rataRataSkor >= 50.9) {
+            $keterangan = 'Sistem cukup layak digunakan, namun masih ada ruang untuk peningkatan.';
+        }
+
+        $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
+        $qrToken = "REKAP-SUS-" . date('m-Y') . "-" . strtoupper(uniqid());
+
+        return view('pengguna.laporan.print_evaluasi', compact('semuaData', 'totalResponden', 'rataRataSkor', 'predikat', 'keterangan', 'qrToken', 'kepalaAktif'));
+    }
+
+    public function perlengkapanTugas(Request $request)
+    {
+        $query = \App\Models\PerlengkapanTugas::where(function($q) {
+            $q->has('laporanMonitoring')->orHas('suratTugas');
+        })->with(['laporanMonitoring.puskesmas', 'laporanMonitoring.pegawai', 'suratTugas', 'items']);
+
+        // Filter berdasarkan tanggal awal dan akhir (menggunakan created_at perlengkapan)
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('created_at', [$request->start_date . ' 00:00:00', $request->end_date . ' 23:59:59']);
+        } elseif ($request->filled('start_date')) {
+            $query->where('created_at', '>=', $request->start_date . ' 00:00:00');
+        } elseif ($request->filled('end_date')) {
+            $query->where('created_at', '<=', $request->end_date . ' 23:59:59');
+        }
+
+        // Filter berdasarkan bulan
+        if ($request->filled('month')) {
+            $query->whereMonth('created_at', $request->month);
+        }
+
+        $dataPerlengkapan = $query->orderBy('created_at', 'desc')->get();
+
+        return view('kepala_p2ptm.laporan.logistik', compact('dataPerlengkapan'));
+    }
+
+    public function cetakPerlengkapanTugas($id)
+    {
+        $perlengkapan = \App\Models\PerlengkapanTugas::with(['suratTugas', 'items'])->findOrFail($id);
+        
+        \Carbon\Carbon::setLocale('id');
+        $tanggal = \Carbon\Carbon::now('Asia/Makassar')->translatedFormat('l, d F Y');
+
+        $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
+
+        // Gunakan view pdf yang sudah ada di modul pengguna untuk perlengkapan tugas (jika ada)
+        return view('pengguna.perlengkapan_tugas.print', compact('perlengkapan', 'tanggal', 'kepalaAktif'));
     }
 
     public function cetakPuskesmas(Request $request)
     {
-        $rekapPuskesmas = \App\Models\Puskesmas::withCount([
-            'peserta as total_peserta',
-            'deteksiDini as total_deteksi',
-            'faktorResiko as total_faktor'
+        $filterKota = $request->kota;
+        $filterKec = $request->kecamatan;
+        $filterPusk = $request->puskesmas_id;
+        $filterWaktu = $request->filter_waktu;
+        $filterBulan = $request->bulan;
+        $filterTglAwal = $request->tgl_awal;
+        $filterTglAkhir = $request->tgl_akhir;
+
+        $waktuDibuatPada = function($q) use ($filterWaktu, $filterBulan, $filterTglAwal, $filterTglAkhir) {
+            $q->whereIn('status_verifikasi', ['approved', 'terverifikasi']);
+            if ($filterWaktu == 'bulan' && $filterBulan) {
+                $q->where(function($query) use ($filterBulan) {
+                    $query->whereMonth('dibuat_pada', $filterBulan)->whereYear('dibuat_pada', date('Y'))
+                          ->orWhereHas('deteksiDini', function($sub) use ($filterBulan) {
+                              $sub->whereMonth('tanggal_pemeriksaan', $filterBulan)->whereYear('tanggal_pemeriksaan', date('Y'));
+                          });
+                });
+            } elseif ($filterWaktu == 'tanggal' && $filterTglAwal && $filterTglAkhir) {
+                $q->where(function($query) use ($filterTglAwal, $filterTglAkhir) {
+                    $query->whereBetween('dibuat_pada', [$filterTglAwal . ' 00:00:00', $filterTglAkhir . ' 23:59:59'])
+                          ->orWhereHas('deteksiDini', function($sub) use ($filterTglAwal, $filterTglAkhir) {
+                              $sub->whereBetween('tanggal_pemeriksaan', [$filterTglAwal, $filterTglAkhir]);
+                          });
+                });
+            }
+        };
+
+        $waktuPemeriksaan = function($q) use ($filterWaktu, $filterBulan, $filterTglAwal, $filterTglAkhir) {
+            if ($filterWaktu == 'bulan' && $filterBulan) {
+                $q->whereMonth('tanggal_pemeriksaan', $filterBulan)->whereYear('tanggal_pemeriksaan', date('Y'));
+            } elseif ($filterWaktu == 'tanggal' && $filterTglAwal && $filterTglAkhir) {
+                $q->whereBetween('tanggal_pemeriksaan', [$filterTglAwal, $filterTglAkhir]);
+            }
+        };
+
+        $waktuTindakLanjut = function($q) use ($filterWaktu, $filterBulan, $filterTglAwal, $filterTglAkhir) {
+            if ($filterWaktu == 'bulan' && $filterBulan) {
+                $q->whereMonth('tanggal_tindak_lanjut', $filterBulan)->whereYear('tanggal_tindak_lanjut', date('Y'));
+            } elseif ($filterWaktu == 'tanggal' && $filterTglAwal && $filterTglAkhir) {
+                $q->whereBetween('tanggal_tindak_lanjut', [$filterTglAwal, $filterTglAkhir]);
+            }
+        };
+
+        $query = \App\Models\Puskesmas::query();
+        $namaWilayah = "Provinsi Kalimantan Selatan";
+        $puskesmasTerpilih = null;
+
+        if ($filterPusk) {
+            $query->where('id', $filterPusk);
+            $puskesmasTerpilih = \App\Models\Puskesmas::find($filterPusk);
+            $namaWilayah = $puskesmasTerpilih->nama_puskesmas ?? "Puskesmas Terpilih";
+        } elseif ($filterKec) {
+            $query->where('kecamatan', $filterKec);
+            $namaWilayah = "Kecamatan " . $filterKec;
+        } elseif ($filterKota) {
+            $query->where('nama_kabupaten', $filterKota);
+            $namaWilayah = $filterKota;
+        }
+
+        $rekapPuskesmas = $query->withCount([
+            'peserta as total_peserta' => $waktuDibuatPada,
+            'peserta as total_laki' => function($q) use ($waktuDibuatPada) { clone $q; $waktuDibuatPada($q); $q->where('jenis_kelamin', 'Laki-Laki'); },
+            'peserta as total_perempuan' => function($q) use ($waktuDibuatPada) { clone $q; $waktuDibuatPada($q); $q->where('jenis_kelamin', 'Perempuan'); },
+            'deteksiDini as total_normal' => function($q) use ($waktuPemeriksaan) { clone $q; $waktuPemeriksaan($q); $q->where('hasil_skrining', 'Normal'); },
+            'deteksiDini as total_berisiko' => function($q) use ($waktuPemeriksaan) { clone $q; $waktuPemeriksaan($q); $q->where('hasil_skrining', '!=', 'Normal'); },
+            'deteksiDini as total_hipertensi' => function($q) use ($waktuPemeriksaan) { clone $q; $waktuPemeriksaan($q); $q->where('diagnosa_penyakit', 'LIKE', '%Hipertensi%'); },
+            'deteksiDini as total_diabetes' => function($q) use ($waktuPemeriksaan) { clone $q; $waktuPemeriksaan($q); $q->where(function($sub){ $sub->where('diagnosa_penyakit', 'LIKE', '%Diabetes%')->orWhere('diagnosa_penyakit', 'LIKE', '%DM%'); }); },
+            'deteksiDini as total_kolesterol' => function($q) use ($waktuPemeriksaan) { clone $q; $waktuPemeriksaan($q); $q->where('diagnosa_penyakit', 'LIKE', '%Kolesterol%'); },
+            'deteksiDini as total_obesitas' => function($q) use ($waktuPemeriksaan) { clone $q; $waktuPemeriksaan($q); $q->where('diagnosa_penyakit', 'LIKE', '%Obesitas%'); },
+            'faktorResiko as total_merokok' => function($q) use ($waktuPemeriksaan) { clone $q; $waktuPemeriksaan($q); $q->where('merokok', 'Ya'); },
+            'tindakLanjut as total_edukasi' => function($q) use ($waktuTindakLanjut) { clone $q; $waktuTindakLanjut($q); $q->whereIn('jenis_tindak_lanjut', ['edukasi', 'anjuran_gaya_hidup', 'monitoring']); },
+            'tindakLanjut as total_rujukan' => function($q) use ($waktuTindakLanjut) { clone $q; $waktuTindakLanjut($q); $q->where('jenis_tindak_lanjut', 'rujukan'); }
         ])->get();
+
+        // Hitung total untuk narasi
+        $totalPasien = $rekapPuskesmas->sum('total_peserta');
+        $totalLaki = $rekapPuskesmas->sum('total_laki');
+        $totalPerempuan = $rekapPuskesmas->sum('total_perempuan');
+        $totalNormal = $rekapPuskesmas->sum('total_normal');
+        $totalBerisiko = $rekapPuskesmas->sum('total_berisiko');
+        $totalEdukasi = $rekapPuskesmas->sum('total_edukasi');
+        $totalRujukan = $rekapPuskesmas->sum('total_rujukan');
+        $narasiEksekutif = "Berdasarkan data periode ini di wilayah <strong>{$namaWilayah}</strong>, tercatat total kunjungan sebanyak <strong>{$totalPasien} pasien</strong> ({$totalLaki} Laki-laki dan {$totalPerempuan} Perempuan). Dari hasil skrining, ditemukan <strong>{$totalBerisiko} warga Berisiko PTM</strong> dan {$totalNormal} warga dengan kondisi Normal. Sebagai upaya intervensi, puskesmas telah memberikan Edukasi & Monitoring kepada <strong>{$totalEdukasi} warga</strong> dan merujuk <strong>{$totalRujukan} warga</strong> ke fasilitas kesehatan lanjutan.";
+
+        // Ambil data detail register pasien untuk dicetak
+        $puskIds = $rekapPuskesmas->pluck('id')->toArray();
+        $queryDetail = \App\Models\DeteksiDiniPTM::with(['peserta', 'tindakLanjut', 'puskesmas'])
+            ->whereIn('puskesmas_id', $puskIds);
+        $waktuPemeriksaan($queryDetail);
+        $detailPasienPuskesmas = $queryDetail->orderBy('tanggal_pemeriksaan', 'desc')->get();
+
+        $faktorList = count($puskIds) > 0 ? \App\Models\FaktorResikoPTM::whereIn('puskesmas_id', $puskIds)->get() : collect();
+        foreach ($detailPasienPuskesmas as $row) {
+            $row->faktorRisiko = $faktorList
+                ->where('peserta_id', $row->peserta_id)
+                ->where('tanggal_pemeriksaan', $row->tanggal_pemeriksaan)
+                ->first();
+        }
 
         $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
         $qrToken = "REKAP-FASKES-" . date('m-Y') . "-" . strtoupper(uniqid());
 
-        return view('pengguna.rekap_puskesmas.print', compact('rekapPuskesmas', 'qrToken', 'kepalaAktif'));
+        return view('pengguna.rekap_puskesmas.print', compact('rekapPuskesmas', 'qrToken', 'kepalaAktif', 'narasiEksekutif', 'detailPasienPuskesmas', 'puskesmasTerpilih'));
     }
 
     public function cetakUsia(Request $request)
     {
+        $filterKota = $request->kota;
+        $filterKec = $request->kecamatan;
+        $filterPusk = $request->puskesmas_id;
+        $filterWaktu = $request->filter_waktu;
+        $filterBulan = $request->bulan;
+        $filterTglAwal = $request->tgl_awal;
+        $filterTglAkhir = $request->tgl_akhir;
+
+        $waktuDibuatPada = function($q) use ($filterWaktu, $filterBulan, $filterTglAwal, $filterTglAkhir) {
+            if ($filterWaktu == 'bulan' && $filterBulan) {
+                $q->where(function($query) use ($filterBulan) {
+                    $query->whereMonth('dibuat_pada', $filterBulan)->whereYear('dibuat_pada', date('Y'))
+                          ->orWhereHas('deteksiDini', function($sub) use ($filterBulan) {
+                              $sub->whereMonth('tanggal_pemeriksaan', $filterBulan)->whereYear('tanggal_pemeriksaan', date('Y'));
+                          });
+                });
+            } elseif ($filterWaktu == 'tanggal' && $filterTglAwal && $filterTglAkhir) {
+                $q->where(function($query) use ($filterTglAwal, $filterTglAkhir) {
+                    $query->whereBetween('dibuat_pada', [$filterTglAwal . ' 00:00:00', $filterTglAkhir . ' 23:59:59'])
+                          ->orWhereHas('deteksiDini', function($sub) use ($filterTglAwal, $filterTglAkhir) {
+                              $sub->whereBetween('tanggal_pemeriksaan', [$filterTglAwal, $filterTglAkhir]);
+                          });
+                });
+            }
+        };
+
+        $filterLokasiPuskesmas = function($q) use ($filterKota, $filterKec, $filterPusk) {
+            if ($filterKota) $q->where('nama_kabupaten', $filterKota);
+            if ($filterKec) $q->where('kecamatan', $filterKec);
+            if ($filterPusk) $q->where('id', $filterPusk);
+        };
+
+        $usiaQuery = \App\Models\Peserta::whereIn('status_verifikasi', ['approved', 'terverifikasi']);
+        if ($filterKota || $filterKec || $filterPusk) {
+            $usiaQuery->whereHas('puskesmas', $filterLokasiPuskesmas);
+        }
+        $waktuDibuatPada($usiaQuery);
+
         $dataUsia = [
-            'remaja'     => \App\Models\Peserta::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) < 18')->count(),
-            'dewasa'     => \App\Models\Peserta::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 18 AND 44')->count(),
-            'pra_lansia' => \App\Models\Peserta::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 45 AND 59')->count(),
-            'lansia'     => \App\Models\Peserta::whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 60')->count(),
+            'remaja'     => (clone $usiaQuery)->whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) < 18')->count(),
+            'dewasa'     => (clone $usiaQuery)->whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 18 AND 44')->count(),
+            'pra_lansia' => (clone $usiaQuery)->whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) BETWEEN 45 AND 59')->count(),
+            'lansia'     => (clone $usiaQuery)->whereRaw('TIMESTAMPDIFF(YEAR, tanggal_lahir, CURDATE()) >= 60')->count(),
         ];
 
         $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
@@ -326,16 +776,72 @@ class LaporanKepalaController extends Controller
         return view('pengguna.laporan.print_kelompok_usia', compact('dataUsia', 'qrToken', 'kepalaAktif'));
     }
 
-    public function cetakSkrining(Request $request)
+    public function cetakSkriningPenyakit(Request $request)
     {
-        $data = \App\Models\DeteksiDiniPTM::selectRaw('hasil_skrining, COUNT(*) as jumlah')
-            ->groupBy('hasil_skrining')
-            ->get();
+        $filterKota = $request->input('kota');
+        $filterKec  = $request->input('kecamatan');
+        $filterPusk = $request->input('puskesmas_id');
+        
+        $filterWaktu = $request->input('filter_waktu');
+        $inputBulan  = $request->input('bulan');
+        $inputTglAwal  = $request->input('tgl_awal');
+        $inputTglAkhir = $request->input('tgl_akhir');
+
+        $filterLokasiPuskesmas = function($q) use ($filterKota, $filterKec, $filterPusk) {
+            if ($filterKota) $q->where('nama_kabupaten', $filterKota);
+            if ($filterKec) $q->where('kecamatan', $filterKec);
+            if ($filterPusk) $q->where('id', $filterPusk);
+        };
+
+        $waktuPemeriksaan = function($query) use ($filterWaktu, $inputBulan, $inputTglAwal, $inputTglAkhir) {
+            if ($filterWaktu == 'bulan' && !empty($inputBulan)) {
+                $query->whereMonth('tanggal_pemeriksaan', $inputBulan)
+                      ->whereYear('tanggal_pemeriksaan', date('Y'));
+            } elseif ($filterWaktu == 'tanggal' && !empty($inputTglAwal) && !empty($inputTglAkhir)) {
+                $query->whereBetween('tanggal_pemeriksaan', [$inputTglAwal, $inputTglAkhir]);
+            }
+        };
+
+        $skriningQuery = \App\Models\DeteksiDiniPTM::whereHas('peserta', function($q) {
+            $q->whereIn('status_verifikasi', ['approved', 'terverifikasi']);
+        });
+        if ($filterKota || $filterKec || $filterPusk) {
+            $skriningQuery->whereHas('puskesmas', $filterLokasiPuskesmas);
+        }
+        $waktuPemeriksaan($skriningQuery);
+
+        $dataSkrining = (clone $skriningQuery)->selectRaw('hasil_skrining, COUNT(*) as jumlah')->groupBy('hasil_skrining')->get();
+        
+        $dataPenyakit = (clone $skriningQuery)->whereNotNull('diagnosa_penyakit')
+                                              ->where('diagnosa_penyakit', '!=', '')
+                                              ->where('diagnosa_penyakit', '!=', 'Sehat')
+                                              ->where('diagnosa_penyakit', '!=', 'Normal')
+                                              ->selectRaw('diagnosa_penyakit, COUNT(*) as jumlah')
+                                              ->groupBy('diagnosa_penyakit')
+                                              ->orderBy('jumlah', 'desc')
+                                              ->get();
+
+        $namaWilayah = 'Seluruh Wilayah';
+        if ($filterPusk) {
+            $pusk = \App\Models\Puskesmas::find($filterPusk);
+            $namaWilayah = $pusk ? 'Puskesmas ' . $pusk->nama_puskesmas : $namaWilayah;
+        } elseif ($filterKec) {
+            $namaWilayah = 'Kecamatan ' . $filterKec;
+        } elseif ($filterKota) {
+            $namaWilayah = $filterKota;
+        }
+
+        $totalOrang = $dataSkrining->sum('jumlah');
+        $totalPenyakitBerisiko = $dataPenyakit->sum('jumlah');
+        $penyakitTerbanyak = $dataPenyakit->first();
+        $namaPenyakitTerbanyak = $penyakitTerbanyak ? $penyakitTerbanyak->diagnosa_penyakit : '-';
+
+        $narasiEksekutif = "Berdasarkan data skrining di <strong>{$namaWilayah}</strong> pada periode ini, tercatat <strong>{$totalOrang} orang</strong> telah mengikuti pemeriksaan. Dari jumlah tersebut, ditemukan <strong>{$totalPenyakitBerisiko} kasus terindikasi Berisiko PTM</strong>, dengan kasus tertinggi adalah <strong>{$namaPenyakitTerbanyak}</strong>.";
 
         $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
-        $qrToken = "REKAP-SKRINING-" . date('m-Y') . "-" . strtoupper(uniqid());
+        $qrToken = "REKAP-SKRINING-PENYAKIT-" . date('m-Y') . "-" . strtoupper(uniqid());
 
-        return view('pengguna.laporan.status_ptm', compact('data', 'qrToken', 'kepalaAktif'));
+        return view('pengguna.laporan.print_skrining_penyakit', compact('dataSkrining', 'dataPenyakit', 'qrToken', 'kepalaAktif', 'narasiEksekutif'));
     }
 
 

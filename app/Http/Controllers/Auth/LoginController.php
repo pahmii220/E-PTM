@@ -35,13 +35,12 @@ public function login(Request $request)
     }
 
     // 🔒 BLOKIR JIKA NONAKTIF
-if ($user->status_aktif == 0) {
-        // Cek menggunakan relasi yang sudah ada
-        if ($user->petugas && !empty($user->petugas->puskesmas_id)) {
-             return back()->with('error', 'Akun Anda telah dinonaktifkan oleh Admin. Silakan hubungi Admin Dinas Kesehatan.');
-        } 
-        
-        return back()->with('error', 'Akun Anda sedang dalam proses peninjauan. Mohon menunggu Admin Dinas Kesehatan memverifikasi pendaftaran Anda.');
+    if ($user->status_aktif == 0) {
+        if ($user->dibuat_pada == $user->diubah_pada) {
+            return back()->with('error', 'Akun Anda sedang dalam proses peninjauan. Mohon menunggu Admin Dinas Kesehatan memverifikasi pendaftaran Anda.');
+        } else {
+            return back()->with('error', 'Akun Anda telah dinonaktifkan oleh Admin. Silakan hubungi Admin Dinas Kesehatan.');
+        }
     }
     // 🔐 proses login
     if (Auth::attempt(

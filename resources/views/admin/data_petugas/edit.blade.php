@@ -26,7 +26,7 @@
             {{-- ================================================= --}}
             {{-- KIRI: DATA PROFIL & PENEMPATAN --}}
             {{-- ================================================= --}}
-            <div class="col-lg-8">
+            <div class="col-lg-10 mx-auto">
                 <div class="data-card p-4 h-100">
                     <div class="section-title mb-4">
                         <i class="bi bi-person-vcard text-primary"></i>
@@ -105,75 +105,7 @@
                 </div>
             </div>
 
-            {{-- ================================================= --}}
-            {{-- KANAN: HAK AKSES & KEAMANAN --}}
-            {{-- ================================================= --}}
-            <div class="col-lg-4">
-                <div class="data-card p-4 h-100">
-                    <div class="section-title mb-4">
-                        <i class="bi bi-shield-lock text-warning"></i>
-                        <span>Hak Akses & Keamanan</span>
-                    </div>
 
-                    @if($petugas->user)
-                        <form action="{{ route('admin.data_petugas.update', $petugas->id) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <input type="hidden" name="update_account_only" value="1">
-
-                            <div class="form-group mb-4">
-                                <label class="form-label fw-bold">Username Sistem</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light"><i class="bi bi-at"></i></span>
-                                    <input type="text" class="form-control bg-light" value="{{ $petugas->user->Username }}"
-                                        readonly>
-                                </div>
-                            </div>
-
-                            <div class="form-group mb-4">
-                                <label class="form-label fw-bold">Level Akses (Role)</label>
-                                <select name="role_name" class="form-select border-2">
-                                    <option value="petugas" {{ $petugas->user->role_name == 'petugas' ? 'selected' : '' }}>Petugas
-                                        (Lapangan)</option>
-                                    <option value="pegawai" {{ $petugas->user->role_name == 'pegawai' ? 'selected' : '' }}>Pegawai
-                                        (Dinkes)</option>
-                                    <option value="admin" {{ $petugas->user->role_name == 'admin' ? 'selected' : '' }}>
-                                        Administrator</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group mb-4">
-                                <label class="form-label fw-bold">Status Keaktifan</label>
-                                <div id="statusContainer"
-                                    class="p-3 border rounded-3 transition-colors {{ $petugas->user->status_aktif ? 'bg-success-subtle border-success-subtle' : 'bg-danger-subtle border-danger-subtle' }}">
-                                    <div class="form-check form-switch m-0 d-flex align-items-center">
-                                        {{-- HIDDEN INPUT DIHAPUS DARI SINI --}}
-                                        <input class="form-check-input fs-5 me-2 mt-0" type="checkbox" name="status_aktif"
-                                            value="1" id="statusSwitch" onchange="toggleStatusText(this)" {{ $petugas->user->status_aktif ? 'checked' : '' }}>
-                                        <label class="form-check-label fw-bold" id="statusLabel" for="statusSwitch">
-                                            Akun {{ $petugas->user->status_aktif ? 'Aktif' : 'Nonaktif' }}
-                                        </label>
-                                    </div>
-                                </div>
-                                <small class="text-muted mt-2 d-block">Nonaktifkan untuk memblokir login sementara.</small>
-                            </div>
-
-                            <div class="mt-auto pt-2">
-                                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
-                                    <i class="bi bi-shield-check me-2"></i> Perbarui Hak Akses
-                                </button>
-                            </div>
-                        </form>
-                    @else
-                        <div class="text-center py-5">
-                            <i class="bi bi-person-x text-muted mb-3" style="font-size: 3rem;"></i>
-                            <h6 class="fw-bold">Belum Ada Akun</h6>
-                            <p class="small text-muted mb-0">Petugas ini belum memiliki akun untuk login ke dalam sistem.</p>
-                        </div>
-                    @endif
-
-                </div>
-            </div>
 
         </div>
     </div>

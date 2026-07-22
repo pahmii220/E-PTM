@@ -4,12 +4,14 @@
 
 @section('content')
     <div class="container-fluid py-4" style="max-width:1400px">
-        {{-- HEADER --}}
-        <div class="card border-0 shadow-sm mb-4 rounded-4" style="background:linear-gradient(135deg,#eef2ff,#f8fafc)">
+        {{-- ================= TABS ================= --}}
+        @include('pengguna.verifikasi.tabs')
+
+        {{-- ================= HEADER & FILTER ================= --}}
+        <div class="card border-0 shadow-sm mb-4 rounded-4 bg-white">
             <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
-                    <h4 class="fw-bold mb-0">Verifikasi Faktor Risiko</h4>
-                    <small class="text-muted">Kelola persetujuan data faktor risiko dari petugas</small>
+                    <h5 class="fw-bold mb-0 text-dark">Data Faktor Risiko</h5>
                 </div>
 
                 {{-- KONTENER TOMBOL DAN FILTER --}}
@@ -23,7 +25,7 @@
                     {{-- FILTER PUSKESMAS & STATUS --}}
                     <form method="GET" action="{{ route('pengguna.verifikasi.faktor') }}" class="d-flex gap-2">
                         {{-- Filter Puskesmas --}}
-                        <select name="puskesmas_id" class="form-select form-select-sm rounded-pill shadow-sm border-0"
+                        <select name="puskesmas_id" class="form-select form-select-sm rounded-pill shadow-sm bg-light border-0"
                             onchange="this.form.submit()" style="min-width: 160px;">
                             <option value="all">Semua Puskesmas</option>
                             @foreach($puskesmasList ?? [] as $p)
@@ -34,7 +36,7 @@
                         </select>
 
                         {{-- Filter Status --}}
-                        <select name="status" class="form-select form-select-sm rounded-pill shadow-sm border-0"
+                        <select name="status" class="form-select form-select-sm rounded-pill shadow-sm bg-light border-0"
                             onchange="this.form.submit()" style="min-width: 130px;">
                             <option value="pending" {{ ($status ?? 'pending') == 'pending' ? 'selected' : '' }}>Tertunda
                             </option>

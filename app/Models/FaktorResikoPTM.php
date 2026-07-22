@@ -21,6 +21,7 @@ class FaktorResikoPTM extends Model
         'tanggal_pemeriksaan',
         'merokok',
         'alkohol',
+        'riwayat_keluarga',
         'kurang_aktivitas_fisik',
         'obesitas',
         'makanan_tidak_sehat',

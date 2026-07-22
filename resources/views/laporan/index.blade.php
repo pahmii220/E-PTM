@@ -175,22 +175,6 @@
                                 </span>
                             </div>
                             <div class="row g-3">
-                                <!-- LAPORAN PESERTA -->
-                                <div class="col-lg-3 col-md-4 col-sm-6">
-                                    <a href="?tab=peserta#preview-section" class="text-decoration-none">
-                                        <div
-                                            class="report-card d-flex align-items-center gap-3 {{ $tab === 'peserta' ? 'active-card border-primary' : '' }}">
-                                            <div class="icon-box bg-primary-soft flex-shrink-0">
-                                                <i class="bi bi-people-fill text-primary"></i>
-                                            </div>
-                                            <div class="text-start">
-                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">Laporan Peserta</h6>
-                                                <p class="text-muted mb-0" style="font-size: 11px; line-height: 1.2;">Cetak data peserta PTM
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
 
                                 <!-- KEGIATAN PTM -->
                                 <div class="col-lg-3 col-md-4 col-sm-6">
@@ -219,56 +203,6 @@
                                 </span>
                             </div>
                             <div class="row g-3">
-                                <!-- LAPORAN DETEKSI DINI -->
-                                <div class="col-lg-3 col-md-4 col-sm-6">
-                                    <a href="?tab=deteksi#preview-section" class="text-decoration-none">
-                                        <div
-                                            class="report-card d-flex align-items-center gap-3 {{ $tab === 'deteksi' ? 'active-card border-danger' : '' }}">
-                                            <div class="icon-box bg-danger-soft flex-shrink-0">
-                                                <i class="bi bi-heart-pulse-fill text-danger"></i>
-                                            </div>
-                                            <div class="text-start">
-                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">Laporan Deteksi Dini</h6>
-                                                <p class="text-muted mb-0" style="font-size: 11px; line-height: 1.2;">Hasil deteksi dini PTM
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-
-                                <!-- LAPORAN FAKTOR RISIKO -->
-                                <div class="col-lg-3 col-md-4 col-sm-6">
-                                    <a href="?tab=faktor#preview-section" class="text-decoration-none">
-                                        <div
-                                            class="report-card d-flex align-items-center gap-3 {{ $tab === 'faktor' ? 'active-card border-warning' : '' }}">
-                                            <div class="icon-box bg-warning-soft flex-shrink-0">
-                                                <i class="bi bi-exclamation-triangle-fill text-warning"></i>
-                                            </div>
-                                            <div class="text-start">
-                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">Laporan Faktor Risiko</h6>
-                                                <p class="text-muted mb-0" style="font-size: 11px; line-height: 1.2;">Data faktor risiko PTM
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-
-                                <!-- LAPORAN TINDAK LANJUT -->
-                                <div class="col-lg-3 col-md-4 col-sm-6">
-                                    <a href="?tab=tindak_lanjut#preview-section" class="text-decoration-none">
-                                        <div
-                                            class="report-card d-flex align-items-center gap-3 {{ $tab === 'tindak_lanjut' ? 'active-card border-success' : '' }}">
-                                            <div class="icon-box bg-success-soft flex-shrink-0">
-                                                <i class="bi bi-clipboard-check-fill text-success"></i>
-                                            </div>
-                                            <div class="text-start">
-                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">Laporan Tindak Lanjut</h6>
-                                                <p class="text-muted mb-0" style="font-size: 11px; line-height: 1.2;">Tindak lanjut
-                                                    pemeriksaan</p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
 
                                 <!-- HASIL SKRINING PTM -->
                                 <div class="col-lg-3 col-md-4 col-sm-6">
@@ -598,7 +532,7 @@
                                                                         <thead class="table-light">
                                                                             <tr>
                                                                                 <th class="ps-4" style="width: 60px;">No</th>
-                                                                                <th>Nama Peserta</th>
+                                                                                <th>Nama Pasien</th>
                                                                                 <th class="text-center">Tekanan Darah</th>
                                                                                 <th class="text-center">Gula Darah</th>
                                                                                 <th>Puskesmas</th>
@@ -644,7 +578,7 @@
                                                                         <thead class="table-light">
                                                                             <tr>
                                                                                 <th class="ps-4" style="width: 60px;">No</th>
-                                                                                <th>Nama Peserta</th>
+                                                                                <th>Nama Pasien</th>
                                                                                 <th class="text-center">Merokok</th>
                                                                                 <th class="text-center">Konsumsi Alkohol</th>
                                                                                 <th class="text-center">Kurang Fisik</th>
@@ -699,7 +633,7 @@
                                                                         <thead class="table-light">
                                                                             <tr>
                                                                                 <th class="ps-4" style="width: 60px;">No</th>
-                                                                                <th>Nama Peserta</th>
+                                                                                <th>Nama Pasien</th>
                                                                                 <th>Jenis Tindak Lanjut</th>
                                                                                 <th>Keterangan Petugas</th>
                                                                                 <th>Puskesmas</th>

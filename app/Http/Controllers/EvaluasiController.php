@@ -42,7 +42,7 @@ class EvaluasiController extends Controller
             'saran' => $request->saran
         ]);
 
-        return redirect()->route('pengguna.evaluasi.form')->with('success', 'Terima kasih banyak! Penilaian Anda berhasil disimpan.');
+        return redirect()->route('petugas.evaluasi.form')->with('success', 'Terima kasih banyak! Penilaian Anda berhasil disimpan.');
     }
 
     // 3. Tampilan Laporan Ke-10 (Summary Evaluasi untuk Admin / Kepala)

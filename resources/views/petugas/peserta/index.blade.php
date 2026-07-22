@@ -1,17 +1,17 @@
 @extends('layouts.master')
 
-@section('title', 'Data Peserta')
+@section('title', 'Data Pasien')
 
 @section('content')
     <div class="container-fluid py-2 px-4" style="max-width:1400px;margin:auto">
 
         {{-- HEADER --}}
         <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-            <h2 class="fw-bold mb-0">Daftar Peserta</h2>
+            <h2 class="fw-bold mb-0">Daftar Pasien</h2>
 
             <div class="d-flex gap-2">
                 <a href="{{ route('petugas.peserta.create') }}" class="btn btn-success">
-                    <i class="bi bi-plus-circle"></i> Tambah Peserta
+                    <i class="bi bi-plus-circle"></i> Tambah Pasien
                 </a>
             </div>
         </div>
@@ -59,7 +59,7 @@
 
         {{-- HEADER CETAK --}}
         <div id="printHeader" class="d-none text-center mb-3">
-            <h4 class="fw-bold mb-1">Laporan Data Peserta</h4>
+            <h4 class="fw-bold mb-1">Laporan Data Pasien</h4>
             <div id="printSubTitle" class="text-muted"></div>
             <hr>
         </div>
@@ -71,15 +71,15 @@
                     <thead class="bg-success text-white">
                         <tr>
                             <th>No</th>
-                            <th>Identitas Peserta</th>
+                            <th>Identitas Pasien</th>
                             <th>No RM</th>
                             <th>TTL</th>
                             <th>JK</th>
                             <th>Pekerjaan</th>
                             <th>Alamat & Kec</th>
                             <th>Kontak</th>
+                            <th>Pemeriksaan Terakhir</th>
                             <th>Puskesmas</th>
-                            <th style="min-width: 140px;">Status Verifikasi</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -91,7 +91,9 @@
 
                                 {{-- NAMA & NIK --}}
                                 <td class="text-start">
-                                    <div class="fw-bold text-dark">{{ $p->nama_lengkap }}</div>
+                                    <a href="{{ route('petugas.peserta.show', $p->id) }}" class="fw-bold" style="color: #0f766e; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="Lihat Rekam Medis & Riwayat">
+                                        {{ $p->nama_lengkap }}
+                                    </a>
                                     <div class="text-muted" style="font-size: 12px;">NIK: {{ $p->nik ?? '-' }}</div>
                                 </td>
 
@@ -121,100 +123,36 @@
                                 </td>
 
                                 <td>{{ $p->kontak }}</td>
-                                <td>{{ $p->puskesmas->nama_puskesmas ?? '-' }}</td>
-
-
-                                {{-- BAGIAN STATUS MENGGUNAKAN MODAL POP-UP --}}
+                                
+                                {{-- PEMERIKSAAN TERAKHIR --}}
                                 <td>
-                                    @if($p->status_verifikasi === 'approved')
-                                        <span class="badge bg-success px-3 py-2 rounded-pill shadow-sm">
-                                            <i class="bi bi-check-circle me-1"></i> Diterima
+                                    @if($p->deteksiDiniPTM)
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-bold" style="font-size: 11px;">
+                                            <i class="bi bi-calendar-check-fill me-1"></i> {{ \Carbon\Carbon::parse($p->deteksiDiniPTM->tanggal_pemeriksaan)->format('d-m-Y') }}
                                         </span>
-                                        @if($p->diverifikasi_pada)
-                                            <div class="text-muted mt-1" style="font-size: 11px;">
-                                                Proses:
-                                                {{ \Carbon\Carbon::parse($p->dibuat_pada)->diffForHumans(\Carbon\Carbon::parse($p->diverifikasi_pada), true) }}
-                                            </div>
-                                        @endif
-
-                                    @elseif($p->status_verifikasi === 'rejected')
-                                        <span class="badge bg-danger px-3 py-2 rounded-pill shadow-sm">
-                                            <i class="bi bi-x-circle me-1"></i> Revisi
-                                        </span>
-
-                                        @if($p->catatan_verifikasi)
-                                            <div class="mt-2">
-                                                <button type="button" class="btn btn-outline-danger rounded-pill"
-                                                    style="font-size: 10px; padding: 2px 10px;" data-bs-toggle="modal"
-                                                    data-bs-target="#noteModal{{ $p->id }}">
-                                                    <i class="bi bi-eye"></i> Lihat Catatan
-                                                </button>
-                                            </div>
-
-                                            {{-- Modal / Pop-up Box --}}
-                                            <div class="modal fade" id="noteModal{{ $p->id }}" tabindex="-1"
-                                                aria-labelledby="noteModalLabel{{ $p->id }}" aria-hidden="true">
-                                                <div class="modal-dialog modal-dialog-centered">
-                                                    <div class="modal-content border-0 shadow">
-                                                        <div class="modal-header bg-danger text-white border-0">
-                                                            <h5 class="modal-title fs-6 fw-bold" id="noteModalLabel{{ $p->id }}">
-                                                                <i class="bi bi-exclamation-triangle-fill me-2"></i> Catatan Revisi
-                                                                Admin
-                                                            </h5>
-                                                            <button type="button" class="btn-close btn-close-white"
-                                                                data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body text-start p-4 text-dark"
-                                                            style="white-space: normal; line-height: 1.6;">
-                                                            <div class="mb-2 text-muted" style="font-size: 12px;">
-                                                                Pesan untuk data peserta: <strong>{{ $p->nama_lengkap }}</strong>
-                                                            </div>
-                                                            <div class="p-3 bg-light border-start border-danger border-4 rounded">
-                                                                {{ $p->catatan_verifikasi }}
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer border-0 bg-light">
-                                                            <button type="button" class="btn btn-secondary btn-sm px-4"
-                                                                data-bs-dismiss="modal">Tutup</button>
-                                                            <a href="{{ route('petugas.peserta.edit', $p->id) }}"
-                                                                class="btn btn-danger btn-sm px-4">
-                                                                <i class="bi bi-pencil-square"></i> Perbaiki Data
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endif
-
                                     @else
-                                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill shadow-sm">
-                                            <i class="bi bi-hourglass-split me-1"></i> Tertunda
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 rounded-pill fw-bold" style="font-size: 11px;">
+                                            <i class="bi bi-exclamation-circle-fill me-1"></i> Belum Periksa
                                         </span>
-
                                     @endif
                                 </td>
+                                
+                                <td>{{ $p->puskesmas->nama_puskesmas ?? '-' }}</td>
 
                                 <td>
-                                    @if($p->status_verifikasi === 'approved' && auth()->user()->role_name !== 'admin')
-                                        {{-- 🔒 TERKUNCI --}}
-                                        <span class="badge bg-secondary">
-                                            Terkunci
-                                        </span>
-                                    @else
-                                        {{-- ✏️ EDIT --}}
-                                        <a href="{{ route('petugas.peserta.edit', $p->id) }}" class="btn btn-sm btn-warning me-1">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </a>
+                                    {{-- ✏️ EDIT --}}
+                                    <a href="{{ route('petugas.peserta.edit', $p->id) }}" class="btn btn-sm btn-warning me-1" title="Edit Biodata">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
 
-                                        {{-- 🗑️ DELETE --}}
-                                        <form action="{{ route('petugas.peserta.destroy', $p->id) }}" method="POST" class="d-inline"
-                                            onsubmit="return confirm('Yakin hapus data?')">
-                                            @csrf @method('DELETE')
-                                            <button class="btn btn-sm btn-danger">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
-                                    @endif
+                                    {{-- 🗑️ DELETE --}}
+                                    <form action="{{ route('petugas.peserta.destroy', $p->id) }}" method="POST" class="d-inline"
+                                        onsubmit="return confirm('Yakin hapus data?')">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-danger" title="Hapus Pasien">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
                                 </td>
 
                             </tr>

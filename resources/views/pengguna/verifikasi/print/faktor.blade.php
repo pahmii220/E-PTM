@@ -165,14 +165,14 @@
 
         {{-- PENJELASAN SINGKAT --}}
         <div style="font-size: 11px; color: #444; margin-bottom: 12px; line-height: 1.4; text-align: left;">
-            Laporan ini menyajikan ringkasan hasil pemeriksaan faktor risiko Penyakit Tidak Menular (PTM) yang meliputi perilaku berisiko peserta (seperti merokok, alkohol, dan kurang aktivitas fisik).
+            Laporan ini menyajikan ringkasan hasil pemeriksaan faktor risiko Penyakit Tidak Menular (PTM) yang meliputi perilaku berisiko pasien (seperti merokok, alkohol, dan kurang aktivitas fisik).
         </div>
 
         <table class="grid">
             <thead>
                 <tr>
                     <th style="width:40px">No</th>
-                    <th>Peserta</th>
+                    <th>Pasien</th>
                     <th style="width:110px">Tanggal Pemeriksaan</th>
                     <th style="width:80px">Merokok</th>
                     <th style="width:80px">Alkohol</th>

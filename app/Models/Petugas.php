@@ -42,9 +42,14 @@ class Petugas extends Model
     }
 
     public function tindakLanjutPTM()
-{
-    return $this->hasMany(TindakLanjutPTM::class);
-}
+    {
+        return $this->hasMany(TindakLanjutPTM::class, 'petugas_id');
+    }
+
+    public function deteksiDiniPTM()
+    {
+        return $this->hasMany(DeteksiDiniPTM::class, 'petugas_id');
+    }
 
 public function user()
 {

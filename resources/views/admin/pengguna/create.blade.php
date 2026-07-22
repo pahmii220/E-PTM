@@ -35,79 +35,117 @@
             </div>
         @endif
 
-        <form action="{{ route('admin.pengguna.store') }}" method="POST">
+        <form action="{{ route('admin.pengguna.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             <div class="row g-4 justify-content-center">
 
                 {{-- KIRI: IDENTITAS DASAR --}}
-                <div class="col-lg-7">
-                    <div class="data-card p-4 h-100">
+                <div class="col-lg-10 mx-auto">
+                    <div class="data-card p-4">
                         <div class="section-title mb-4">
                             <i class="bi bi-person-vcard text-primary"></i>
-                            <span>Identitas Dasar Pegawai</span>
+                            <span>Identitas & Profil Lengkap Pegawai</span>
                         </div>
 
                         <div class="row g-4">
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <label class="form-label fw-bold">Nama Lengkap <span class="text-danger">*</span></label>
                                 <input type="text" name="Nama_Lengkap" class="form-control"
                                     placeholder="Contoh: Budi Santoso, S.KM" value="{{ old('Nama_Lengkap') }}" required>
                             </div>
 
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <label class="form-label fw-bold">Nomor Induk Pegawai (NIP)</label>
-                                <input type="text" name="nip" class="form-control" placeholder="Opsional, dapat diisi nanti"
+                                <input type="text" name="nip" class="form-control" placeholder="Contoh: 198504122010011005"
                                     value="{{ old('nip') }}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Tanggal Lahir</label>
+                                <input type="date" name="tgl_lahir" class="form-control" value="{{ old('tgl_lahir') }}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Telepon / WhatsApp</label>
+                                <input type="text" name="telepon" class="form-control" placeholder="Contoh: 081234567890" value="{{ old('telepon') }}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Jabatan</label>
+                                <select name="jabatan" class="form-select">
+                                    <option value="">-- Pilih Jabatan --</option>
+                                    @php
+                                        $jabatanList = [
+                                            'Kepala Seksi P2PTM',
+                                            'Epidemiolog Kesehatan Ahli Pertama',
+                                            'Penata Layanan Operasional',
+                                            'Pengelola Data PTM',
+                                            'Penelaah Teknis Kebijakan',
+                                            'Administrator Kesehatan Ahli Pertama',
+                                            'Pengadministrasi Perkantoran',
+                                        ];
+                                    @endphp
+                                    @foreach($jabatanList as $j)
+                                        <option value="{{ $j }}" {{ old('jabatan') == $j ? 'selected' : '' }}>{{ $j }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Pangkat / Golongan</label>
+                                <select name="golongan" class="form-select">
+                                    <option value="">-- Pilih Golongan --</option>
+                                    @php
+                                        $golonganList = [
+                                            'IX',
+                                            'Penata (III/c)',
+                                            'Pembina (IV/a)',
+                                            'Penata Muda Tk.1 (III/b)',
+                                        ];
+                                    @endphp
+                                    @foreach($golonganList as $g)
+                                        <option value="{{ $g }}" {{ old('golongan') == $g ? 'selected' : '' }}>{{ $g }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Bidang / Subdit</label>
+                                <input type="text" name="bidang" class="form-control" placeholder="Contoh: P2PTM" value="{{ old('bidang') ?? 'P2PTM' }}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Provinsi</label>
+                                <input type="text" name="provinsi" class="form-control" placeholder="Contoh: Kalimantan Selatan" value="{{ old('provinsi') ?? 'Kalimantan Selatan' }}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Kabupaten / Kota</label>
+                                <input type="text" name="kabupaten_kota" class="form-control" placeholder="Contoh: Banjarmasin" value="{{ old('kabupaten_kota') }}">
                             </div>
 
                             <div class="col-md-12">
                                 <label class="form-label fw-bold">Alamat Email</label>
                                 <input type="email" name="email" class="form-control" placeholder="email@contoh.com"
                                     value="{{ old('email') }}">
-                                <small class="text-muted">Digunakan jika sistem memerlukan notifikasi email.</small>
+                                <small class="text-muted">Digunakan untuk notifikasi email sistem.</small>
                             </div>
-                        </div>
-                    </div>
-                </div>
 
-                {{-- KANAN: AKUN LOGIN --}}
-                <div class="col-lg-5">
-                    <div class="data-card p-4 h-100 d-flex flex-column">
-                        <div class="section-title mb-4">
-                            <i class="bi bi-key-fill text-warning"></i>
-                            <span>Kredensial Akun Login</span>
-                        </div>
-
-                        <div class="form-group mb-4">
-                            <label class="form-label fw-bold">Username <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light text-muted">@</span>
-                                <input type="text" name="Username" class="form-control" placeholder="Pilih username unik"
-                                    value="{{ old('Username') }}" required>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Alamat Lengkap Tempat Tinggal</label>
+                                <textarea name="alamat" class="form-control" rows="3" placeholder="Contoh: Jl. Ahmad Yani No. 12, Kel. Pemurus Luar, Kec. Banjarmasin Timur">{{ old('alamat') }}</textarea>
                             </div>
-                            <small class="text-muted">Gunakan huruf kecil, tanpa spasi.</small>
-                        </div>
 
-                        <div class="form-group mb-4">
-                            <label class="form-label fw-bold">Password Awal <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="password" name="password" id="password" class="form-control"
-                                    placeholder="Minimal 8 karakter" required style="border-right: none;">
-                                <span class="input-group-text bg-white" id="togglePassword"
-                                    style="cursor: pointer; border-left: none; border-radius: 0 10px 10px 0; border-color: #e2e8f0;">
-                                    <i class="bi bi-eye text-muted"></i>
-                                </span>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Foto Profil (Opsional)</label>
+                                <input type="file" name="foto" class="form-control" accept="image/*">
+                                <small class="text-muted">Format gambar (JPG, PNG, WEBP), Maksimal 2MB.</small>
                             </div>
                         </div>
 
-                        <div class="mt-2 p-3 bg-light rounded-3 small text-muted mb-4">
-                            <i class="bi bi-info-circle me-1"></i> Admin hanya membuat akun untuk login ke Sistem. Pegawai dapat melengkapi Profile Lengkap secara mandiri melalui menu Profil
-                            mereka nanti.
-                        </div>
-
-                        <div class="mt-auto pt-2">
-                            <button type="submit" class="btn-action-primary w-100 py-3">
-                                <i class="bi bi-person-check-fill me-2"></i> Daftarkan Pegawai
+                        <div class="mt-4 pt-3 border-top text-end">
+                            <button type="submit" class="btn-action-primary px-5 py-2">
+                                <i class="bi bi-person-check-fill me-2"></i> Daftarkan Profil Pegawai
                             </button>
                         </div>
                     </div>

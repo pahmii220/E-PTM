@@ -3,6 +3,8 @@
 @section('content')
     <div class="container-fluid py-4" style="max-width:1400px">
 
+        @include('kepala_p2ptm.laporan.partials.tabs')
+
         {{-- ALERT PESAN --}}
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show shadow-sm rounded-3" role="alert">
@@ -16,8 +18,8 @@
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col-md-5">
-                        <h4 class="fw-bold mb-0">Laporan Peserta (Terverifikasi)</h4>
-                        <small class="text-muted">Tinjau data peserta dan lakukan pencetakan laporan bulanan.</small>
+                        <h4 class="fw-bold mb-0">Laporan Pasien (Terverifikasi)</h4>
+                        <small class="text-muted">Tinjau data pasien dan lakukan pencetakan laporan bulanan.</small>
                     </div>
 
                     <div class="col-md-7">
@@ -97,7 +99,7 @@
                     <thead class="table-light">
                         <tr>
                             <th class="ps-4">No</th>
-                            <th>Nama Peserta</th>
+                            <th>Nama Pasien</th>
                             <th>No RM</th>
                             <th>Kontak</th>
                             <th>Status</th>

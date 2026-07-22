@@ -18,7 +18,7 @@ class DeteksiDiniPTM extends Model
 
     protected $fillable = [
         'peserta_id',
-        'puskesmas_id',          // ✅ GANTI
+        'puskesmas_id',
         'tanggal_pemeriksaan',
         'tekanan_darah',
         'gula_darah',
@@ -27,6 +27,7 @@ class DeteksiDiniPTM extends Model
         'tinggi_badan',
         'imt',
         'hasil_skrining',
+        'diagnosa_penyakit',
         'petugas_id',
 
         // fields verifikasi
@@ -42,6 +43,8 @@ class DeteksiDiniPTM extends Model
         'berat_badan' => 'float',
         'tinggi_badan' => 'float',
         'imt' => 'float',
+        'gula_darah' => 'float',
+        'kolesterol' => 'float',
     ];
 
     // -----------------------

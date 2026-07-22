@@ -10,6 +10,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- jQuery & Select2 -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
 
@@ -93,7 +98,7 @@
         }
     </style>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-
+    @stack('styles')
 </head>
 
 <body>
@@ -120,8 +125,8 @@ $notifCount = 0;
 $isNearDeadline = false;
 $role = auth()->check() ? auth()->user()->role_name : '';
 if ($jumlahPendingAdmin > 0) {
-    // ID sekarang menjadi dinamis, misal: 'admin-verif-petugas-1'
-    $allNotifIds[] = 'admin-verif-petugas-' . $jumlahPendingAdmin;
+    // ID dinamis berdasarkan ID pendaftar terakhir agar notif baru bisa muncul walau jumlahnya sama
+    $allNotifIds[] = 'admin-verif-petugas-' . ($latestPendingIdAdmin ?? $jumlahPendingAdmin);
     $notifCount++;
 }
 
@@ -140,6 +145,15 @@ if (auth()->check()) {
         if ($role === 'petugas') {
             $puskesmas_id = DB::table('petugas')->where('user_id', auth()->id())->value('puskesmas_id');
 
+            // 🔥 PENGINGAT DARI DINKES 🔥
+            $pkmNotifData = DB::table('puskesmas')->where('id', $puskesmas_id)->select('notif_pengingat', 'updated_at')->first();
+            if($pkmNotifData && !empty($pkmNotifData->notif_pengingat)) {
+                $pengingatId = 'pengingat-dinkes-' . strtotime($pkmNotifData->updated_at);
+                $pesanPengingatDinkes = $pkmNotifData->notif_pengingat;
+                $allNotifIds[] = $pengingatId;
+                $notifCount++;
+            }
+
             $pesertaNotif = DB::table('peserta')->where('puskesmas_id', $puskesmas_id)->where('status_verifikasi', 'approved')->whereNotNull('diverifikasi_pada')->where('diverifikasi_pada', '>=', Carbon::now()->subDays(7))->select('id', DB::raw("'peserta' as type"), 'nama_lengkap as nama', 'status_verifikasi as status', 'catatan_verifikasi as note', 'diverifikasi_pada as time')->get();
             $deteksiNotif = DB::table('deteksi_dini_ptm')->join('peserta', 'deteksi_dini_ptm.peserta_id', '=', 'peserta.id')->where('deteksi_dini_ptm.puskesmas_id', $puskesmas_id)->where('deteksi_dini_ptm.status_verifikasi', 'approved')->whereNotNull('deteksi_dini_ptm.diverifikasi_pada')->where('deteksi_dini_ptm.diverifikasi_pada', '>=', Carbon::now()->subDays(7))->select('deteksi_dini_ptm.id', DB::raw("'deteksi' as type"), 'peserta.nama_lengkap as nama', 'deteksi_dini_ptm.status_verifikasi as status', 'deteksi_dini_ptm.catatan_verifikasi as note', 'deteksi_dini_ptm.diverifikasi_pada as time')->get();
             $faktorNotif = DB::table('faktor_resiko_ptm')->join('peserta', 'faktor_resiko_ptm.peserta_id', '=', 'peserta.id')->where('faktor_resiko_ptm.puskesmas_id', $puskesmas_id)->where('faktor_resiko_ptm.status_verifikasi', 'approved')->whereNotNull('faktor_resiko_ptm.diverifikasi_pada')->where('faktor_resiko_ptm.diverifikasi_pada', '>=', Carbon::now()->subDays(7))->select('faktor_resiko_ptm.id', DB::raw("'faktor' as type"), 'peserta.nama_lengkap as nama', 'faktor_resiko_ptm.status_verifikasi as status', 'faktor_resiko_ptm.catatan_verifikasi as note', 'faktor_resiko_ptm.diverifikasi_pada as time')->get();
@@ -150,48 +164,25 @@ if (auth()->check()) {
             $notifCount += $notifData->count();
 
         } elseif ($role === 'pegawai') {
-            // Ambil peserta yang punya minimal 1 data pending dalam 14 hari terakhir
-            // Di-GROUP per peserta agar 1 peserta = 1 notif (bukan 3 notif terpisah)
-            $pesertaDenganDataPending = DB::table('peserta')
-                ->where(function($q) {
-                    $q->where('peserta.status_verifikasi', 'pending')
-                      ->orWhereExists(function($sub) {
-                          $sub->from('deteksi_dini_ptm')
-                              ->whereColumn('deteksi_dini_ptm.peserta_id', 'peserta.id')
-                              ->where('deteksi_dini_ptm.status_verifikasi', 'pending');
-                      })
-                      ->orWhereExists(function($sub) {
-                          $sub->from('faktor_resiko_ptm')
-                              ->whereColumn('faktor_resiko_ptm.peserta_id', 'peserta.id')
-                              ->where('faktor_resiko_ptm.status_verifikasi', 'pending');
-                      });
-                })
-                ->where(function($q) {
-                    $q->where('peserta.diubah_pada', '>=', Carbon::now()->subDays(14))
-                      ->orWhereExists(function($sub) {
-                          $sub->from('deteksi_dini_ptm')
-                              ->whereColumn('deteksi_dini_ptm.peserta_id', 'peserta.id')
-                              ->where('deteksi_dini_ptm.diubah_pada', '>=', Carbon::now()->subDays(14));
-                      })
-                      ->orWhereExists(function($sub) {
-                          $sub->from('faktor_resiko_ptm')
-                              ->whereColumn('faktor_resiko_ptm.peserta_id', 'peserta.id')
-                              ->where('faktor_resiko_ptm.diubah_pada', '>=', Carbon::now()->subDays(14));
-                      });
-                })
+            // Ambil notifikasi laporan masuk per puskesmas (dikelompokkan)
+            $laporanPuskesmasPending = DB::table('deteksi_dini_ptm')
+                ->join('puskesmas', 'deteksi_dini_ptm.puskesmas_id', '=', 'puskesmas.id')
+                ->where('deteksi_dini_ptm.status_verifikasi', 'pending')
                 ->select(
-                    'peserta.id',
-                    DB::raw("'peserta' as type"),
-                    'peserta.nama_lengkap as nama',
+                    'puskesmas.id',
+                    DB::raw("'puskesmas' as type"),
+                    'puskesmas.nama_puskesmas as nama',
+                    DB::raw('count(deteksi_dini_ptm.id) as total_data'),
                     DB::raw("'pending' as status"),
                     DB::raw("null as note"),
-                    'peserta.diubah_pada as time'
+                    DB::raw("MAX(deteksi_dini_ptm.tanggal_pemeriksaan) as time")
                 )
-                ->orderByDesc('peserta.diubah_pada')
+                ->groupBy('puskesmas.id', 'puskesmas.nama_puskesmas')
+                ->orderByDesc('time')
                 ->take(5)
                 ->get();
 
-            $notifData = $pesertaDenganDataPending;
+            $notifData = $laporanPuskesmasPending;
             $notifCount += $notifData->count();
 
             $totalPending = DB::table('peserta')->where('status_verifikasi', 'pending')->count() +
@@ -286,6 +277,27 @@ if (auth()->check()) {
 
         <div class="notif-body overflow-y-auto" style="max-height: 350px;">
 
+            {{-- PENGINGAT DARI DINKES --}}
+            @if(isset($pesanPengingatDinkes) && !empty($pesanPengingatDinkes))
+                <li x-show="!readList.includes('{{ $pengingatId }}')" x-transition.opacity.duration.300ms
+                    class="relative border-bottom bg-blue-50 hover:bg-blue-100 transition">
+                    <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="{{ route('petugas.laporan.index') }}">
+                        <div class="d-flex align-items-start">
+                            <div class="text-blue-500 me-3 fs-4"><i class="bi bi-info-circle-fill"></i></div>
+                            <div style="line-height: 1.4;">
+                                <div class="fw-bold text-dark" style="font-size: 14px;">Pesan dari Dinas Kesehatan</div>
+                                <div class="text-muted mt-1" style="font-size: 12px;">{{ $pesanPengingatDinkes }}</div>
+                                <div class="text-secondary mt-2 fw-semibold" style="font-size: 10px;">Dinas Kesehatan Provinsi</div>
+                            </div>
+                        </div>
+                    </a>
+                    <button @click.prevent="markRead('{{ $pengingatId }}')"
+                        class="position-absolute top-50 end-0 translate-middle-y me-3 btn btn-sm btn-link text-gray-400 hover:text-blue-500 p-0 border-0">
+                        <i class="bi bi-x-circle-fill fs-5"></i>
+                    </button>
+                </li>
+            @endif
+
             {{-- DEADLINE --}}
             @if($isNearDeadline)
                 <li x-show="!readList.includes('deadline-notif')" x-transition.opacity.duration.300ms
@@ -314,14 +326,13 @@ if (auth()->check()) {
                 <li x-show="!readList.includes('pengingat-verif')" x-transition.opacity.duration.300ms
                     class="relative border-bottom bg-blue-50 hover:bg-blue-100 transition">
                     <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent"
-                        href="{{ route('pengguna.verifikasi.peserta') }}">
+                        href="{{ route('pengguna.verifikasi.index') }}">
                         <div class="d-flex align-items-start">
                             <div class="text-blue-500 me-3 fs-4"><i class="bi bi-clock-history"></i></div>
                             <div style="line-height: 1.4;">
-                                <div class="fw-bold text-dark" style="font-size: 14px;">Pengingat Verifikasi</div>
-                                <div class="text-muted mt-1" style="font-size: 12px;">Terdapat total
-                                    <strong>{{ $totalPending }} antrean data</strong> yang masih menunggu verifikasi Anda.
-                                    Mohon segera diproses.</div>
+                                <div class="fw-bold text-dark" style="font-size: 14px;">Data Laporan Masuk</div>
+                                <div class="text-muted mt-1" style="font-size: 12px;">Terdapat
+                                    <strong>{{ $totalPending }} antrean data</strong> yang masuk untuk Anda pantau. Mohon segera diproses.</div>
                                 <div class="text-secondary mt-2 fw-semibold" style="font-size: 10px;">Sistem Otomatis</div>
                             </div>
                         </div>
@@ -336,11 +347,11 @@ if (auth()->check()) {
 
             {{-- 🔥 AKTIVASI AKUN PETUGAS (KHUSUS ADMIN) --}}
             @if($role === 'admin' && isset($jumlahPendingAdmin) && $jumlahPendingAdmin > 0)
-                {{-- Gunakan ID dinamis yang menyertakan jumlah pendaftar --}}
-                <li x-show="!readList.includes('admin-verif-petugas-{{ $jumlahPendingAdmin }}')" x-transition.opacity.duration.300ms
+                @php $notifId = 'admin-verif-petugas-' . ($latestPendingIdAdmin ?? $jumlahPendingAdmin); @endphp
+                <li x-show="!readList.includes('{{ $notifId }}')" x-transition.opacity.duration.300ms
                     class="relative border-bottom bg-indigo-50 hover:bg-indigo-100 transition">
 
-                    <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="{{ route('admin.data_petugas.index') }}">
+                    <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="{{ route('admin.data_petugas.index', ['filter' => 'pending']) }}">
                         <div class="d-flex align-items-start">
                             <div class="text-indigo-600 me-3 fs-4"><i class="bi bi-person-lines-fill"></i></div>
                             <div style="line-height: 1.4;">
@@ -352,8 +363,8 @@ if (auth()->check()) {
                         </div>
                     </a>
 
-                    {{-- Pastikan tombol markRead juga menggunakan ID dinamis yang sama --}}
-                    <button @click.prevent="markRead('admin-verif-petugas-{{ $jumlahPendingAdmin }}')"
+                    <!-- Tombol mark as read (silang) -->
+                    <button @click.prevent="markRead('{{ $notifId }}')"
                         class="absolute top-3 right-3 text-gray-400 hover:text-indigo-600 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"
                         title="Tandai sudah dibaca">
                         <i class="bi bi-check2"></i>
@@ -361,13 +372,33 @@ if (auth()->check()) {
                 </li>
             @endif
 
-            {{-- NOTIFIKASI DATABASE (REVISI/TOLAK DATA) --}}
+            {{-- NOTIFIKASI DATABASE (REVISI/TOLAK DATA & PENGAJUAN SURAT TUGAS) --}}
             @if(isset($dbNotifications) && $dbNotifications->count() > 0)
                 @foreach($dbNotifications as $notif)
-                    <li class="relative border-bottom bg-red-50 hover:bg-red-100 transition">
+                    @php
+                        $notifType = $notif->data['type'] ?? 'danger';
+                        if ($notifType === 'warning') {
+                            $bgColorClass = 'bg-yellow-50 hover:bg-yellow-100';
+                            $iconColorClass = 'text-yellow-500';
+                            $iconClass = 'bi-envelope-paper-fill';
+                            $btnHoverColor = 'hover:text-yellow-600';
+                        } elseif ($notifType === 'info') {
+                            $bgColorClass = 'bg-blue-50 hover:bg-blue-100';
+                            $iconColorClass = 'text-blue-500';
+                            $iconClass = 'bi-info-circle-fill';
+                            $btnHoverColor = 'hover:text-blue-600';
+                        } else {
+                            $bgColorClass = 'bg-red-50 hover:bg-red-100';
+                            $iconColorClass = 'text-red-500';
+                            $iconClass = 'bi-exclamation-circle-fill';
+                            $btnHoverColor = 'hover:text-red-600';
+                        }
+                        $notifUrl = $notif->data['url'] ?? route('notifications.read', $notif->id);
+                    @endphp
+                    <li class="relative border-bottom {{ $bgColorClass }} transition">
                         <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="{{ route('notifications.read', $notif->id) }}">
                             <div class="d-flex align-items-start">
-                                <div class="text-red-500 me-3 fs-4"><i class="bi bi-exclamation-circle-fill"></i></div>
+                                <div class="{{ $iconColorClass }} me-3 fs-4"><i class="bi {{ $iconClass }}"></i></div>
                                 <div style="line-height: 1.4;">
                                     <div class="fw-bold text-dark" style="font-size: 14px;">{{ $notif->data['title'] ?? 'Notifikasi' }}</div>
                                     <div class="text-muted mt-1" style="font-size: 12px;">{{ $notif->data['message'] ?? '' }}</div>
@@ -375,9 +406,8 @@ if (auth()->check()) {
                                 </div>
                             </div>
                         </a>
-                        {{-- Tombol Mark as Read langsung hit route backend agar hapus dari DB --}}
                         <a href="{{ route('notifications.read', $notif->id) }}"
-                            class="absolute top-3 right-3 text-gray-400 hover:text-red-600 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"
+                            class="absolute top-3 right-3 text-gray-400 {{ $btnHoverColor }} bg-white rounded-full w-6 h-6 flex items-center justify-center shadow-sm border"
                             title="Tandai sudah dibaca">
                             <i class="bi bi-check2"></i>
                         </a>
@@ -425,17 +455,16 @@ if (auth()->check()) {
                 @elseif($role === 'pegawai')
                     <li x-show="!readList.includes('{{ $notifId }}')" x-transition.opacity.duration.300ms
                         class="relative border-bottom hover:bg-green-50 transition">
-                        <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="{{ route('pengguna.verifikasi.peserta') }}">
+                        <a class="dropdown-item py-3 text-wrap pe-5 bg-transparent" href="{{ route('pengguna.verifikasi_laporan.show', $notif->id) }}">
                             <div class="d-flex align-items-start">
-                                <div class="text-green-600 me-3 fs-4"><i class="bi bi-person-plus-fill"></i></div>
+                                <div class="text-green-600 me-3 fs-4"><i class="bi bi-hospital"></i></div>
                                 <div style="line-height: 1.4;">
-                                    <div class="fw-bold text-dark" style="font-size: 14px;">Data Baru Perlu Verifikasi</div>
+                                    <div class="fw-bold text-dark" style="font-size: 14px;">Laporan Baru Masuk</div>
                                     <div class="text-muted mt-1" style="font-size: 12px;">
-                                        Petugas baru menginput data PTM atas nama
-                                        <strong>{{ $notif->nama }}</strong>. Mohon segera diverifikasi.
+                                        <strong>{{ $notif->nama }}</strong> mengirimkan <strong>{{ $notif->total_data ?? 'beberapa' }} data PTM baru</strong> yang siap dimonitor.
                                     </div>
-                                    <div class="text-secondary mt-2 fw-semibold" style="font-size: 10px;">Masuk:
-                                        {{ Carbon::parse($notif->time)->diffForHumans() }}</div>
+                                    <div class="text-secondary mt-2 fw-semibold" style="font-size: 10px;">Laporan Terakhir:
+                                        {{ Carbon::parse($notif->time)->translatedFormat('d F Y') }}</div>
                                 </div>
                             </div>
                         </a>
@@ -514,6 +543,7 @@ if (auth()->check()) {
         <div class="relative border-l pl-4 border-gray-200">
         @php
 $fotoProfil = null;
+$namaAsli = null;
 $user = Auth::user();
 
 if (Auth::check()) {
@@ -522,6 +552,7 @@ if (Auth::check()) {
         $profil = \App\Models\PegawaiDinkes::where('user_id', $user->id)->first();
         if ($profil) {
             $fotoProfil = $profil->foto;
+            $namaAsli = $profil->nama_pegawai;
         }
     }
     // Tambahkan pengecekan untuk role petugas
@@ -529,7 +560,12 @@ if (Auth::check()) {
         $profil = \App\Models\Petugas::where('user_id', $user->id)->first();
         if ($profil) {
             $fotoProfil = $profil->foto;
+            $namaAsli = $profil->nama_petugas;
         }
+    }
+
+    if (empty($namaAsli)) {
+        $namaAsli = $user->Nama_Lengkap ?? $user->username ?? null;
     }
 }
         @endphp
@@ -547,10 +583,29 @@ if (Auth::check()) {
                         style="object-fit: cover; background-color: #f3f4f6;">
                 @endif
         
-                <span class="font-medium text-gray-700">
-                    {{ ucfirst(Auth::user()->role_name) }}
-                </span>
-                <i class="bi bi-caret-down-fill text-gray-500"></i>
+                <div class="text-start leading-tight">
+                    @php
+                        $displayRole = Auth::user()->role_name;
+                        if ($displayRole === 'admin') $displayRole = 'Administrator';
+                        elseif ($displayRole === 'pegawai') $displayRole = 'Pegawai Dinkes';
+                        elseif ($displayRole === 'kepala_p2ptm') $displayRole = 'Kepala P2PTM';
+                        else $displayRole = ucfirst($displayRole);
+                    @endphp
+
+                    @if(Auth::user()->role_name === 'admin')
+                        <span class="font-semibold text-gray-800 text-sm block">
+                            Administrator
+                        </span>
+                    @else
+                        <span class="font-semibold text-gray-800 text-sm block">
+                            {{ $namaAsli ?? $displayRole }}
+                        </span>
+                        <span class="text-xs text-gray-500 font-normal block">
+                            {{ $displayRole }}
+                        </span>
+                    @endif
+                </div>
+                <i class="bi bi-caret-down-fill text-gray-500 ms-1"></i>
             </button>
         
             <div id="profileDropdown"
@@ -631,16 +686,16 @@ if (Auth::check()) {
 
     <script>
         setTimeout(function () {
-            document.querySelectorAll('.alert').forEach(function (alert) {
+            // Hanya sembunyikan alert notifikasi (bukan alert UI seperti rekomendasi sistem)
+            document.querySelectorAll('.alert-dismissible').forEach(function (alert) {
                 alert.classList.remove('show');
                 setTimeout(() => alert.remove(), 300);
             });
-        }, 3000);
+        }, 10000);
     </script>
 
     {{-- DataTables --}}
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 
@@ -737,8 +792,53 @@ if (Auth::check()) {
 
     {{-- Footer --}}
     <footer>
-        <strong class="text-gray-500">© 2025 Muhammad Pahmi | Pelaporan PTM</strong>
+        <strong class="text-gray-500">© 2025 Muhammad Pahmi | Aplikasi Manajemen Data & Monitoring PTM  </strong>
     </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    {{-- TOAST NOTIFIKASI PENGINGAT DARI DINKES (PETUGAS) --}}
+    @if(auth()->check() && auth()->user()->role_name === 'petugas' && !empty($pesanPengingatDinkes))
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let readNotifs = JSON.parse(localStorage.getItem('readNotifs') || '[]');
+            if(!readNotifs.includes('{{ $pengingatId }}')) {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: "bottom-end",
+                    showConfirmButton: false,
+                    showCloseButton: true,
+                    timer: false,
+                    didOpen: (toast) => {
+                        toast.style.cursor = 'pointer';
+                        toast.addEventListener('click', (e) => {
+                            if (!e.target.closest('.swal2-close')) {
+                                window.location.href = "{{ route('petugas.laporan.index') }}";
+                            }
+                        });
+                    }
+                });
+                
+                Toast.fire({
+                    icon: "info",
+                    title: "Pesan Baru",
+                    text: "{!! addslashes($pesanPengingatDinkes) !!}",
+                    background: '#f0fdfa',
+                    color: '#0f766e',
+                    iconColor: '#14b8a6',
+                    customClass: {
+                        popup: 'shadow-lg border-start border-4 border-info'
+                    }
+                }).then((result) => {
+                    // Tandai dibaca jika ditekan tombol silang close
+                    if (result.dismiss === Swal.DismissReason.close) {
+                        readNotifs.push('{{ $pengingatId }}');
+                        localStorage.setItem('readNotifs', JSON.stringify(readNotifs));
+                    }
+                });
+            }
+        });
+    </script>
+    @endif
 
     @stack('scripts')
 

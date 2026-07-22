@@ -175,13 +175,12 @@
                             @enderror
                         </div>
 
-                        {{-- PUSKESMAS --}}
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">
-                                Puskesmas <span class="text-danger">*</span>
-                            </label>
-
-                            @if(auth()->user()->role_name === 'admin')
+                        @if(auth()->user()->role_name === 'admin')
+                            {{-- PUSKESMAS --}}
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                    Puskesmas <span class="text-danger">*</span>
+                                </label>
                                 <select name="puskesmas_id" class="form-select rounded-3 @error('puskesmas_id') is-invalid @enderror" required>
                                     <option value="">-- Pilih Puskesmas --</option>
                                     @foreach($puskesmas as $pkm)
@@ -190,16 +189,13 @@
                                         </option>
                                     @endforeach
                                 </select>
-                            @else
-                                <input type="text" class="form-control rounded-3 bg-light"
-                                    value="{{ auth()->user()->petugas->puskesmas->nama_puskesmas ?? '-' }}" readonly>
-                                <input type="hidden" name="puskesmas_id" value="{{ auth()->user()->petugas->puskesmas_id }}">
-                            @endif
-
-                            @error('puskesmas_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                                @error('puskesmas_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        @else
+                            <input type="hidden" name="puskesmas_id" value="{{ auth()->user()->petugas->puskesmas_id ?? $peserta->puskesmas_id }}">
+                        @endif
 
                         {{-- ALAMAT --}}
                         <div class="col-12">

@@ -20,7 +20,7 @@
 
         .container {
             width: 100%;
-            max-width: 1000px;
+            max-width: 100%;
             margin: 0 auto;
             padding: 6px 8px;
             box-sizing: border-box;

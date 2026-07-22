@@ -62,7 +62,19 @@
                         @forelse($semuaData as $index => $row)
                             <tr>
                                 <td class="text-center text-muted">{{ $index + 1 }}</td>
-                            <td class="fw-semibold text-dark">{{ $row->user->pegawaiDinkes->nama_pegawai ?? 'Pegawai/Petugas' }}</td>
+                                @php
+                                    $userProfile = $row->user;
+                                    $namaFinal = $userProfile->Nama_Lengkap ?? 'Pegawai/Petugas';
+                                    
+                                    if ($userProfile) {
+                                        if ($userProfile->role_name === 'petugas' && $userProfile->petugas) {
+                                            $namaFinal = $userProfile->petugas->nama_pegawai;
+                                        } elseif ($userProfile->pegawaiDinkes) {
+                                            $namaFinal = $userProfile->pegawaiDinkes->nama_pegawai;
+                                        }
+                                    }
+                                @endphp
+                                <td class="fw-semibold text-dark">{{ $namaFinal }}</td>
                                 <td class="text-center">
                                     <span
                                         class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-bold">{{ $row->skor_sus }}</span>

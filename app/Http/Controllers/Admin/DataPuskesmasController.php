@@ -49,6 +49,8 @@ class DataPuskesmasController extends Controller
             'alamat'           => 'nullable|string',
             'kode_pos'         => 'nullable|string|max:10',
             'email'            => 'nullable|email|max:150',
+            'latitude'         => 'nullable|numeric',
+            'longitude'        => 'nullable|numeric',
         ]);
 
         Puskesmas::create($validated);
@@ -86,6 +88,8 @@ class DataPuskesmasController extends Controller
             'alamat'           => 'nullable|string',
             'kode_pos'         => 'nullable|string|max:10',
             'email'            => 'nullable|email|max:150',
+            'latitude'         => 'nullable|numeric',
+            'longitude'        => 'nullable|numeric',
         ]);
 
         $data_puskesma->update($validated);

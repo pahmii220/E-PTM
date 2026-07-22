@@ -77,7 +77,7 @@
                                 <th>No</th>
                                 <th>Tanggal Daftar</th>
                                 <th>No. Rekam Medis</th>
-                                <th>Nama Peserta</th>
+                                <th>Nama Pasien</th>
                                 <th>Tanggal Lahir</th>
                                 <th>Kontak</th>
                             </tr>

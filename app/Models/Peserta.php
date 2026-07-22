@@ -76,4 +76,9 @@ class Peserta extends Model
     {
         return $this->hasOne(DeteksiDiniPTM::class, 'peserta_id');
     }
+
+    public function deteksiDinis()
+    {
+        return $this->hasMany(DeteksiDiniPTM::class, 'peserta_id');
+    }
 }

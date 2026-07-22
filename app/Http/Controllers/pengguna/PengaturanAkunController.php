@@ -60,4 +60,24 @@ public function updateUsername(Request $request)
         return redirect('/login')
             ->with('success', 'Password berhasil diganti. Silakan login kembali.');
     }
+
+    public function updateEmail(Request $request)
+    {
+        $user = Auth::user();
+
+        // Validasi
+        $request->validate([
+            'email' => 'required|email|max:255',
+            'password' => 'required'
+        ]);
+
+        if (!Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => 'Password salah, gagal menyimpan email']);
+        }
+
+        $user->email = $request->email;
+        $user->save();
+
+        return back()->with('success', 'Alamat Email Bantuan berhasil diperbarui!');
+    }
 }

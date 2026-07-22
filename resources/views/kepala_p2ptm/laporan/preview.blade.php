@@ -22,7 +22,7 @@
                                 <tr>
                                     <th>No</th>
                                     <th>NIK</th>
-                                    <th>Nama Peserta</th>
+                                    <th>Nama Pasien</th>
                                     <th>Tanggal Lahir</th>
                                     <th>Jenis Kelamin</th>
                                 </tr>
@@ -38,7 +38,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5">Tidak ada data peserta di periode ini.</td>
+                                        <td colspan="5">Tidak ada data pasien di periode ini.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -48,7 +48,7 @@
                             <thead class="table-dark">
                                 <tr>
                                     <th>No</th>
-                                    <th>Nama Peserta</th>
+                                    <th>Nama Pasien</th>
                                     <th>Tensi (Sistole/Diastole)</th>
                                     <th>Gula Darah</th>
                                     <th>Hasil Skrining</th>

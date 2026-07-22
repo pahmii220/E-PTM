@@ -45,11 +45,12 @@
                     <thead>
                         <tr>
                             <th width="5%" class="text-center">No</th>
-                            <th width="30%">Identitas Pegawai</th>
-                            <th width="20%">Jabatan & Bidang</th>
-                            <th width="20%">Wilayah Kerja</th>
-                            <th width="10%" class="text-center">Status</th>
-                            <th width="15%" class="text-center">Aksi</th>
+                            <th width="25%">Identitas Pegawai</th>
+                            <th width="15%">Jabatan</th>
+                            <th width="15%">Bidang</th>
+                            <th width="10%">Golongan</th>
+                            <th width="15%">Wilayah Kerja</th>
+                            <th width="10%" class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -64,7 +65,7 @@
                                 <td>
                                     <div class="d-flex align-items-center gap-3">
                                         {{-- FOTO PROFILE --}}
-                                        <div class="avatar-wrapper">
+                                        {{-- <div class="avatar-wrapper">
                                             @if($u->pegawaiDinkes && $u->pegawaiDinkes->foto)
                                                 <img src="{{ asset('storage/' . $u->pegawaiDinkes->foto) }}"
                                                     alt="Foto {{ $u->Username }}" class="avatar-img">
@@ -73,19 +74,16 @@
                                                     <i class="bi bi-person-fill"></i>
                                                 </div>
                                             @endif
-                                        </div>
+                                        </div> --}}
 
                                         {{-- DETAIL IDENTITAS --}}
                                         <div>
                                             <div class="fw-bold text-dark mb-1">
-                                                {{ $u->pegawaiDinkes->nama_pegawai ?? $u->Nama_Lengkap ?? $u->Username }}
+                                                {{ $u->nama_pegawai ?? '-' }}
                                             </div>
                                             <div class="text-muted small mb-1 d-flex align-items-center gap-1">
                                                 <i class="bi bi-credit-card-2-front"></i>
-                                                NIP: {{ $u->pegawaiDinkes->nip ?? $u->nip ?? '-' }}
-                                            </div>
-                                            <div class="text-primary small fw-medium">
-                                                <i class="bi bi-envelope"></i> {{ $u->email ?? 'Tidak ada email' }}
+                                                NIP: {{ $u->nip ?? '-' }}
                                             </div>
                                         </div>
                                     </div>
@@ -94,11 +92,21 @@
                                 {{-- JABATAN --}}
                                 <td>
                                     <div class="fw-medium text-dark mb-1">
-                                        {{ $u->pegawaiDinkes->jabatan ?? '-' }}
+                                        {{ $u->jabatan ?? '-' }}
                                     </div>
-                                    <div class="text-muted small">
-                                        <i class="bi bi-building"></i>
-                                        {{ $u->pegawaiDinkes->bidang ?? 'Bidang tidak tersedia' }}
+                                </td>
+
+                                {{-- BIDANG --}}
+                                <td>
+                                    <div class="fw-medium text-dark mb-1">
+                                        {{ $u->bidang ?? '-' }}
+                                    </div>
+                                </td>
+
+                                {{-- GOLONGAN --}}
+                                <td>
+                                    <div class="fw-medium text-dark mb-1">
+                                        {{ $u->golongan ?? '-' }}
                                     </div>
                                 </td>
 
@@ -106,24 +114,13 @@
                                 <td>
                                     <div class="fw-medium text-dark mb-1 text-capitalize">
                                         <i class="bi bi-geo-alt-fill text-danger small"></i>
-                                        {{ strtolower($u->pegawaiDinkes->kabupaten_kota ?? '-') }}
+                                        {{ strtolower($u->kabupaten_kota ?? '-') }}
                                     </div>
                                     <div class="text-muted small text-capitalize" style="padding-left: 14px;">
-                                        Prov. {{ strtolower($u->pegawaiDinkes->provinsi ?? '-') }}
+                                        Prov. {{ strtolower($u->provinsi ?? '-') }}
                                     </div>
                                 </td>
 
-                                {{-- STATUS --}}
-                                <td class="text-center">
-                                    <span class="status-badge {{ $u->status_aktif ? 'status-active' : 'status-inactive' }}">
-                                        <i class="bi {{ $u->status_aktif ? 'bi-check-circle-fill' : 'bi-x-circle-fill' }}"></i>
-                                        {{ $u->status_aktif ? 'Aktif' : 'Nonaktif' }}
-                                    </span>
-                                    <div class="text-muted small mt-2 fw-medium text-uppercase"
-                                        style="font-size: 11px; letter-spacing: 0.5px;">
-                                        {{ $u->role_name }}
-                                    </div>
-                                </td>
 
                                 {{-- AKSI --}}
                                 <td class="text-center">

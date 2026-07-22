@@ -39,34 +39,54 @@
             @csrf
             <div class="row g-4 justify-content-center">
 
-                {{-- KIRI: IDENTITAS DASAR & PENEMPATAN --}}
-                <div class="col-lg-7">
-                    <div class="data-card p-4 h-100">
+                {{-- DATA PROFIL & KEPEGAWAIAN PETUGAS --}}
+                <div class="col-lg-10 mx-auto">
+                    <div class="data-card p-4">
                         <div class="section-title mb-4">
                             <i class="bi bi-person-vcard text-primary"></i>
-                            <span>Identitas Dasar & Penempatan</span>
+                            <span>Profil & Kepegawaian Petugas</span>
                         </div>
 
-                        <div class="row g-4">
-                            <div class="col-md-12">
+                        <div class="row g-3">
+                            <div class="col-md-6">
                                 <label class="form-label fw-bold">Nama Lengkap <span class="text-danger">*</span></label>
                                 <input type="text" name="nama_pegawai" class="form-control"
                                     placeholder="Contoh: Siti Aminah, Amd.Kep" value="{{ old('nama_pegawai') }}" required>
                             </div>
 
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Nomor Induk Pegawai (NIP)</label>
-                                <input type="text" name="nip" class="form-control" placeholder="Opsional, dapat diisi nanti"
-                                    value="{{ old('nip') }}">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Nomor Induk Pegawai (NIP) / NIK <span class="text-danger">*</span></label>
+                                <input type="text" name="nip" class="form-control" placeholder="NIP atau NIK KTP"
+                                    value="{{ old('nip') }}" required>
                             </div>
 
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Puskesmas</label>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Jenis Kelamin <span class="text-danger">*</span></label>
+                                <select name="jenis_kelamin" class="form-select" required>
+                                    <option value="" disabled selected>— Pilih Jenis Kelamin —</option>
+                                    <option value="Laki-laki" {{ old('jenis_kelamin') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                                    <option value="Perempuan" {{ old('jenis_kelamin') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Tanggal Lahir <span class="text-danger">*</span></label>
+                                <input type="date" name="tanggal_lahir" class="form-control"
+                                    value="{{ old('tanggal_lahir') }}" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Telepon / HP <span class="text-danger">*</span></label>
+                                <input type="text" name="telepon" class="form-control" placeholder="Contoh: 0812XXXXXXXX"
+                                    value="{{ old('telepon') }}" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Puskesmas Penempatan <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light"><i
-                                            class="bi bi-hospital text-danger"></i></span>
-                                    <select name="puskesmas_id" class="form-select">
-                                        <option value="">— Pilih Wilayah Tugas —</option>
+                                    <span class="input-group-text bg-light"><i class="bi bi-hospital text-danger"></i></span>
+                                    <select name="puskesmas_id" class="form-select" required>
+                                        <option value="" disabled selected>— Pilih Wilayah Tugas —</option>
                                         @foreach($puskesmas ?? [] as $p)
                                             <option value="{{ $p->id }}" {{ old('puskesmas_id') == $p->id ? 'selected' : '' }}>
                                                 {{ $p->nama_puskesmas }}
@@ -74,51 +94,29 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <small class="text-muted mt-1 d-block">Puskesmas tempat petugas berdinas.</small>
                             </div>
-                        </div>
-                    </div>
-                </div>
 
-                {{-- KANAN: AKUN LOGIN --}}
-                <div class="col-lg-5">
-                    <div class="data-card p-4 h-100 d-flex flex-column">
-                        <div class="section-title mb-4">
-                            <i class="bi bi-key-fill text-warning"></i>
-                            <span>Kredensial Akun Login</span>
-                        </div>
-
-                        <div class="form-group mb-4">
-                            <label class="form-label fw-bold">Username <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light text-muted">@</span>
-                                <input type="text" name="username" class="form-control" placeholder="Pilih username unik"
-                                    value="{{ old('username') }}" required>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Jabatan <span class="text-danger">*</span></label>
+                                <input type="text" name="jabatan" class="form-control" placeholder="Contoh: Perawat Pelaksana PTM"
+                                    value="{{ old('jabatan') }}" required>
                             </div>
-                            <small class="text-muted">Gunakan huruf kecil, tanpa spasi.</small>
-                        </div>
 
-                        <div class="form-group mb-4">
-                            <label class="form-label fw-bold">Password Awal <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="password" name="password" id="password" class="form-control"
-                                    placeholder="Minimal 8 karakter" required style="border-right: none;">
-                                <span class="input-group-text bg-white" id="togglePassword"
-                                    style="cursor: pointer; border-left: none; border-radius: 0 10px 10px 0; border-color: #e2e8f0;">
-                                    <i class="bi bi-eye text-muted"></i>
-                                </span>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Poli / Program Tugas <span class="text-danger">*</span></label>
+                                <input type="text" name="bidang" class="form-control" placeholder="Contoh: Poli Umum / Program PTM"
+                                    value="{{ old('bidang') }}" required>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Alamat Lengkap <span class="text-danger">*</span></label>
+                                <textarea name="alamat" class="form-control" rows="3" placeholder="Alamat lengkap tempat tinggal..." required>{{ old('alamat') }}</textarea>
                             </div>
                         </div>
 
-                        <div class="mt-2 p-3 bg-light rounded-3 small text-muted mb-4">
-                            <i class="bi bi-info-circle me-1"></i> Admin hanya membuat akun untuk login ke Sistem. Petugas Kesehatan dapat melengkapi
-                            Profile Lengkap secara mandiri melalui menu Profil
-                            mereka nanti.
-                        </div>
-
-                        <div class="mt-auto pt-2">
-                            <button type="submit" class="btn-action-primary w-100 py-3">
-                                <i class="bi bi-person-check-fill me-2"></i> Daftarkan Petugas
+                        <div class="mt-4 pt-3 border-top text-end">
+                            <button type="submit" class="btn-action-primary px-5 py-2">
+                                <i class="bi bi-person-check-fill me-2"></i> Daftarkan Profil Petugas
                             </button>
                         </div>
                     </div>
@@ -126,6 +124,8 @@
 
             </div>
         </form>
+
+
     </div>
 
     {{-- ================= STYLE ================= --}}

@@ -17,11 +17,11 @@ class PesertaController extends Controller
         $user = Auth::user();
 
         if (in_array($user->role_name, ['admin', 'pegawai'])) {
-            $peserta = Peserta::with('puskesmas')
+            $peserta = Peserta::with(['puskesmas', 'deteksiDiniPTM'])
                 ->latest()
                 ->paginate(20);
         } else {
-            $peserta = Peserta::with('puskesmas')
+            $peserta = Peserta::with(['puskesmas', 'deteksiDiniPTM'])
                 ->where('puskesmas_id', $user->petugas->puskesmas_id)
                 ->latest()
                 ->paginate(20);
@@ -110,12 +110,39 @@ class PesertaController extends Controller
             'kontak'            => $request->kontak,
             'created_by'        => $user->id,
             'status_ptm'        => $request->status_ptm ?? null,
-            'status_verifikasi' => 'pending',
+            'status_verifikasi' => 'approved',
         ]); 
 
         return redirect()
             ->route('petugas.deteksi_dini.create', ['peserta_id' => $pesertaBaru->id])
             ->with('success', 'Data Peserta tersimpan. Silakan lanjut isi form Deteksi Dini berikut.');
+    }
+
+    /**
+     * Tampilkan detail rekam medis & timeline kunjungan peserta
+     */
+    public function show($id)
+    {
+        $user = Auth::user();
+
+        $peserta = $user->role_name === 'admin'
+            ? Peserta::findOrFail($id)
+            : Peserta::where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
+
+        // Ambil semua riwayat deteksi dini & tindak lanjut terikat secara kronologis
+        $riwayatKunjungan = \App\Models\DeteksiDiniPTM::with(['tindakLanjut', 'petugas'])
+            ->where('peserta_id', $id)
+            ->orderBy('tanggal_pemeriksaan', 'desc')
+            ->get();
+
+        // Cari faktor risiko untuk tiap kunjungan
+        foreach ($riwayatKunjungan as $rk) {
+            $rk->faktor_risiko = \App\Models\FaktorResikoPTM::where('peserta_id', $id)
+                ->where('tanggal_pemeriksaan', $rk->tanggal_pemeriksaan)
+                ->first();
+        }
+
+        return view('petugas.peserta.show', compact('peserta', 'riwayatKunjungan'));
     }
 
     /**
@@ -132,13 +159,6 @@ class PesertaController extends Controller
         $peserta = $user->role_name === 'admin'
             ? Peserta::findOrFail($id)
             : Peserta::where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
-
-        // 🔒 hanya approved yang terkunci
-        if ($user->role_name !== 'admin' && $peserta->status_verifikasi === 'approved') {
-            return redirect()
-                ->route('petugas.peserta.index')
-                ->with('error', 'Data sudah disetujui dan tidak dapat diedit.');
-        }
 
         $puskesmas = [];
         if ($user->role_name === 'admin') {
@@ -162,12 +182,6 @@ class PesertaController extends Controller
         $peserta = $user->role_name === 'admin'
             ? Peserta::findOrFail($id)
             : Peserta::where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
-
-        if ($user->role_name !== 'admin' && $peserta->status_verifikasi === 'approved') {
-            return redirect()
-                ->route('petugas.peserta.index')
-                ->with('error', 'Data sudah disetujui dan tidak dapat diubah.');
-        }
 
         // Otomatis tambahkan/sesuaikan prefiks kode Puskesmas pendek ke no_rekam_medis jika belum ada
         $puskesmasId = $user->role_name === 'admin' ? ($request->puskesmas_id ?? $peserta->puskesmas_id) : $user->petugas->puskesmas_id;
@@ -220,9 +234,9 @@ class PesertaController extends Controller
             $updateData['tanggal_lahir'] = $request->tanggal_lahir;
         }
 
-        // jika sebelumnya rejected → reset ke pending
+        // jika sebelumnya rejected → set ke approved
         if ($peserta->status_verifikasi === 'rejected') {
-            $updateData['status_verifikasi'] = 'pending';
+            $updateData['status_verifikasi'] = 'approved';
             $updateData['catatan_verifikasi'] = null;
             $updateData['diverifikasi_oleh'] = null;
             $updateData['diverifikasi_pada']   = null;
@@ -249,12 +263,6 @@ class PesertaController extends Controller
         $peserta = $user->role_name === 'admin'
             ? Peserta::findOrFail($id)
             : Peserta::where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
-
-        if ($user->role_name !== 'admin' && $peserta->status_verifikasi === 'approved') {
-            return redirect()
-                ->route('petugas.peserta.index')
-                ->with('error', 'Data sudah disetujui dan tidak dapat dihapus.');
-        }
 
         $peserta->delete();
 

@@ -6,7 +6,8 @@ use App\Models\Puskesmas;
 use App\Models\DeteksiDiniPTM;
 use App\Models\Peserta;
 use App\Models\FaktorResikoPTM;
-
+use App\Models\LaporanHasilMonitoring;
+use Illuminate\Http\Request;
 
 class KepalaP2ptmController extends Controller
 {
@@ -47,7 +48,13 @@ public function dashboard()
         'rejectedCount'  => \App\Models\DeteksiDiniPTM::where('status_verifikasi', 'rejected')->count(),
     ];
     
-    return view('kepala_p2ptm.dashboard', compact('data', 'skNormal', 'skDicurigai', 'skRisiko', 'totalSkrining'));
+    // 4. Data Peta Sebaran Puskesmas
+    $mapPuskesmasData = \App\Models\Puskesmas::whereNotNull('latitude')
+                        ->whereNotNull('longitude')
+                        ->withCount(['peserta', 'deteksiDini'])
+                        ->get();
+
+    return view('kepala_p2ptm.dashboard', compact('data', 'skNormal', 'skDicurigai', 'skRisiko', 'totalSkrining', 'mapPuskesmasData'));
 }
 
 public function printStatistik()
@@ -147,5 +154,79 @@ public function verifikasiLaporan(\Illuminate\Http\Request $request)
         return view('verifikasi_publik', compact('judul', 'periode'));
     }
 
+    public function tinjauLaporanMonitoring(Request $request)
+    {
+        $query = LaporanHasilMonitoring::with(['pegawai.user', 'puskesmas']);
 
+        $startDate = $request->input('start_date');
+        $endDate   = $request->input('end_date');
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        } elseif ($startDate) {
+            $query->where('created_at', '>=', $startDate . ' 00:00:00');
+        } elseif ($endDate) {
+            $query->where('created_at', '<=', $endDate . ' 23:59:59');
+        }
+
+        $laporan = $query->latest()->get();
+
+        return view('kepala_p2ptm.laporan_monitoring.index', compact('laporan', 'startDate', 'endDate'));
+    }
+
+    public function accLaporanMonitoring(Request $request, $id)
+    {
+        $laporan = LaporanHasilMonitoring::findOrFail($id);
+        
+        $request->validate([
+            'status_laporan' => 'required|in:disetujui,ditolak',
+            'catatan_kepala' => 'nullable|string'
+        ]);
+
+        $laporan->update([
+            'status_laporan' => $request->status_laporan,
+            'catatan_kepala' => $request->catatan_kepala,
+            'tanggal_disetujui' => $request->status_laporan === 'disetujui' ? now() : null
+        ]);
+
+        $statusText = $request->status_laporan === 'disetujui' ? 'disetujui' : 'ditolak';
+        return redirect()->back()->with('success', "Laporan hasil monitoring berhasil $statusText.");
+    }
+
+    public function cetakLaporanMonitoring($id)
+    {
+        $laporan = \App\Models\LaporanHasilMonitoring::with(['pegawai.user', 'puskesmas'])->findOrFail($id);
+        
+        \Carbon\Carbon::setLocale('id');
+        $tanggal = \Carbon\Carbon::now('Asia/Makassar')->translatedFormat('l, d F Y');
+
+        $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
+
+        return view('kepala_p2ptm.laporan_monitoring.print', compact('laporan', 'tanggal', 'kepalaAktif'));
+    }
+
+    public function cetakSemuaLaporanMonitoring(Request $request)
+    {
+        $query = LaporanHasilMonitoring::with(['pegawai.user', 'puskesmas']);
+
+        $startDate = $request->input('start_date');
+        $endDate   = $request->input('end_date');
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        } elseif ($startDate) {
+            $query->where('created_at', '>=', $startDate . ' 00:00:00');
+        } elseif ($endDate) {
+            $query->where('created_at', '<=', $endDate . ' 23:59:59');
+        }
+
+        $laporan = $query->latest()->get();
+
+        \Carbon\Carbon::setLocale('id');
+        $tanggal = \Carbon\Carbon::now('Asia/Makassar')->translatedFormat('l, d F Y');
+
+        $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
+
+        return view('kepala_p2ptm.laporan_monitoring.print_semua', compact('laporan', 'startDate', 'endDate', 'tanggal', 'kepalaAktif'));
+    }
 }

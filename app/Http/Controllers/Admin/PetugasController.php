@@ -42,9 +42,30 @@ class PetugasController extends Controller
             });
         }
 
-        $petugas = $query->orderBy('nama_pegawai')->paginate(15);
+        // Fitur filter pending (Menunggu Verifikasi)
+        if ($request->has('filter') && $request->filter == 'pending') {
+            $query->whereHas('user', function ($q) {
+                $q->where('status_aktif', 0);
+            });
+        }
 
-        return view('admin.data_petugas.index', compact('petugas'));
+        // Fitur filter puskesmas
+        if ($request->has('puskesmas_id') && $request->puskesmas_id != '') {
+            $query->where('puskesmas_id', $request->puskesmas_id);
+        }
+
+        // Fitur filter kecamatan
+        if ($request->has('kecamatan') && $request->kecamatan != '') {
+            $query->whereHas('puskesmas', function ($q) use ($request) {
+                $q->where('kecamatan', $request->kecamatan);
+            });
+        }
+
+        $petugas = $query->orderBy('nama_pegawai')->paginate(15);
+        $puskesmasList = Puskesmas::orderBy('nama_puskesmas')->get();
+        $kecamatanList = Puskesmas::select('kecamatan')->distinct()->orderBy('kecamatan')->pluck('kecamatan');
+
+        return view('admin.data_petugas.index', compact('petugas', 'puskesmasList', 'kecamatanList'));
     }
 
     /**
@@ -62,37 +83,45 @@ class PetugasController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_pegawai' => 'required|string|max:191',
-            'nip'          => 'nullable|string|max:50',
-            // VALIDASI INI TETAP PENGGUNA KARENA MENGECEK LANGSUNG KE TABEL DATABASE
-            'username'     => 'required|string|max:100|unique:pengguna,Username', 
-            'password'     => 'required|string|min:8',
-            'puskesmas_id' => 'nullable|exists:puskesmas,id',
+            'nama_pegawai' => 'required|string|max:255',
+            'nip'          => 'required|string|max:50|unique:petugas,nip',
+            'jenis_kelamin'=> 'required|string',
+            'tanggal_lahir'=> 'required|date',
+            'telepon'      => 'required|string|max:20',
+            'puskesmas_id' => 'required|exists:puskesmas,id',
+            'jabatan'      => 'required|string|max:255',
+            'bidang'       => 'required|string|max:255',
+            'alamat'       => 'required|string',
         ]);
 
-        // 1. Buat User Login
-        $user = User::create([
-            'Username'     => $request->username,
-            'Nama_Lengkap' => $request->nama_pegawai,
-            'email'        => $request->username . '@ptm.local',
-            'password'     => Hash::make($request->password),
-            'role_name'    => 'petugas',
-            'status_aktif' => 1,
-        ]);
+        try {
+            // Buat data profil petugas baru
+            Petugas::create([
+                'user_id'      => null,
+                'nip'          => $request->nip,
+                'nama_pegawai' => $request->nama_pegawai,
+                'puskesmas_id' => $request->puskesmas_id,
+                'jabatan'      => $request->jabatan,
+                'bidang'       => $request->bidang,
+                'alamat'       => $request->alamat,
+                'telepon'      => $request->telepon,
+                'tanggal_lahir'=> $request->tanggal_lahir,
+            ]);
 
-        // 2. Buat Data Profil Petugas
-        Petugas::create([
-            'user_id'      => $user->id,
-            'nama_pegawai' => $request->nama_pegawai,
-            'nip'          => $request->nip,
-            'puskesmas_id' => $request->puskesmas_id,
-            'jabatan'      => 'Petugas Lapangan', // Default
-        ]);
+            return redirect()
+                ->route('admin.data_petugas.index')
+                ->with('success', 'Data profil petugas berhasil ditambahkan.');
 
-        return redirect()
-            ->route('admin.data_petugas.index')
-            ->with('success', 'Petugas berhasil didaftarkan.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Gagal mendaftarkan petugas: ' . $e->getMessage());
+        }
     }
+
+
+
 
     /**
      * FORM EDIT PETUGAS

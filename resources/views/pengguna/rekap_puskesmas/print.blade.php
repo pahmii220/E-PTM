@@ -5,14 +5,15 @@
     <meta charset="utf-8">
     <title>Laporan Rekap PTM Per Puskesmas</title>
     <style>
-        /* ====== SETTING CETAK ====== */
+        /* ====== SETTING CETAK LANDSCAPE ====== */
         @page {
-            margin: 15mm 12mm;
+            size: landscape;
+            margin: 10mm 10mm;
         }
 
         body {
             font-family: "Times New Roman", serif;
-            font-size: 12px;
+            font-size: 11px;
             margin: 0;
             padding: 0;
             background: #fff;
@@ -21,9 +22,8 @@
 
         .container {
             width: 100%;
-            max-width: 1000px;
             margin: 0 auto;
-            padding: 6px 8px;
+            padding: 4px 6px;
             box-sizing: border-box;
         }
 
@@ -95,9 +95,8 @@
         /* ====== TABEL ====== */
         table.grid {
             width: 100%;
-            max-width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
+            font-size: 10.5px;
             table-layout: fixed;
             box-sizing: border-box;
         }
@@ -134,7 +133,7 @@
         }
 
         .ttd .block {
-            width: 40%;
+            width: 30%;
             text-align: center;
             font-size: 12px;
         }
@@ -158,7 +157,7 @@
             table.grid {
                 -webkit-print-color-adjust: exact;
                 box-shadow: inset -1px 0 0 #111;
-                font-size: 11.5px;
+                font-size: 10px;
             }
 
             table.grid tr>td:last-child,
@@ -189,7 +188,9 @@
             <div class="center">
                 <div class="prov">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
                 <div class="dinas">DINAS KESEHATAN</div>
-                <div class="addr">Jalan Belitung Darat No.118 — Telp: (0511) 3355661 — Banjarmasin 70116</div>
+                <div class="addr">Jalan Dharma Praja, Banjarbaru, Kalimantan Selatan Kode Pos 70732
+                    <br>
+                (Kawasan Perkantoran Pemerintah Provinsi Kalimantan Selatan)</div>
             </div>
             <div class="clear"></div>
         </div>
@@ -198,37 +199,173 @@
 
         {{-- JUDUL --}}
         <div class="title">
-            LAPORAN REKAP PENYAKIT TIDAK MENULAR (PTM)<br>
-            PER PUSKESMAS
+            @if(isset($puskesmasTerpilih) && $puskesmasTerpilih)
+                LAPORAN DETAIL REGISTER PASIEN PTM<br>
+                {{ strtoupper($puskesmasTerpilih->nama_puskesmas) }}
+            @else
+                LAPORAN REKAP PENYAKIT TIDAK MENULAR (PTM)<br>
+                PER PUSKESMAS
+            @endif
         </div>
 
-        {{-- TABEL DATA --}}
-        <table class="grid">
-            <thead>
-                <tr>
-                    <th style="width:40px;">No</th>
-                    <th>Nama Puskesmas</th>
-                    <th style="width:110px;">Total Peserta</th>
-                    <th style="width:110px;">Deteksi Dini</th>
-                    <th style="width:110px;">Faktor Risiko</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($rekapPuskesmas as $item)
+        {{-- NARASI EKSEKUTIF --}}
+        <div style="background-color: #f8f9fa; border-left: 4px solid #198754; padding: 12px 15px; margin-bottom: 15px; font-size: 12px; line-height: 1.5; text-align: justify;">
+            {!! $narasiEksekutif ?? 'Tidak ada data untuk periode ini.' !!}
+        </div>
+
+        {{-- TABEL MATRIKS REKAPITULASI KINERJA PUSKESMAS (TAMPIL HANYA JIKA TIDAK MEMILIH PUSKESMAS SPESIFIK) --}}
+        @if(!isset($puskesmasTerpilih) || !$puskesmasTerpilih)
+            <table class="grid">
+                <thead>
                     <tr>
-                        <td>{{ $loop->iteration }}</td>
-                        <td class="left">{{ $item->nama_puskesmas }}</td>
-                        <td>{{ $item->total_peserta }}</td>
-                        <td>{{ $item->total_deteksi }}</td>
-                        <td>{{ $item->total_faktor }}</td>
+                        <th rowspan="2" style="width:4%;">No</th>
+                        <th rowspan="2" style="width:32%;">Nama Puskesmas</th>
+                        <th rowspan="2" style="width:14%;">Total Pasien</th>
+                        <th colspan="2" style="width:16%;">Demografi</th>
+                        <th colspan="2" style="width:17%;">Temuan Skrining</th>
+                        <th colspan="2" style="width:17%;">Tindak Lanjut</th>
                     </tr>
-                @empty
                     <tr>
-                        <td colspan="5">Tidak ada data rekap puskesmas.</td>
+                        <th style="width:8%;">L</th>
+                        <th style="width:8%;">P</th>
+                        <th style="width:8.5%;">Berisiko PTM</th>
+                        <th style="width:8.5%;">Normal</th>
+                        <th style="width:8.5%;">Edukasi</th>
+                        <th style="width:8.5%;">Rujukan RS</th>
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @php
+                        $sumPasien = 0; $sumLaki = 0; $sumPerem = 0;
+                        $sumBerisiko = 0; $sumNormal = 0; $sumEdukasi = 0; $sumRujukan = 0;
+                    @endphp
+                    @forelse ($rekapPuskesmas as $item)
+                        @php
+                            $sumPasien += $item->total_peserta;
+                            $sumLaki += $item->total_laki;
+                            $sumPerem += $item->total_perempuan;
+                            $sumBerisiko += $item->total_berisiko ?? 0;
+                            $sumNormal += $item->total_normal ?? 0;
+                            $sumEdukasi += $item->total_edukasi;
+                            $sumRujukan += $item->total_rujukan;
+                        @endphp
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td class="left"><strong>{{ $item->nama_puskesmas }}</strong></td>
+                            <td><strong>{{ $item->total_peserta }}</strong></td>
+                            <td>{{ $item->total_laki }}</td>
+                            <td>{{ $item->total_perempuan }}</td>
+                            <td><span style="{{ ($item->total_berisiko ?? 0) > 0 ? 'color:#b91c1c;font-weight:bold;' : '' }}">{{ $item->total_berisiko ?? 0 }}</span></td>
+                            <td>{{ $item->total_normal ?? 0 }}</td>
+                            <td>{{ $item->total_edukasi }}</td>
+                            <td>{{ $item->total_rujukan }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="9">Tidak ada data rekap puskesmas.</td>
+                        </tr>
+                    @endforelse
+                    @if($rekapPuskesmas->count() > 0)
+                        <tr style="font-weight: bold; background-color: #f1f1f1;">
+                            <td colspan="2" style="text-align: right; padding-right: 15px;">TOTAL KESELURUHAN</td>
+                            <td>{{ $sumPasien }}</td>
+                            <td>{{ $sumLaki }}</td>
+                            <td>{{ $sumPerem }}</td>
+                            <td>{{ $sumBerisiko }}</td>
+                            <td>{{ $sumNormal }}</td>
+                            <td>{{ $sumEdukasi }}</td>
+                            <td>{{ $sumRujukan }}</td>
+                        </tr>
+                    @endif
+                </tbody>
+            </table>
+        @endif
+
+        {{-- TABEL DETAIL REGISTER PASIEN PTM (TAMPIL HANYA JIKA MEMILIH PUSKESMAS SPESIFIK & ADA DETAIL PASIEN) --}}
+        @if(isset($puskesmasTerpilih) && $puskesmasTerpilih && isset($detailPasienPuskesmas) && $detailPasienPuskesmas->count() > 0)
+            <div style="margin-top: 20px; margin-bottom: 8px;">
+                <div style="font-size: 13px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #111; padding-bottom: 4px; margin-bottom: 6px;">
+                    DATA DETAIL REGISTER PASIEN PTM @if(isset($puskesmasTerpilih) && $puskesmasTerpilih) — {{ strtoupper($puskesmasTerpilih->nama_puskesmas) }} @endif
+                </div>
+                <div style="font-size: 10.5px; color: #333; margin-bottom: 6px;">
+                    Wilayah: {{ $puskesmasTerpilih->kecamatan ?? '-' }}, {{ $puskesmasTerpilih->nama_kabupaten ?? 'Kota Banjarmasin' }} | Total Pasien: <strong>{{ $detailPasienPuskesmas->count() }} Orang</strong>
+                </div>
+            </div>
+
+            <table class="grid">
+                <thead>
+                    <tr>
+                        <th style="width: 3.5%;">No</th>
+                        <th style="width: 8.5%;">Tanggal</th>
+                        <th style="width: 14%;">Nama Pasien</th>
+                        <th style="width: 11%;">No RM</th>
+                        <th style="width: 5%;">Umur</th>
+                        <th style="width: 6%;">JK</th>
+                        <th style="width: 7%;">TD (mmHg)</th>
+                        <th style="width: 6.5%;">Gula</th>
+                        <th style="width: 6.5%;">Kolesterol</th>
+                        <th style="width: 5%;">IMT</th>
+                        <th style="width: 13%;">Faktor Risiko</th>
+                        <th style="width: 14%;">Diagnosa &amp; Penyakit PTM</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($detailPasienPuskesmas as $d)
+                        @php
+                            $umur = $d->peserta && $d->peserta->tanggal_lahir ? \Carbon\Carbon::parse($d->peserta->tanggal_lahir)->age : '-';
+                            $isHipertensi = ($d->sistole >= 140 || $d->diastole >= 90);
+                            $isDiabetes = ($d->gula_darah > 200);
+                            $isKolesterol = ($d->kolesterol > 200);
+                            $isImtTinggi = ($d->imt > 25);
+
+                            $noRmFormatted = $d->peserta->no_rekam_medis 
+                                ?? ($d->peserta->nik 
+                                    ?? ('RM-' . str_replace('-', '', \Carbon\Carbon::parse($d->tanggal_pemeriksaan)->format('Ymd')) . '-' . str_pad($d->peserta_id ?? 1, 3, '0', STR_PAD_LEFT)));
+                        @endphp
+                        <tr>
+                            <td style="text-align:center;">{{ $loop->iteration }}</td>
+                            <td style="text-align:center;">{{ \Carbon\Carbon::parse($d->tanggal_pemeriksaan)->format('d/m/Y') }}</td>
+                            <td class="left"><strong>{{ $d->peserta->nama_lengkap ?? '-' }}</strong></td>
+                            <td style="text-align:center;">{{ $noRmFormatted }}</td>
+                            <td style="text-align:center;">{{ $umur }} Thn</td>
+                            <td style="text-align:center;">{{ $d->peserta->jenis_kelamin ?? '-' }}</td>
+                            <td style="text-align:center; {{ $isHipertensi ? 'color:#b91c1c; font-weight:bold;' : '' }}">
+                                {{ $d->sistole && $d->diastole ? $d->sistole . '/' . $d->diastole : ($d->tekanan_darah ?? '-') }}
+                            </td>
+                            <td style="text-align:center; {{ $isDiabetes ? 'color:#b91c1c; font-weight:bold;' : '' }}">
+                                {{ $d->gula_darah ?? '-' }}
+                            </td>
+                            <td style="text-align:center; {{ $isKolesterol ? 'color:#b91c1c; font-weight:bold;' : '' }}">
+                                {{ $d->kolesterol ?? '-' }}
+                            </td>
+                            <td style="text-align:center; {{ $isImtTinggi ? 'color:#b45309; font-weight:bold;' : '' }}">
+                                {{ $d->imt ?? '-' }}
+                            </td>
+                            <td class="left">
+                                @php
+                                    $riskList = [];
+                                    if(optional($d->faktorRisiko)->merokok == 'Ya') $riskList[] = 'Merokok';
+                                    if(optional($d->faktorRisiko)->kurang_aktivitas == 'Ya') $riskList[] = 'Kurang Olahraga';
+                                    if(optional($d->faktorRisiko)->kurang_sayur_buah == 'Ya') $riskList[] = 'Kurang Sayur/Buah';
+                                @endphp
+                                @if(count($riskList) > 0)
+                                    {{ implode(', ', $riskList) }}
+                                @else
+                                    Aman / Normal
+                                @endif
+                            </td>
+                            <td class="left">
+                                @if($d->diagnosa_penyakit)
+                                    <strong style="color: #b91c1c;">{{ $d->diagnosa_penyakit }}</strong>
+                                @else
+                                    <span style="color: #15803d;">Sehat / Normal</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
 
         {{-- BAGIAN TANDA TANGAN & QR CODE (Sudah Disinkronkan Berdasarkan Role) --}}
         <div class="ttd">
@@ -276,10 +413,12 @@
 
                                 $namaPejabat = $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah';
                                 $nipPejabat = $kepalaAktif->nip ?? '1973062022006041016';
+                                $judulQR = isset($puskesmasTerpilih) && $puskesmasTerpilih 
+                                    ? 'Laporan Detail Register Pasien PTM - ' . $puskesmasTerpilih->nama_puskesmas 
+                                    : 'Laporan Rekap PTM Per Puskesmas';
                             @endphp
 
-                            {{-- Judul disesuaikan menjadi: Laporan Rekap PTM Per Puskesmas --}}
-                            {!! QrCode::size(85)->generate(url('/verifikasi-laporan?judul=Laporan%20Rekap%20PTM%20Per%20Puskesmas&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah) . '&nama_kepala=' . urlencode($namaPejabat) . '&nip=' . urlencode($nipPejabat))) !!}
+                            {!! QrCode::size(85)->generate(url('/verifikasi-laporan?judul=' . urlencode($judulQR) . '&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah) . '&nama_kepala=' . urlencode($namaPejabat) . '&nip=' . urlencode($nipPejabat))) !!}
                         @else
                             <div style="height: 85px;"></div>
                         @endif

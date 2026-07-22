@@ -3,6 +3,8 @@
 @section('content')
     <div class="container-fluid py-4" style="max-width:1400px">
 
+        @include('kepala_p2ptm.laporan.partials.tabs')
+
         {{-- ALERT PESAN --}}
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show shadow-sm rounded-3" role="alert">
@@ -98,7 +100,7 @@
                     <thead class="table-light">
                         <tr>
                             <th class="ps-4">No</th>
-                            <th>Nama Peserta</th>
+                            <th>Nama Pasien</th>
                             <th>Puskesmas</th>
                             <th>Tanggal Periksa</th>
                             <th>Tekanan Darah</th>

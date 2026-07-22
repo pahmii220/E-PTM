@@ -176,7 +176,7 @@
         {{-- PENJELASAN SINGKAT --}} 
         <div
             style="font-size: 11px; color: #444; margin-bottom: 12px; line-height: 1.4; text-align: left;"> Laporan ini berisi
-            informasi mengenai tindak lanjut peserta Penyakit Tidak Menular (PTM).
+            informasi mengenai tindak lanjut pasien Penyakit Tidak Menular (PTM).
             Data yang ditampilkan digunakan sebagai dasar pemantauan pelaksanaan tindak lanjut serta bahan evaluasi program PTM.
         </div>
 
@@ -184,7 +184,7 @@
             <thead>
                 <tr>
                     <th style="width:40px">No</th>
-                    <th>Peserta</th>
+                    <th>Pasien</th>
                     <th style="width:120px">Tanggal Tindak Lanjut</th>
                     <th style="width:160px">Jenis Tindak Lanjut</th>
                     <th>Keterangan</th>

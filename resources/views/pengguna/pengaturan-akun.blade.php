@@ -79,7 +79,7 @@
                                     <p class="text-muted small text-uppercase fw-bold tracking-wider mb-1">Role Akses</p>
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-medium">
-                                            <i class="bi bi-person-gear me-1"></i> Pegawai
+                                            <i class="bi bi-person-gear me-1"></i> {{ auth()->user()->role_name }}
                                         </span>
                                     </div>
                                 </div>
@@ -217,6 +217,7 @@
                 </div>
 
             </div>
+
         </div>
     </div>
 @endsection

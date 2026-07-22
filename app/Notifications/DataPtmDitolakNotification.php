@@ -20,7 +20,7 @@ class DataPtmDitolakNotification extends Notification
 
     public function via($notifiable): array
     {
-        return ['mail', 'database']; // Tambahkan 'database' untuk in-app notification
+        return ['database'];
     }
 
     public function toMail($notifiable): MailMessage

@@ -19,9 +19,8 @@ class PenggunaController extends Controller
 
 public function index()
     {
-        // Ambil data user beserta relasinya, tapi HANYA yang role-nya 'pegawai'
-        $pengguna = User::with('pegawaiDinkes')
-            ->where('role_name', 'pegawai') // <--- BARIS INI DITAMBAHKAN KEMBALI
+        // Ambil data PegawaiDinkes beserta relasi User
+        $pengguna = PegawaiDinkes::with('user')
             ->orderBy('id', 'desc') 
             ->paginate(15);
 
@@ -36,27 +35,17 @@ public function index()
     public function store(Request $request)
     {
         $request->validate([
-            'Username'       => 'required|string|max:50|unique:pengguna,Username',
-            'email'          => 'nullable|email|unique:pengguna,email',
-            'password'       => 'required|min:8',
             'Nama_Lengkap'   => 'required|string|max:191',
             'nip'            => 'nullable|string|max:50',
+            'tgl_lahir'      => 'nullable|date',
+            'telepon'        => 'nullable|string|max:20',
             'jabatan'        => 'nullable|string|max:100',
+            'golongan'       => 'nullable|string|max:100',
             'bidang'         => 'nullable|string|max:100',
             'provinsi'       => 'nullable|string|max:100',
             'kabupaten_kota' => 'nullable|string|max:100',
             'alamat'         => 'nullable|string',
             'foto'           => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-        ]);
-
-        // 1. Simpan User
-        $user = User::create([
-            'Username'     => $request->Username,
-            'Nama_Lengkap' => $request->Nama_Lengkap,
-            'email'        => $request->email ?? $request->Username.'@ptm.local',
-            'password'     => Hash::make($request->password),
-            'role_name'    => 'pegawai',
-            'status_aktif' => 1,
         ]);
 
         // 2. Handle Upload Foto
@@ -65,12 +54,14 @@ public function index()
             $fotoPath = $request->file('foto')->store('foto_pegawai', 'public');
         }
 
-        // 3. Simpan Detail Pegawai
         PegawaiDinkes::create([
-            'user_id'        => $user->id,
+            'user_id'        => null,
             'nama_pegawai'   => $request->Nama_Lengkap,
             'nip'            => $request->nip,
+            'tgl_lahir'      => $request->tgl_lahir,
+            'telepon'        => $request->telepon,
             'jabatan'        => $request->jabatan,
+            'golongan'       => $request->golongan,
             'bidang'         => $request->bidang,
             'provinsi'       => $request->provinsi,
             'kabupaten_kota' => $request->kabupaten_kota,
@@ -84,24 +75,25 @@ public function index()
 
     public function edit($id)
     {
-        $user = User::with('pegawaiDinkes')->findOrFail($id);
+        $pegawai = PegawaiDinkes::with('user')->findOrFail($id);
         return view('admin.pengguna.edit', [
-            'user'    => $user,
-            'pegawai' => $user->pegawaiDinkes
+            'user'    => $pegawai->user, // Bisa null
+            'pegawai' => $pegawai
         ]);
     }
 
     public function update(Request $request, $id)
     {
-        $user = User::findOrFail($id);
-        $pegawai = $user->pegawaiDinkes;
+        $pegawai = PegawaiDinkes::findOrFail($id);
+        $user = $pegawai->user;
 
-        // Validasi (Nama field harus match dengan 'name' di Blade)
-        // Jika di Blade name="nama_pegawai", maka di sini juga harus nama_pegawai
         $request->validate([
             'Nama_Lengkap'   => 'required|string|max:191', 
             'nip'            => 'nullable|string|max:50',
+            'tgl_lahir'      => 'nullable|date',
+            'telepon'        => 'nullable|string|max:20',
             'jabatan'        => 'nullable|string|max:100',
+            'golongan'       => 'nullable|string|max:100',
             'bidang'         => 'nullable|string|max:100',
             'provinsi'       => 'nullable|string|max:100',
             'kabupaten_kota' => 'nullable|string|max:100',
@@ -109,23 +101,36 @@ public function index()
             'foto'           => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        // 1. Update User
-        $user->update([
-            'Nama_Lengkap' => $request->Nama_Lengkap,
-        ]);
+        // 1. Update User (Hanya jika profil sudah punya akun login)
+        if ($user) {
+            $userPayload = ['Nama_Lengkap' => $request->Nama_Lengkap];
+            if ($request->filled('email')) {
+                $userPayload['email'] = $request->email;
+            }
+            $user->update($userPayload);
+        }
 
-        // 2. Handle Foto
+        // 2. Handle Foto & Data Pegawai
         $dataPegawai = [
             'nama_pegawai'   => $request->Nama_Lengkap,
             'nip'            => $request->nip,
+            'tgl_lahir'      => $request->tgl_lahir,
+            'telepon'        => $request->telepon,
             'jabatan'        => $request->jabatan,
+            'golongan'       => $request->golongan,
             'bidang'         => $request->bidang,
             'provinsi'       => $request->provinsi,
             'kabupaten_kota' => $request->kabupaten_kota,
             'alamat'         => $request->alamat,
         ];
 
-        if ($request->hasFile('foto')) {
+        if ($request->input('hapus_foto') == '1') {
+            // Hapus foto lama jika ada
+            if ($pegawai && $pegawai->foto) {
+                Storage::disk('public')->delete($pegawai->foto);
+            }
+            $dataPegawai['foto'] = null; // Set foto jadi null di DB
+        } elseif ($request->hasFile('foto')) {
             // Hapus foto lama jika ada
             if ($pegawai && $pegawai->foto) {
                 Storage::disk('public')->delete($pegawai->foto);
@@ -134,11 +139,8 @@ public function index()
             $dataPegawai['foto'] = $request->file('foto')->store('foto_pegawai', 'public');
         }
 
-        // 3. Update Detail Pegawai
-        PegawaiDinkes::updateOrCreate(
-            ['user_id' => $user->id],
-            $dataPegawai
-        );
+        // 3. Update Detail Pegawai (Langsung update data model)
+        $pegawai->update($dataPegawai);
 
         return redirect()->route('admin.pengguna.index')
             ->with('success', 'Data pegawai dinkes berhasil diperbarui.');
@@ -212,19 +214,15 @@ public function updateAccess(Request $request, $id)
 
     public function destroy($id)
     {
-        $user = User::findOrFail($id);
-        $pegawai = $user->pegawaiDinkes;
-
-        // Hapus file foto dari storage sebelum hapus data
-        if ($pegawai && $pegawai->foto) {
+        $pegawai = PegawaiDinkes::findOrFail($id);
+        if ($pegawai->foto) {
             Storage::disk('public')->delete($pegawai->foto);
         }
-
-        if ($pegawai) {
-            $pegawai->delete();
+        if ($pegawai->user_id) {
+            $user = User::find($pegawai->user_id);
+            if ($user) $user->delete();
         }
-
-        $user->delete();
+        $pegawai->delete();
 
         return redirect()->route('admin.pengguna.index')
             ->with('success', 'Data Pegawai berhasil dihapus.');

@@ -3,13 +3,15 @@
 @section('content')
     <div class="container-fluid py-4" style="max-width:1400px">
 
+        @include('kepala_p2ptm.laporan.partials.tabs')
+
         <div class="card border-0 shadow-sm mb-4 rounded-4" style="background:linear-gradient(135deg,#eef2ff,#f8fafc)">
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col-md-5">
                         <h4 class="fw-bold mb-0">Laporan Tindak Lanjut PTM</h4>
                         <small class="text-muted">Tinjau data tindakan atau rujukan yang diberikan petugas kepada
-                            peserta.</small>
+                            pasien.</small>
                     </div>
 
                     <div class="col-md-7">
@@ -55,7 +57,7 @@
                     <thead class="table-light">
                         <tr>
                             <th class="ps-4" style="width:60px">No</th>
-                            <th>Nama Peserta</th>
+                            <th>Nama Pasien</th>
                             <th>Tanggal Tindak Lanjut</th>
                             <th>Jenis Tindak Lanjut</th>
                             <th>Keterangan/Catatan</th>

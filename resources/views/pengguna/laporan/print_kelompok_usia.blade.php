@@ -8,6 +8,7 @@
     <style>
         /* ====== SETTING CETAK ====== */
         @page {
+            size: portrait;
             margin: 15mm 12mm;
         }
 
@@ -17,11 +18,12 @@
             padding: 0;
             background: #fff;
             -webkit-print-color-adjust: exact;
+            color: #111;
         }
 
         .container {
             width: 100%;
-            max-width: 1000px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 6px 8px;
             box-sizing: border-box;
@@ -71,6 +73,56 @@
             margin: 8px 0 12px 0;
         }
 
+        /* ====== CHART SECTION ====== */
+        .chart-box {
+            background-color: #fcfcfc;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+        }
+
+        .chart-title {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 4px;
+        }
+
+        .bar-item {
+            margin-bottom: 8px;
+        }
+
+        .bar-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .bar-label-group {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11.5px;
+            margin-bottom: 3px;
+        }
+
+        .bar-track {
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            height: 16px;
+            width: 100%;
+            overflow: hidden;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .bar-fill {
+            height: 100%;
+            background-color: #198754;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
         /* ====== TABLE ====== */
         table.grid {
             width: 100%;
@@ -82,13 +134,13 @@
         table.grid th,
         table.grid td {
             border: 1px solid #111;
-            padding: 4px 6px;
+            padding: 5px 8px;
             vertical-align: middle;
             word-wrap: break-word;
         }
 
         table.grid th {
-            background: #eee;
+            background: #f3f4f6;
             font-weight: 700;
             text-align: center;
         }
@@ -108,13 +160,13 @@
         /* ====== TTD & QR CODE ====== */
         .ttd {
             width: 100%;
-            margin-top: 24px;
+            margin-top: 20px;
             display: flex;
             justify-content: flex-end;
         }
 
         .ttd .block {
-            width: 40%;
+            width: 42%;
             text-align: center;
             font-size: 12px;
         }
@@ -124,7 +176,7 @@
             justify-content: center;
             align-items: center;
             height: 85px;
-            margin: 10px 0;
+            margin: 8px 0;
         }
 
         .ttd .block .name {
@@ -149,14 +201,15 @@
         {{-- KOP SURAT --}}
         <div class="kop">
             <div class="left">
-                <img src="{{ asset('images/dinkes.png') }}" style="width:65px;">
+                <img src="{{ asset('images/dinkes.png') }}" style="width:65px; height:auto;">
             </div>
             <br>
             <div class="center">
                 <div class="prov">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
                 <div class="dinas">DINAS KESEHATAN</div>
                 <div class="addr">
-                    Jalan Belitung Darat No.118 — Telp: (0511) 3355661 — Banjarmasin 70116
+                    Jalan Dharma Praja, Banjarbaru, Kalimantan Selatan Kode Pos 70732<br>
+                    (Kawasan Perkantoran Pemerintah Provinsi Kalimantan Selatan)
                 </div>
             </div>
             <div class="clear"></div>
@@ -165,17 +218,36 @@
         <hr class="top">
 
         {{-- JUDUL --}}
-        <div style="width:100%; text-align:center; margin-bottom:15px;">
-            <h3 style="margin:0; font-size:15px; letter-spacing:0.6px; font-weight:700;">
-                LAPORAN PENYAKIT TIDAK MENULAR (PTM) <br>
+        <div style="width:100%; text-align:center; margin-bottom:12px;">
+            <h3 style="margin:0; font-size:14px; letter-spacing:0.5px; font-weight:700;">
+                LAPORAN REKAPITULASI PENYAKIT TIDAK MENULAR (PTM)<br>
                 BERDASARKAN KELOMPOK USIA
             </h3>
         </div>
 
         {{-- PENJELASAN SINGKAT --}}
-        <div style="font-size: 11px; color: #444; margin-bottom: 12px; line-height: 1.4; text-align: left;">
-            Laporan ini menyajikan ringkasan data peserta pemeriksaan Penyakit Tidak Menular (PTM) yang dikelompokkan berdasarkan kategori usia (Remaja, Dewasa, Pra Lansia, dan Lansia) pada Dinas Kesehatan Provinsi Kalimantan Selatan.
+        <div style="font-size: 11px; color: #333; margin-bottom: 10px; line-height: 1.4; text-align: justify;">
+            Laporan ini menyajikan distribusi dan persentase sebaran peserta pemeriksaan Penyakit Tidak Menular (PTM) yang dikelompokkan berdasarkan kategori usia (Remaja, Dewasa, Pra Lansia, dan Lansia) pada Dinas Kesehatan Provinsi Kalimantan Selatan.
         </div>
+
+        {{-- INFO FILTER AKTIF --}}
+        @if(request('kota') || request('kecamatan') || request('puskesmas_id') || request('filter_waktu'))
+        <div style="font-size: 11px; margin-bottom: 12px; border: 1px dashed #999; padding: 6px 10px; background-color: #f9f9f9;">
+            @if(request('kota')) <strong>Kota/Kab:</strong> {{ request('kota') }} &nbsp;|&nbsp; @endif
+            @if(request('kecamatan')) <strong>Kecamatan:</strong> {{ request('kecamatan') }} &nbsp;|&nbsp; @endif
+            @if(request('puskesmas_id'))
+                @php
+                    $pusk = \App\Models\Puskesmas::find(request('puskesmas_id'));
+                @endphp
+                <strong>Puskesmas:</strong> {{ $pusk ? $pusk->nama_puskesmas : request('puskesmas_id') }} &nbsp;|&nbsp;
+            @endif
+            @if(request('filter_waktu') == 'bulan' && request('bulan')) 
+                <strong>Periode:</strong> {{ \Carbon\Carbon::create()->month((int)request('bulan'))->translatedFormat('F') }} {{ date('Y') }}
+            @elseif(request('filter_waktu') == 'tanggal' && request('tgl_awal') && request('tgl_akhir')) 
+                <strong>Periode:</strong> {{ \Carbon\Carbon::parse(request('tgl_awal'))->format('d-m-Y') }} s/d {{ \Carbon\Carbon::parse(request('tgl_akhir'))->format('d-m-Y') }}
+            @endif
+        </div>
+        @endif
 
         @php
             $totalRemaja = $dataUsia['remaja'] ?? 0;
@@ -183,100 +255,137 @@
             $totalPraLansia = $dataUsia['pra_lansia'] ?? 0;
             $totalLansia = $dataUsia['lansia'] ?? 0;
             $grandTotal = $totalRemaja + $totalDewasa + $totalPraLansia + $totalLansia;
+
+            $persenRemaja = $grandTotal > 0 ? round(($totalRemaja / $grandTotal) * 100, 1) : 0;
+            $persenDewasa = $grandTotal > 0 ? round(($totalDewasa / $grandTotal) * 100, 1) : 0;
+            $persenPraLansia = $grandTotal > 0 ? round(($totalPraLansia / $grandTotal) * 100, 1) : 0;
+            $persenLansia = $grandTotal > 0 ? round(($totalLansia / $grandTotal) * 100, 1) : 0;
+
+            // Cari kelompok dominan
+            $highestCategory = 'Pra Lansia';
+            $highestPersen = $persenPraLansia;
+            if ($persenRemaja >= max($persenDewasa, $persenPraLansia, $persenLansia)) {
+                $highestCategory = 'Remaja (< 18 Tahun)'; $highestPersen = $persenRemaja;
+            } elseif ($persenDewasa >= max($persenRemaja, $persenPraLansia, $persenLansia)) {
+                $highestCategory = 'Dewasa (18-44 Tahun)'; $highestPersen = $persenDewasa;
+            } elseif ($persenPraLansia >= max($persenRemaja, $persenDewasa, $persenLansia)) {
+                $highestCategory = 'Pra Lansia (45-59 Tahun)'; $highestPersen = $persenPraLansia;
+            } elseif ($persenLansia >= max($persenRemaja, $persenDewasa, $persenPraLansia)) {
+                $highestCategory = 'Lansia (≥ 60 Tahun)'; $highestPersen = $persenLansia;
+            }
         @endphp
 
-        {{-- TABEL --}}
+        {{-- VISUAL GRAFIK BATANG HORIZONTAL (PRINT-FRIENDLY CSS) --}}
+        <div class="chart-box">
+            <div class="chart-title">📊 Visualisasi Grafik Sebaran Kelompok Usia</div>
+            
+            <div class="bar-item">
+                <div class="bar-label-group">
+                    <span><strong>1. Remaja</strong> (< 18 Tahun)</span>
+                    <span><strong>{{ $persenRemaja }}%</strong> ({{ $totalRemaja }} Orang)</span>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-fill" style="width: {{ $persenRemaja }}%;"></div>
+                </div>
+            </div>
+
+            <div class="bar-item">
+                <div class="bar-label-group">
+                    <span><strong>2. Dewasa</strong> (18 – 44 Tahun)</span>
+                    <span><strong>{{ $persenDewasa }}%</strong> ({{ $totalDewasa }} Orang)</span>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-fill" style="width: {{ $persenDewasa }}%;"></div>
+                </div>
+            </div>
+
+            <div class="bar-item">
+                <div class="bar-label-group">
+                    <span><strong>3. Pra Lansia</strong> (45 – 59 Tahun)</span>
+                    <span><strong>{{ $persenPraLansia }}%</strong> ({{ $totalPraLansia }} Orang)</span>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-fill" style="width: {{ $persenPraLansia }}%;"></div>
+                </div>
+            </div>
+
+            <div class="bar-item">
+                <div class="bar-label-group">
+                    <span><strong>4. Lansia</strong> (≥ 60 Tahun)</span>
+                    <span><strong>{{ $persenLansia }}%</strong> ({{ $totalLansia }} Orang)</span>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-fill" style="width: {{ $persenLansia }}%;"></div>
+                </div>
+            </div>
+        </div>
+
+        {{-- TABEL DATA RINGKAS --}}
         <table class="grid">
             <thead>
                 <tr>
                     <th style="width:40px">No</th>
                     <th>Kelompok Usia</th>
                     <th>Rentang Usia</th>
-                    <th style="width:120px">Jumlah Peserta</th>
-                    <th style="width:90px">Persentase</th>
-                    <th style="width:150px">Proporsi (Visual)</th>
+                    <th style="width:130px">Jumlah Peserta</th>
+                    <th style="width:100px">Persentase</th>
+                    <th style="width:120px">Kategori Risiko</th>
                 </tr>
             </thead>
             <tbody>
-                @php
-                    $persenRemaja = $grandTotal > 0 ? round(($totalRemaja / $grandTotal) * 100, 1) : 0;
-                @endphp
                 <tr>
                     <td style="text-align:center">1</td>
-                    <td>Remaja</td>
+                    <td><strong>Remaja</strong></td>
                     <td style="text-align:center">&lt; 18 Tahun</td>
-                    <td style="text-align:center">{{ $totalRemaja }} Orang</td>
-                    <td style="text-align:center">{{ $persenRemaja }}%</td>
-                    <td style="text-align:center">
-                        <div style="background-color: #e5e7eb; border-radius: 3px; width: 100%; height: 10px; display: inline-block; overflow: hidden; vertical-align: middle;">
-                            <div style="background-color: #4b5563; height: 100%; width: {{ $persenRemaja }}%;"></div>
-                        </div>
-                    </td>
+                    <td style="text-align:center"><strong>{{ $totalRemaja }}</strong> Orang</td>
+                    <td style="text-align:center"><strong>{{ $persenRemaja }}%</strong></td>
+                    <td style="text-align:center; font-size:11px;">Rendah</td>
                 </tr>
-                @php
-                    $persenDewasa = $grandTotal > 0 ? round(($totalDewasa / $grandTotal) * 100, 1) : 0;
-                @endphp
                 <tr>
                     <td style="text-align:center">2</td>
-                    <td>Dewasa</td>
+                    <td><strong>Dewasa</strong></td>
                     <td style="text-align:center">18 – 44 Tahun</td>
-                    <td style="text-align:center">{{ $totalDewasa }} Orang</td>
-                    <td style="text-align:center">{{ $persenDewasa }}%</td>
-                    <td style="text-align:center">
-                        <div style="background-color: #e5e7eb; border-radius: 3px; width: 100%; height: 10px; display: inline-block; overflow: hidden; vertical-align: middle;">
-                            <div style="background-color: #4b5563; height: 100%; width: {{ $persenDewasa }}%;"></div>
-                        </div>
-                    </td>
+                    <td style="text-align:center"><strong>{{ $totalDewasa }}</strong> Orang</td>
+                    <td style="text-align:center"><strong>{{ $persenDewasa }}%</strong></td>
+                    <td style="text-align:center; font-size:11px;">Sedang</td>
                 </tr>
-                @php
-                    $persenPraLansia = $grandTotal > 0 ? round(($totalPraLansia / $grandTotal) * 100, 1) : 0;
-                @endphp
                 <tr>
                     <td style="text-align:center">3</td>
-                    <td>Pra Lansia</td>
+                    <td><strong>Pra Lansia</strong></td>
                     <td style="text-align:center">45 – 59 Tahun</td>
-                    <td style="text-align:center">{{ $totalPraLansia }} Orang</td>
-                    <td style="text-align:center">{{ $persenPraLansia }}%</td>
-                    <td style="text-align:center">
-                        <div style="background-color: #e5e7eb; border-radius: 3px; width: 100%; height: 10px; display: inline-block; overflow: hidden; vertical-align: middle;">
-                            <div style="background-color: #4b5563; height: 100%; width: {{ $persenPraLansia }}%;"></div>
-                        </div>
-                    </td>
+                    <td style="text-align:center"><strong>{{ $totalPraLansia }}</strong> Orang</td>
+                    <td style="text-align:center"><strong>{{ $persenPraLansia }}%</strong></td>
+                    <td style="text-align:center; font-size:11px; font-weight:bold;">Tinggi</td>
                 </tr>
-                @php
-                    $persenLansia = $grandTotal > 0 ? round(($totalLansia / $grandTotal) * 100, 1) : 0;
-                @endphp
                 <tr>
                     <td style="text-align:center">4</td>
-                    <td>Lansia</td>
+                    <td><strong>Lansia</strong></td>
                     <td style="text-align:center">≥ 60 Tahun</td>
-                    <td style="text-align:center">{{ $totalLansia }} Orang</td>
-                    <td style="text-align:center">{{ $persenLansia }}%</td>
-                    <td style="text-align:center">
-                        <div style="background-color: #e5e7eb; border-radius: 3px; width: 100%; height: 10px; display: inline-block; overflow: hidden; vertical-align: middle;">
-                            <div style="background-color: #4b5563; height: 100%; width: {{ $persenLansia }}%;"></div>
-                        </div>
-                    </td>
+                    <td style="text-align:center"><strong>{{ $totalLansia }}</strong> Orang</td>
+                    <td style="text-align:center"><strong>{{ $persenLansia }}%</strong></td>
+                    <td style="text-align:center; font-size:11px; font-weight:bold;">Sangat Tinggi</td>
                 </tr>
                 {{-- BARIS TOTAL --}}
-                <tr style="background-color: #f9fafb; font-weight: bold;">
-                    <td colspan="3" style="text-align:center; padding-right: 10px;">Total Keseluruhan</td>
+                <tr style="background-color: #f8f9fa; font-weight: bold;">
+                    <td colspan="3" style="text-align:right; padding-right: 15px;">TOTAL KESELURUHAN</td>
                     <td style="text-align:center;">{{ $grandTotal }} Orang</td>
                     <td style="text-align:center;">100%</td>
-                    <td style="text-align:center;">
-                        <div style="background-color: #e5e7eb; border-radius: 3px; width: 100%; height: 10px; display: inline-block; overflow: hidden; vertical-align: middle;">
-                            <div style="background-color: #4b5563; height: 100%; width: 100%;"></div>
-                        </div>
-                    </td>
+                    <td style="text-align:center;">-</td>
                 </tr>
             </tbody>
         </table>
+
+        {{-- EXECUTIVE INSIGHT BOX --}}
+        <div style="border: 1px solid #198754; border-left: 5px solid #198754; background-color: #f8fdf9; padding: 8px 12px; margin-top: 12px; font-size: 11px; line-height: 1.4;">
+            <strong>💡 Catatan:</strong><br>
+            Berdasarkan data rekapitulasi di atas, kelompok penderita PTM terbesar didominasi oleh kategori <strong>{{ $highestCategory }}</strong> yaitu sebesar <strong>{{ $highestPersen }}%</strong> (dari total {{ $grandTotal }} peserta). Direkomendasikan penguatan intervensi deteksi dini dan edukasi gaya hidup sehat pada kelompok usia tersebut melalui kegiatan Posbindu PTM dan fasilitas pelayanan kesehatan.
+        </div>
 
         {{-- TTD & QR CODE --}}
         <div class="ttd">
             <div class="block">
                 <br>
-                <div>DIKELUARKAN DI BANJARMASIN</div>
+                <div>DIKELUARKAN DI BANJARBARU</div>
                 <div>TANGGAL: {{ now()->format('d-m-Y') }}</div>
 
                 @if(auth()->check() && auth()->user()->role_name === 'pegawai')
@@ -287,8 +396,7 @@
                         KEPALA BIDANG P2PTM
                     </div>
 
-                    <div class="qr-container" style="margin: 10px 0;">
-                        {{-- Ruang kosong pengganti QR Code agar posisi seimbang --}}
+                    <div class="qr-container" style="margin: 8px 0;">
                         <div style="height: 85px;"></div>
                     </div>
 
@@ -307,11 +415,9 @@
                         {{ $kepalaAktif->jabatan ?? 'KEPALA BIDANG P2PTM' }}
                     </div>
 
-                    <div class="qr-container" style="margin: 10px 0;">
+                    <div class="qr-container" style="margin: 8px 0;">
                         @if(isset($qrToken))
                             @php
-                                // Karena ini rekap keseluruhan, periode bisa kita buat "Data Keseluruhan" atau "Hingga saat ini"
-                                // atau jika controller mengirim bulan/tahun, kita bisa tangkap juga.
                                 $periode = request('bulan') && request('tahun')
                                     ? \Carbon\Carbon::create()->month((int) request('bulan'))->format('F') . ' ' . request('tahun')
                                     : 'Data Keseluruhan PTM';
@@ -322,7 +428,6 @@
                                 $nipPejabat = $kepalaAktif->nip ?? '1973062022006041016';
                             @endphp
 
-                            {{-- Judul disesuaikan menjadi: Laporan Kelompok Usia --}}
                             {!! QrCode::size(85)->generate(url('/verifikasi-laporan?judul=Laporan%20Kelompok%20Usia%20PTM&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah) . '&nama_kepala=' . urlencode($namaPejabat) . '&nip=' . urlencode($nipPejabat))) !!}
                         @else
                             <div style="height: 85px;"></div>

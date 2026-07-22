@@ -98,10 +98,10 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold">Konsumsi Alkohol</label>
-                            <select name="alkohol" class="form-select rounded-3" required>
-                                <option value="Tidak" {{ $faktor->alkohol == 'Tidak' ? 'selected' : '' }}>Tidak</option>
-                                <option value="Ya" {{ $faktor->alkohol == 'Ya' ? 'selected' : '' }}>Ya</option>
+                            <label class="form-label fw-semibold">Riwayat PTM Keluarga</label>
+                            <select name="riwayat_keluarga" class="form-select rounded-3" required>
+                                <option value="Tidak" {{ old('riwayat_keluarga', $faktor->riwayat_keluarga) == 'Tidak' ? 'selected' : '' }}>Tidak</option>
+                                <option value="Ya" {{ old('riwayat_keluarga', $faktor->riwayat_keluarga) == 'Ya' ? 'selected' : '' }}>Ya</option>
                             </select>
                         </div>
 

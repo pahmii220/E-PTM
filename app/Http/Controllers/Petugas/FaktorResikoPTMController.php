@@ -81,7 +81,13 @@ public function create()
      */
 public function store(Request $request)
     {
-        // ... (kode validasi dan pengecekan role tetap sama) ...
+        $request->validate([
+            'peserta_id'             => 'required|exists:peserta,id',
+            'tanggal_pemeriksaan'    => 'required|date',
+            'merokok'                => 'required|in:Ya,Tidak',
+            'riwayat_keluarga'       => 'required|in:Ya,Tidak',
+            'kurang_aktivitas_fisik' => 'required|in:Ya,Tidak',
+        ]);
 
         $faktorBaru = FaktorResikoPTM::create([
             'peserta_id' => $request->peserta_id ?? $request->pasien_id,
@@ -90,7 +96,8 @@ public function store(Request $request)
                 : Auth::user()->petugas->puskesmas_id,
             'tanggal_pemeriksaan'    => $request->tanggal_pemeriksaan,
             'merokok'                => $request->merokok,
-            'alkohol'                => $request->alkohol,
+            'alkohol'                => 'Tidak', // Set default
+            'riwayat_keluarga'       => $request->riwayat_keluarga,
             'kurang_aktivitas_fisik' => $request->kurang_aktivitas_fisik,
             'petugas_id' => Auth::id(),
             'created_by' => Auth::id(),
@@ -187,7 +194,7 @@ public function edit($id)
     $request->validate([
         'tanggal_pemeriksaan'     => 'required|date',
         'merokok'                 => 'required|in:Ya,Tidak',
-        'alkohol'                 => 'required|in:Ya,Tidak',
+        'riwayat_keluarga'        => 'required|in:Ya,Tidak',
         'kurang_aktivitas_fisik'  => 'required|in:Ya,Tidak',
     ]);
 
@@ -202,7 +209,8 @@ public function edit($id)
     // UPDATE DATA UTAMA
     $faktor->tanggal_pemeriksaan = $request->tanggal_pemeriksaan;
     $faktor->merokok = $request->merokok;
-    $faktor->alkohol = $request->alkohol;
+    $faktor->alkohol = 'Tidak'; // Default
+    $faktor->riwayat_keluarga = $request->riwayat_keluarga;
     $faktor->kurang_aktivitas_fisik = $request->kurang_aktivitas_fisik;
 
     // ✅ INI YANG SEBELUMNYA HILANG

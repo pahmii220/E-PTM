@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Laporan Peserta Pemeriksaan</title>
+    <title>Laporan Pasien Pemeriksaan</title>
     <style>
         /* ====== SETTING CETAK ====== */
         @page {
@@ -143,7 +143,7 @@
 
         {{-- JUDUL --}}
         <div style="text-align:center;margin-bottom:10px;">
-            <h3 style="margin:0;font-size:15px;letter-spacing:0.6px;">LAPORAN PESERTA</h3>
+            <h3 style="margin:0;font-size:15px;letter-spacing:0.6px;">LAPORAN PASIEN</h3>
         </div>
 
     {{-- INFO BULAN / PERIODE --}}
@@ -160,8 +160,8 @@
     
     {{-- KETERANGAN LAPORAN --}}
     <div style="font-size:12px; margin-bottom:10px;">
-        Laporan ini berisi daftar peserta berdasarkan periode yang dipilih. Informasi yang
-        disajikan digunakan sebagai bahan pendataan, monitoring, dan penyusunan laporan peserta pada Dinas Kesehatan Provinsi
+        Laporan ini berisi daftar pasien berdasarkan periode yang dipilih. Informasi yang
+        disajikan digunakan sebagai bahan pendataan, monitoring, dan penyusunan laporan pasien pada Dinas Kesehatan Provinsi
         Kalimantan Selatan.
     </div>
     
@@ -175,7 +175,7 @@
                     <th style="width:40px">No</th>
                     <th>No. RM</th>
                     <th>Tanggal Lahir</th>
-                    <th>Nama Peserta</th>
+                    <th>Nama Pasien</th>
                     <th>Puskesmas</th>
                     <th>Kontak</th>
                     <th>Alamat</th>
@@ -200,7 +200,7 @@
 
         {{-- TOTAL --}}
         <div style="margin-top:6px; font-size:12px; font-weight:700;">
-            Jumlah keseluruhan peserta sebanyak = {{ $items->count() }} orang
+            Jumlah keseluruhan pasien sebanyak = {{ $items->count() }} orang
         </div>
 
         {{-- BLOK TTD & QR (Telah disinkronkan) --}}
@@ -257,7 +257,7 @@
         $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i'); 
                                         @endphp
 
-                                        {!! QrCode::size(100)->generate(url('/verifikasi-laporan?judul=Laporan%20Peserta%20PTM&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah))) !!}
+                                        {!! QrCode::size(100)->generate(url('/verifikasi-laporan?judul=Laporan%20Pasien%20PTM&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah))) !!}
                                     @else
                                         <div style="height: 85px;"></div>
                                     @endif

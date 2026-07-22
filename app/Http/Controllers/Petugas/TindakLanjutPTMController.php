@@ -26,13 +26,12 @@ class TindakLanjutPTMController extends Controller
         if ($user->role_name === 'admin') {
             $tindakLanjut = TindakLanjutPTM::with(['peserta', 'deteksiDini'])
                 ->latest()
-                ->get();
-
-            $deteksiDiniTerbaru = DeteksiDiniPTM::latest()->first();
+                ->get()
+                ->unique('peserta_id');
 
             return view(
                 'petugas.tindak_lanjut.index',
-                compact('tindakLanjut', 'deteksiDiniTerbaru')
+                compact('tindakLanjut')
             );
         }
 
@@ -42,28 +41,28 @@ class TindakLanjutPTMController extends Controller
         }
 
         $tindakLanjut = TindakLanjutPTM::with(['peserta', 'deteksiDini'])
-            ->where('petugas_id', $user->petugas->id)
+            ->whereHas('peserta', function($q) use ($user) {
+                $q->where('puskesmas_id', $user->petugas->puskesmas_id);
+            })
             ->latest()
-            ->get();
-
-        $deteksiDiniTerbaru = DeteksiDiniPTM::where('petugas_id', $user->petugas->id)
-    ->latest()
-    ->first();
-
-
+            ->get()
+            ->unique('peserta_id');
 
         return view(
             'petugas.tindak_lanjut.index',
-            compact('tindakLanjut', 'deteksiDiniTerbaru')
+            compact('tindakLanjut')
         );
     }
 
     /* =====================
      | CREATE
      ===================== */
-    public function create($deteksi_dini_id)
+    public function create($deteksi_dini_id = null)
     {
-        $deteksiTerpilih = DeteksiDiniPTM::with('peserta')->findOrFail($deteksi_dini_id);
+        $deteksiTerpilih = null;
+        if ($deteksi_dini_id && $deteksi_dini_id !== 'all') {
+            $deteksiTerpilih = DeteksiDiniPTM::with('peserta')->find($deteksi_dini_id);
+        }
 
         // ADMIN: semua deteksi
         if (Auth::user()->role_name === 'admin') {
@@ -77,13 +76,14 @@ class TindakLanjutPTMController extends Controller
             }
 
             $daftarDeteksi = DeteksiDiniPTM::with('peserta')
-    ->where('petugas_id', auth()->user()->petugas->id)
-    ->whereDoesntHave('tindakLanjut') // 🔥 KUNCI
-    ->latest()
-    ->get();
-
-
-
+                ->where('puskesmas_id', auth()->user()->petugas->puskesmas_id)
+                ->whereDoesntHave('tindakLanjut') // KUNCI
+                ->latest()
+                ->get();
+        }
+        
+        if ($deteksiTerpilih && !$daftarDeteksi->contains('id', $deteksiTerpilih->id)) {
+            $daftarDeteksi->prepend($deteksiTerpilih);
         }
 
         return view(
@@ -129,42 +129,56 @@ class TindakLanjutPTMController extends Controller
      ===================== */
     public function edit($id)
     {
-        $query = TindakLanjutPTM::query();
+        $query = TindakLanjutPTM::with(['deteksiDini.peserta', 'peserta']);
 
         if (Auth::user()->role_name !== 'admin') {
-            $query->where('petugas_id', Auth::user()->petugas->id);
+            $query->whereHas('peserta', function($q) {
+                $q->where('puskesmas_id', Auth::user()->petugas->puskesmas_id);
+            });
         }
 
         $tindakLanjut = $query->findOrFail($id);
 
-        return view('petugas.tindak_lanjut.edit', compact('tindakLanjut'));
+        // Cari data faktor risiko terkait
+        $faktor = \App\Models\FaktorResikoPTM::where('peserta_id', $tindakLanjut->peserta_id)
+            ->where('tanggal_pemeriksaan', $tindakLanjut->deteksiDini->tanggal_pemeriksaan)
+            ->first();
+
+        return view('petugas.tindak_lanjut.edit', compact('tindakLanjut', 'faktor'));
     }
 
     /* =====================
      | UPDATE
      ===================== */
-   public function update(Request $request, $id)
-{
-    $request->validate([
-        'jenis_tindak_lanjut' => 'required',
-        'tanggal_tindak_lanjut' => 'nullable|date',
-        'status_tindak_lanjut' => 'required',
-        'catatan_petugas' => 'nullable|string',
-    ]);
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'jenis_tindak_lanjut' => 'required',
+            'tanggal_tindak_lanjut' => 'nullable|date',
+            'status_tindak_lanjut' => 'required',
+            'catatan_petugas' => 'nullable|string',
+        ]);
 
-    $tindakLanjut = TindakLanjutPTM::findOrFail($id);
+        $query = TindakLanjutPTM::query();
+        if (Auth::user()->role_name !== 'admin') {
+            $query->whereHas('peserta', function($q) {
+                $q->where('puskesmas_id', Auth::user()->petugas->puskesmas_id);
+            });
+        }
 
-    $tindakLanjut->update([
-        'jenis_tindak_lanjut' => $request->jenis_tindak_lanjut,
-        'tanggal_tindak_lanjut' => $request->tanggal_tindak_lanjut,
-        'status_tindak_lanjut' => $request->status_tindak_lanjut,
-        'catatan_petugas' => $request->catatan_petugas,
-    ]);
+        $tindakLanjut = $query->findOrFail($id);
 
-    return redirect()
-        ->route('petugas.tindak_lanjut.index')
-        ->with('success', 'Data tindak lanjut berhasil diperbarui.');
-}
+        $tindakLanjut->update([
+            'jenis_tindak_lanjut' => $request->jenis_tindak_lanjut,
+            'tanggal_tindak_lanjut' => $request->tanggal_tindak_lanjut,
+            'status_tindak_lanjut' => $request->status_tindak_lanjut,
+            'catatan_petugas' => $request->catatan_petugas,
+        ]);
+
+        return redirect()
+            ->route('petugas.tindak_lanjut.index')
+            ->with('success', 'Data tindak lanjut berhasil diperbarui.');
+    }
 
 
     /* =====================
@@ -175,7 +189,9 @@ class TindakLanjutPTMController extends Controller
         $query = TindakLanjutPTM::query();
 
         if (Auth::user()->role_name !== 'admin') {
-            $query->where('petugas_id', Auth::user()->petugas->id);
+            $query->whereHas('peserta', function($q) {
+                $q->where('puskesmas_id', Auth::user()->petugas->puskesmas_id);
+            });
         }
 
         $query->findOrFail($id)->delete();
@@ -188,5 +204,25 @@ class TindakLanjutPTMController extends Controller
         $tindakLanjut = TindakLanjutPTM::with(['peserta', 'deteksiDini'])->findOrFail($id);
 
         return view('petugas.tindak_lanjut.show', compact('tindakLanjut'));
+    }
+
+    /* =====================
+     | CETAK PDF
+     ===================== */
+    public function cetak($id)
+    {
+        $query = TindakLanjutPTM::with(['peserta.puskesmas', 'deteksiDini']);
+        if (Auth::user()->role_name !== 'admin') {
+            $query->whereHas('peserta', function($q) {
+                $q->where('puskesmas_id', Auth::user()->petugas->puskesmas_id);
+            });
+        }
+        $tindakLanjut = $query->findOrFail($id);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('petugas.tindak_lanjut.cetak', compact('tindakLanjut'));
+        $pdf->setPaper('a4', 'portrait');
+
+        $nama = \Illuminate\Support\Str::slug($tindakLanjut->peserta->nama_lengkap);
+        return $pdf->stream('hasil-skrining-'.$nama.'.pdf');
     }
 }

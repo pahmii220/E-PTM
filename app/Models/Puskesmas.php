@@ -26,6 +26,8 @@ class Puskesmas extends Model
         'alamat',
         'kode_pos',
         'email',
+        'latitude',
+        'longitude',
     ];
 
     /**

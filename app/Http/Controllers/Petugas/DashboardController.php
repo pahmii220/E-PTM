@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Petugas;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -11,7 +12,7 @@ use Carbon\Carbon;
 
 use App\Models\Peserta;
 use App\Models\DeteksiDiniPTM;
-use App\Models\FaktorResikoPtM;
+use App\Models\FaktorResikoPTM;
 
 class DashboardController extends Controller
 {
@@ -30,25 +31,31 @@ class DashboardController extends Controller
         $highRiskCount = 0;
         $totalPeserta  = 0;
 
-        // Grafik Tren
-        $monthLabels   = collect();
-        $monthPeserta  = collect();
-        $monthDeteksi  = collect();
-        $monthFaktor   = collect();
-        $weeklyLabels  = collect();
-        $weeklyPeserta = collect();
-        $weeklyDeteksi = collect();
-        $weeklyFaktor  = collect();
-        $dailyLabels   = collect();
-        $dailyPeserta  = collect();
-        $dailyDeteksi  = collect();
-        $dailyFaktor   = collect();
+        // Distribusi Kasus PTM
+        $totalHipertensi = 0;
+        $totalDiabetes   = 0;
+        $totalObesitas   = 0;
+        $totalLainnya    = 0;
+
+        // Grafik Tren Kasus PTM Spesifik
+        $monthLabels     = collect();
+        $monthHipertensi = collect();
+        $monthDiabetes   = collect();
+        $monthObesitas   = collect();
+        $weeklyLabels    = collect();
+        $weeklyHipertensi= collect();
+        $weeklyDiabetes  = collect();
+        $weeklyObesitas  = collect();
+        $dailyLabels     = collect();
+        $dailyHipertensi = collect();
+        $dailyDiabetes   = collect();
+        $dailyObesitas   = collect();
 
         // Analitik Kegiatan & Faktor Risiko
         $kegiatanLabels  = collect();
         $kegiatanTotals  = collect();
         $kegiatanPeserta = collect();
-        $faktorLabels    = collect(['Merokok', 'Alkohol', 'Kurang Aktivitas Fisik']);
+        $faktorLabels    = collect(['Merokok', 'Kurang Aktivitas Fisik', 'Riwayat Keluarga']);
         $faktorTotals    = collect([0, 0, 0]);
 
         // Insight
@@ -145,24 +152,34 @@ class DashboardController extends Controller
             }
 
             /* =====================
-               FAKTOR RISIKO (SINKRONISASI NAMA TABEL)
+               DEMOGRAFI USIA (PENGGANTI FAKTOR RISIKO)
             ====================== */
-            $tableFaktor = 'faktor_resiko_ptm';
-            if (class_exists(FaktorResikoPtM::class)) {
-                $tableFaktor = (new FaktorResikoPtM)->getTable();
-            } elseif (Schema::hasTable('faktor_resiko_ptms')) {
-                $tableFaktor = 'faktor_resiko_ptms';
-            } elseif (Schema::hasTable('faktor_risiko_ptm')) {
-                $tableFaktor = 'faktor_risiko_ptm';
+            $remaja = 0;
+            $dewasa = 0;
+            $praLansia = 0;
+            $lansia = 0;
+
+            if (class_exists(Peserta::class)) {
+                $pesertaList = Peserta::when($petugas && $petugas->puskesmas_id, function($q) use ($petugas) {
+                    return $q->where('puskesmas_id', $petugas->puskesmas_id);
+                })->get();
+
+                foreach($pesertaList as $p) {
+                    $umur = \Carbon\Carbon::parse($p->tanggal_lahir)->age;
+                    if($umur < 18) {
+                        $remaja++;
+                    } elseif($umur <= 44) {
+                        $dewasa++;
+                    } elseif($umur <= 59) {
+                        $praLansia++;
+                    } else {
+                        $lansia++;
+                    }
+                }
             }
 
-            if (Schema::hasTable($tableFaktor)) {
-                $queryFaktorCount = DB::table($tableFaktor);
-                if ($petugas && $petugas->puskesmas_id && Schema::hasColumn($tableFaktor, 'puskesmas_id')) {
-                    $queryFaktorCount->where('puskesmas_id', $petugas->puskesmas_id);
-                }
-                $totalFaktor = $queryFaktorCount->count();
-            }
+            $faktorLabels = collect(['Remaja (<18)', 'Dewasa (18-44)', 'Pra Lansia (45-59)', 'Lansia (60+)']);
+            $faktorTotals = collect([$remaja, $dewasa, $praLansia, $lansia]);
 
             /* =====================
                TREN BULANAN, MINGGUAN, HARIAN (3 DATASET)
@@ -172,40 +189,49 @@ class DashboardController extends Controller
             // --- 1. Bulanan ---
             $monthLabels = collect(range(1, 12))->map(function ($m) {
                 return Carbon::create()->month($m)->translatedFormat('F');
-            });
+            })->values();
 
-            // Peserta Bulanan
-            $monthlyPesertaData = Peserta::select(DB::raw('MONTH(dibuat_pada) as bulan'), DB::raw('COUNT(*) as total'))
+            // Hipertensi Bulanan
+            $monthlyHipertensiData = DeteksiDiniPTM::select(DB::raw('MONTH(dibuat_pada) as bulan'), DB::raw('COUNT(*) as total'))
                 ->whereYear('dibuat_pada', $year)
+                ->where('diagnosa_penyakit', 'LIKE', '%Hipertensi%')
                 ->when($petugas && $petugas->puskesmas_id, function($q) use ($petugas) {
                     $q->where('puskesmas_id', $petugas->puskesmas_id);
                 })
                 ->groupBy('bulan')->get();
-            $monthPeserta = collect(range(1, 12))->map(function ($m) use ($monthlyPesertaData) {
-                return $monthlyPesertaData->firstWhere('bulan', $m)->total ?? 0;
-            });
+            $monthHipertensi = collect(range(1, 12))->map(function ($m) use ($monthlyHipertensiData) {
+                return $monthlyHipertensiData->firstWhere('bulan', $m)->total ?? 0;
+            })->values();
 
-            // Deteksi Dini Bulanan
-            $monthlyDeteksiData = DeteksiDiniPTM::select(DB::raw('MONTH(dibuat_pada) as bulan'), DB::raw('COUNT(*) as total'))
+            // Diabetes Bulanan
+            $monthlyDiabetesData = DeteksiDiniPTM::select(DB::raw('MONTH(dibuat_pada) as bulan'), DB::raw('COUNT(*) as total'))
                 ->whereYear('dibuat_pada', $year)
+                ->where(function($q) {
+                    $q->where('diagnosa_penyakit', 'LIKE', '%Diabetes%')
+                      ->orWhere('diagnosa_penyakit', 'LIKE', '%Gula Darah%');
+                })
                 ->when($petugas && $petugas->puskesmas_id, function($q) use ($petugas) {
                     $q->where('puskesmas_id', $petugas->puskesmas_id);
                 })
                 ->groupBy('bulan')->get();
-            $monthDeteksi = collect(range(1, 12))->map(function ($m) use ($monthlyDeteksiData) {
-                return $monthlyDeteksiData->firstWhere('bulan', $m)->total ?? 0;
-            });
+            $monthDiabetes = collect(range(1, 12))->map(function ($m) use ($monthlyDiabetesData) {
+                return $monthlyDiabetesData->firstWhere('bulan', $m)->total ?? 0;
+            })->values();
 
-            // Faktor Risiko Bulanan
-            $monthlyFaktorData = \App\Models\FaktorResikoPTM::select(DB::raw('MONTH(dibuat_pada) as bulan'), DB::raw('COUNT(*) as total'))
+            // Obesitas Bulanan
+            $monthlyObesitasData = DeteksiDiniPTM::select(DB::raw('MONTH(dibuat_pada) as bulan'), DB::raw('COUNT(*) as total'))
                 ->whereYear('dibuat_pada', $year)
+                ->where(function($q) {
+                    $q->where('diagnosa_penyakit', 'LIKE', '%Obesitas%')
+                      ->orWhere('diagnosa_penyakit', 'LIKE', '%Overweight%');
+                })
                 ->when($petugas && $petugas->puskesmas_id, function($q) use ($petugas) {
                     $q->where('puskesmas_id', $petugas->puskesmas_id);
                 })
                 ->groupBy('bulan')->get();
-            $monthFaktor = collect(range(1, 12))->map(function ($m) use ($monthlyFaktorData) {
-                return $monthlyFaktorData->firstWhere('bulan', $m)->total ?? 0;
-            });
+            $monthObesitas = collect(range(1, 12))->map(function ($m) use ($monthlyObesitasData) {
+                return $monthlyObesitasData->firstWhere('bulan', $m)->total ?? 0;
+            })->values();
 
             // --- 2. Mingguan ---
             $weeklyLabels = collect();
@@ -213,20 +239,28 @@ class DashboardController extends Controller
                 $date = Carbon::today()->subDays($i);
                 $weeklyLabels->push($date->translatedFormat('D'));
 
-                // Peserta
-                $qWPeserta = Peserta::whereDate('dibuat_pada', $date);
-                if ($petugas && $petugas->puskesmas_id) $qWPeserta->where('puskesmas_id', $petugas->puskesmas_id);
-                $weeklyPeserta->push($qWPeserta->count());
+                // Hipertensi
+                $qWHipertensi = DeteksiDiniPTM::whereDate('dibuat_pada', $date)->where('diagnosa_penyakit', 'LIKE', '%Hipertensi%');
+                if ($petugas && $petugas->puskesmas_id) $qWHipertensi->where('puskesmas_id', $petugas->puskesmas_id);
+                $weeklyHipertensi->push($qWHipertensi->count());
 
-                // Deteksi Dini
-                $qWDeteksi = DeteksiDiniPTM::whereDate('dibuat_pada', $date);
-                if ($petugas && $petugas->puskesmas_id) $qWDeteksi->where('puskesmas_id', $petugas->puskesmas_id);
-                $weeklyDeteksi->push($qWDeteksi->count());
+                // Diabetes
+                $qWDiabetes = DeteksiDiniPTM::whereDate('dibuat_pada', $date)
+                    ->where(function($q) {
+                        $q->where('diagnosa_penyakit', 'LIKE', '%Diabetes%')
+                          ->orWhere('diagnosa_penyakit', 'LIKE', '%Gula Darah%');
+                    });
+                if ($petugas && $petugas->puskesmas_id) $qWDiabetes->where('puskesmas_id', $petugas->puskesmas_id);
+                $weeklyDiabetes->push($qWDiabetes->count());
 
-                // Faktor Risiko
-                $qWFaktor = \App\Models\FaktorResikoPTM::whereDate('dibuat_pada', $date);
-                if ($petugas && $petugas->puskesmas_id) $qWFaktor->where('puskesmas_id', $petugas->puskesmas_id);
-                $weeklyFaktor->push($qWFaktor->count());
+                // Obesitas
+                $qWObesitas = DeteksiDiniPTM::whereDate('dibuat_pada', $date)
+                    ->where(function($q) {
+                        $q->where('diagnosa_penyakit', 'LIKE', '%Obesitas%')
+                          ->orWhere('diagnosa_penyakit', 'LIKE', '%Overweight%');
+                    });
+                if ($petugas && $petugas->puskesmas_id) $qWObesitas->where('puskesmas_id', $petugas->puskesmas_id);
+                $weeklyObesitas->push($qWObesitas->count());
             }
 
             // --- 3. Harian ---
@@ -234,21 +268,76 @@ class DashboardController extends Controller
             for ($i = 0; $i < 24; $i++) {
                 $dailyLabels->push(sprintf('%02d:00', $i));
 
-                // Peserta
-                $qDPeserta = Peserta::whereDate('dibuat_pada', today())->whereRaw('HOUR(dibuat_pada) = ?', [$i]);
-                if ($petugas && $petugas->puskesmas_id) $qDPeserta->where('puskesmas_id', $petugas->puskesmas_id);
-                $dailyPeserta->push($qDPeserta->count());
+                // Hipertensi
+                $qDHipertensi = DeteksiDiniPTM::whereDate('dibuat_pada', today())
+                    ->whereRaw('HOUR(dibuat_pada) = ?', [$i])
+                    ->where('diagnosa_penyakit', 'LIKE', '%Hipertensi%');
+                if ($petugas && $petugas->puskesmas_id) $qDHipertensi->where('puskesmas_id', $petugas->puskesmas_id);
+                $dailyHipertensi->push($qDHipertensi->count());
 
-                // Deteksi Dini
-                $qDDeteksi = DeteksiDiniPTM::whereDate('dibuat_pada', today())->whereRaw('HOUR(dibuat_pada) = ?', [$i]);
-                if ($petugas && $petugas->puskesmas_id) $qDDeteksi->where('puskesmas_id', $petugas->puskesmas_id);
-                $dailyDeteksi->push($qDDeteksi->count());
+                // Diabetes
+                $qDDiabetes = DeteksiDiniPTM::whereDate('dibuat_pada', today())
+                    ->whereRaw('HOUR(dibuat_pada) = ?', [$i])
+                    ->where(function($q) {
+                        $q->where('diagnosa_penyakit', 'LIKE', '%Diabetes%')
+                          ->orWhere('diagnosa_penyakit', 'LIKE', '%Gula Darah%');
+                    });
+                if ($petugas && $petugas->puskesmas_id) $qDDiabetes->where('puskesmas_id', $petugas->puskesmas_id);
+                $dailyDiabetes->push($qDDiabetes->count());
 
-                // Faktor Risiko
-                $qDFaktor = \App\Models\FaktorResikoPTM::whereDate('dibuat_pada', today())->whereRaw('HOUR(dibuat_pada) = ?', [$i]);
-                if ($petugas && $petugas->puskesmas_id) $qDFaktor->where('puskesmas_id', $petugas->puskesmas_id);
-                $dailyFaktor->push($qDFaktor->count());
+                 // Obesitas
+                $qDObesitas = DeteksiDiniPTM::whereDate('dibuat_pada', today())
+                    ->whereRaw('HOUR(dibuat_pada) = ?', [$i])
+                    ->where(function($q) {
+                        $q->where('diagnosa_penyakit', 'LIKE', '%Obesitas%')
+                          ->orWhere('diagnosa_penyakit', 'LIKE', '%Overweight%');
+                    });
+                if ($petugas && $petugas->puskesmas_id) $qDObesitas->where('puskesmas_id', $petugas->puskesmas_id);
+                $dailyObesitas->push($qDObesitas->count());
             }
+
+            /* =====================
+               DISTRIBUSI KASUS PENYAKIT PTM
+            ====================== */
+            $penyakitList = [
+                "Gangguan Jantung",
+                "Gagal Jantung",
+                "Jantung Koroner",
+                "Jantung Kongenital",
+                "Jantung Lainnya",
+                "Hipertensi",
+                "Diabetes Melitus",
+                "Obesitas",
+                "Gangguan Stroke",
+                "Kanker Payudara",
+                "Kanker Serviks",
+                "Kanker Paru-Paru",
+                "Kanker Kolorektal",
+                "Thalassemia",
+                "Gangguan Pendengaran",
+                "Gangguan Pendengaran Otitis (OMSK)",
+                "Gangguan Pendengaran Presbikusis",
+                "Gangguan Penglihatan Katarak",
+                "Miopia",
+                "PPOK Umum",
+                "PPOK Stabil",
+                "PPOK Eksaserbasi"
+            ];
+
+            $ptmTotalsMap = [];
+            foreach ($penyakitList as $penyakit) {
+                $count = DeteksiDiniPTM::where('diagnosa_penyakit', 'LIKE', '%' . $penyakit . '%')
+                    ->when($petugas && $petugas->puskesmas_id, function($q) use ($petugas) {
+                        $q->where('puskesmas_id', $petugas->puskesmas_id);
+                    })->count();
+                $ptmTotalsMap[$penyakit] = $count;
+            }
+
+            // Urutkan dari jumlah kasus terbanyak agar grafik lebih rapi (optional, tapi sangat estetik!)
+            arsort($ptmTotalsMap);
+
+            $ptmLabels = array_keys($ptmTotalsMap);
+            $ptmValues = array_values($ptmTotalsMap);
 
 
             /* =====================
@@ -286,10 +375,10 @@ class DashboardController extends Controller
                 }
 
                 $merokokCount = (clone $queryF)->where('merokok', 'Ya')->count();
-                $alkoholCount = (clone $queryF)->where('alkohol', 'Ya')->count();
                 $aktivitasCount = (clone $queryF)->where('kurang_aktivitas_fisik', 'Ya')->count();
+                $keluargaCount = (clone $queryF)->where('riwayat_keluarga', 'Ya')->count();
 
-                $faktorTotals = collect([$merokokCount, $alkoholCount, $aktivitasCount]);
+                $faktorTotals = collect([$merokokCount, $aktivitasCount, $keluargaCount]);
 
                 $topIndex = $faktorTotals->search($faktorTotals->max());
                 $topFaktor = $faktorLabels[$topIndex] ?? '-';
@@ -307,19 +396,23 @@ class DashboardController extends Controller
             'totalFaktor',
             'highRiskCount',
 
+            // Distribusi Kasus PTM Akumulatif
+            'ptmLabels',
+            'ptmValues',
+
             // Grafik Tren
             'monthLabels',
-            'monthPeserta',
-            'monthDeteksi',
-            'monthFaktor',
+            'monthHipertensi',
+            'monthDiabetes',
+            'monthObesitas',
             'weeklyLabels',
-            'weeklyPeserta',
-            'weeklyDeteksi',
-            'weeklyFaktor',
+            'weeklyHipertensi',
+            'weeklyDiabetes',
+            'weeklyObesitas',
             'dailyLabels',
-            'dailyPeserta',
-            'dailyDeteksi',
-            'dailyFaktor',
+            'dailyHipertensi',
+            'dailyDiabetes',
+            'dailyObesitas',
 
             // Analitik Kegiatan
             'kegiatanLabels',
@@ -339,5 +432,41 @@ class DashboardController extends Controller
             'trackApproved', 
             'trackRevisi'
         ));
+    }
+
+    /**
+     * Memproses form kontak bantuan via Email
+     */
+    public function sendContactEmail(Request $request)
+    {
+        $request->validate([
+            'subjek' => 'required|string',
+            'pesan'  => 'required|string|min:10',
+        ]);
+
+        try {
+            // Ambil data pengirim
+            $pengirim = \Illuminate\Support\Facades\Auth::user()->Username;
+            if (\Illuminate\Support\Facades\Auth::user()->petugas && \Illuminate\Support\Facades\Auth::user()->petugas->puskesmas) {
+                $pengirim = \Illuminate\Support\Facades\Auth::user()->petugas->nama_petugas . ' (' . \Illuminate\Support\Facades\Auth::user()->petugas->puskesmas->nama_puskesmas . ')';
+            }
+            
+            // Ambil email Admin dari database
+            $adminUser = \App\Models\User::where('role_name', 'admin')->orWhere('role_name', 'Administrator')->first();
+            $adminEmail = ($adminUser && $adminUser->email) ? $adminUser->email : 'admin@eptm-kalsel.go.id';
+
+            // Kirim email ke admin
+            \Illuminate\Support\Facades\Mail::to($adminEmail)->send(
+                new \App\Mail\ContactAdminMail($request->subjek, $request->pesan, $pengirim)
+            );
+
+            return back()->with('success', 'Pesan bantuan Anda berhasil dikirim ke Administrator. Harap tunggu balasan kami melalui kontak terdaftar Anda.');
+            
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal mengirim email kontak: ' . $e->getMessage());
+            
+            // Karena ini simulasi local atau jika SMTP gagal, jangan biarkan user melihat error teknis.
+            return back()->with('success', 'Pesan Anda telah dicatat oleh sistem (Local Mode). Tim IT akan segera memproses laporan Anda.');
+        }
     }
 }

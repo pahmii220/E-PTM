@@ -195,7 +195,7 @@
 
         {{-- PENJELASAN SINGKAT --}}
         <div style="font-size: 11px; color: #444; margin-bottom: 12px; line-height: 1.4; text-align: left;">
-            Laporan ini berisi data hasil pemeriksaan deteksi dini Penyakit Tidak Menular (PTM) yang dilakukan pada peserta
+            Laporan ini berisi data hasil pemeriksaan deteksi dini Penyakit Tidak Menular (PTM) yang dilakukan pada pasien
             .
         </div>
 
@@ -204,7 +204,7 @@
             <thead>
                 <tr>
                     <th style="width:40px">No</th>
-                    <th>Peserta</th>
+                    <th>Pasien</th>
                     <th style="width:120px">Tanggal Pemeriksaan</th>
                     <th style="width:90px">Tekanan</th>
                     <th style="width:80px">Gula</th>

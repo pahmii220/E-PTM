@@ -29,7 +29,31 @@ class DataPtmRevisiNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['database'];
+    }
+
+    public function toDatabase(object $notifiable): array
+    {
+        $jenisData = 'Data PTM';
+        $namaPeserta = '-';
+
+        if (get_class($this->item) === 'App\Models\DeteksiDiniPTM') {
+            $namaPeserta = $this->item->peserta->nama_lengkap ?? '-';
+            $jenisData = 'Deteksi Dini';
+        } elseif (get_class($this->item) === 'App\Models\FaktorResikoPTM') {
+            $namaPeserta = $this->item->peserta->nama_lengkap ?? '-';
+            $jenisData = 'Faktor Risiko';
+        } elseif (get_class($this->item) === 'App\Models\Peserta') {
+            $namaPeserta = $this->item->nama_lengkap ?? '-'; 
+            $jenisData = 'Peserta';
+        }
+
+        return [
+            'title' => "Revisi {$jenisData}",
+            'message' => "Petugas telah merevisi data {$jenisData} untuk {$namaPeserta}.",
+            'url' => route('pengguna.verifikasi_laporan.index'),
+            'type' => 'warning'
+        ];
     }
 
     /**

@@ -10,16 +10,10 @@
         <h2 class="fw-bold mb-0">Data Tindak Lanjut PTM</h2>
 
         @if(auth()->user()->role_name === 'petugas')
-            @if($deteksiDiniTerbaru)
-                <a href="{{ route('petugas.tindak_lanjut.create', $deteksiDiniTerbaru->id) }}"
-                    class="btn btn-success">
-                    <i class="bi bi-plus-circle"></i> Tambah Tindak Lanjut
-                </a>
-            @else
-                <button class="btn btn-secondary" disabled>
-                    Belum Ada Deteksi Dini
-                </button>   
-            @endif
+            <a href="{{ route('petugas.tindak_lanjut.create') }}"
+                class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Tambah Tindak Lanjut
+            </a>
         @endif
     </div>
     <br>
@@ -45,7 +39,7 @@
                 {{-- SEARCH --}}
                 <div class="col-md-6">
                     <input type="text" id="customSearch" class="form-control"
-                        placeholder="Cari nama peserta / catatan">
+                        placeholder="Cari nama pasien / catatan">
                 </div>
 
             </div>
@@ -59,7 +53,7 @@
                 <thead class="bg-success text-white">
                     <tr>
                         <th>No</th>
-                        <th>Nama Peserta</th>
+                        <th>Nama Pasien</th>
                         <th>Tgl Pemeriksaan</th>
                         <th>Jenis Tindak Lanjut</th>
                         <th>Tgl Tindak Lanjut</th>
@@ -101,19 +95,25 @@
                         </td>
 
 
-                        <td class="text-start">
+                        <td style="max-width: 300px; white-space: normal; text-align: justify;">
                             {{ $t->catatan_petugas ?? '-' }}
                         </td>
 
                         {{-- AKSI --}}
                         <td>
+                            <a href="{{ route('petugas.tindak_lanjut.cetak', $t->id) }}"
+                               class="btn btn-sm btn-info me-1 text-white" target="_blank"
+                               title="Cetak PDF/Surat">
+                                <i class="bi bi-printer"></i>
+                            </a>
+
                             @if(auth()->user()->role_name === 'petugas')
-                                <a href="{{ route('petugas.tindak_lanjut.edit',$t->id) }}"
+                                <a href="{{ route('petugas.tindak_lanjut.edit', $t->id) }}"
                                     class="btn btn-sm btn-warning me-1">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
 
-                                <form action="{{ route('petugas.tindak_lanjut.destroy',$t->id) }}"
+                                <form action="{{ route('petugas.tindak_lanjut.destroy', $t->id) }}"
                                     method="POST" class="d-inline"
                                     onsubmit="return confirm('Yakin hapus data?')">
                                     @csrf @method('DELETE')

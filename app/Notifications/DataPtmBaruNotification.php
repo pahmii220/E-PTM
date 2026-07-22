@@ -21,7 +21,18 @@ class DataPtmBaruNotification extends Notification
 
     public function via($notifiable)
     {
-        return ['mail'];
+        return ['database'];
+    }
+
+    public function toDatabase($notifiable)
+    {
+        $namaPeserta = $this->data->peserta->nama_lengkap ?? 'Tidak diketahui';
+        return [
+            'title' => 'Data PTM Baru',
+            'message' => 'Terdapat entri data pemeriksaan baru untuk ' . $namaPeserta,
+            'url' => route('pengguna.verifikasi.peserta'),
+            'type' => 'info'
+        ];
     }
 
 public function toMail($notifiable)

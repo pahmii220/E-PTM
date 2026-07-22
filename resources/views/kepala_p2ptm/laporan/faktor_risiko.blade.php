@@ -2,12 +2,15 @@
 
 @section('content')
     <div class="container-fluid py-4" style="max-width:1400px">
+
+        @include('kepala_p2ptm.laporan.partials.tabs')
+
         <div class="card border-0 shadow-sm mb-4 rounded-4" style="background:linear-gradient(135deg,#eef2ff,#f8fafc)">
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col-md-5">
                         <h4 class="fw-bold mb-0">Laporan Faktor Risiko PTM</h4>
-                        <small class="text-muted">Tinjau data perilaku berisiko peserta (Merokok, Kurang Aktivitas, Diet,
+                        <small class="text-muted">Tinjau data perilaku berisiko pasien (Merokok, Kurang Aktivitas, Diet,
                             dll).</small>
                     </div>
 
@@ -86,7 +89,7 @@
                     <thead class="table-light">
                         <tr>
                             <th class="ps-4">No</th>
-                            <th>Nama Peserta</th>
+                            <th>Nama Pasien</th>
                             <th>Tanggal Pemeriksaan</th>
                             <th>Puskesmas</th>
                             <th>Merokok</th>

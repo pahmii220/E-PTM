@@ -37,11 +37,18 @@ public function boot()
                                             ->where('role_name', 'petugas')
                                             ->where('status_aktif', 0)
                                             ->count();
+                                            
+                    $latestPendingIdAdmin = DB::table('pengguna')
+                                            ->where('role_name', 'petugas')
+                                            ->where('status_aktif', 0)
+                                            ->orderBy('id', 'desc')
+                                            ->value('id') ?? 0;
                 }
             }
 
             // Kirim variabel ke view
             $view->with('jumlahPendingAdmin', $jumlahPendingAdmin);
+            $view->with('latestPendingIdAdmin', $latestPendingIdAdmin ?? 0);
             $view->with('role', $role);
         });
     }

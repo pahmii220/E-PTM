@@ -20,7 +20,31 @@ class DataPtmDisetujuiNotification extends Notification
 
     public function via($notifiable): array
     {
-        return ['mail'];
+        return ['database'];
+    }
+
+    public function toDatabase($notifiable): array
+    {
+        $jenisData = 'Data PTM';
+        $namaPeserta = '-';
+
+        if (get_class($this->item) === 'App\Models\DeteksiDiniPTM') {
+            $namaPeserta = $this->item->peserta->nama_lengkap ?? '-';
+            $jenisData = 'Data Deteksi Dini';
+        } elseif (get_class($this->item) === 'App\Models\FaktorResikoPTM') {
+            $namaPeserta = $this->item->peserta->nama_lengkap ?? '-';
+            $jenisData = 'Data Faktor Risiko';
+        } elseif (get_class($this->item) === 'App\Models\Peserta') {
+            $namaPeserta = $this->item->nama_lengkap ?? '-'; 
+            $jenisData = 'Data Peserta Baru';
+        }
+
+        return [
+            'title' => $jenisData . ' Disetujui',
+            'message' => 'Dinkes menyetujui data ' . $jenisData . ' untuk ' . $namaPeserta,
+            'url' => route('petugas.laporan.index'),
+            'type' => 'success'
+        ];
     }
 
 public function toMail($notifiable): MailMessage

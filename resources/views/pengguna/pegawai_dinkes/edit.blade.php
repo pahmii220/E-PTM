@@ -212,12 +212,14 @@
                                             Kalimantan Tengah</option>
                                         <option value="Kalimantan Timur" {{ old('provinsi', optional($pegawai)->provinsi) == 'Kalimantan Timur' ? 'selected' : '' }}>
                                             Kalimantan Timur</option>
+                                            <option value="Kalimantan Barat" {{ old('provinsi', optional($pegawai)->provinsi) == 'Kalimantan Barat' ? 'selected' : '' }}>
+                                                Kalimantan Barat</option>
                                     </select>
                                 </div>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold text-dark">Kabupaten</label>
+                                <label class="form-label fw-semibold text-dark">Kabupaten / Kota</label>
                                 <div class="input-group input-group-flat shadow-sm rounded-3">
                                     <span class="input-group-text bg-white border-end-0 text-muted"><i
                                             class="bi bi-geo-alt"></i></span>
