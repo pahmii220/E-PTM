@@ -34,6 +34,109 @@
             scroll-behavior: smooth;
         }
 
+        /* ============================================
+           GLOBAL ANIMATIONS — LANDING PAGE
+        ============================================ */
+
+        /* Scroll Reveal */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.7s cubic-bezier(.4,0,.2,1), transform 0.7s cubic-bezier(.4,0,.2,1);
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal-left {
+            opacity: 0;
+            transform: translateX(-50px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .reveal-left.visible { opacity: 1; transform: translateX(0); }
+        .reveal-right {
+            opacity: 0;
+            transform: translateX(50px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        .reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+        /* Animated Text Gradient */
+        .anim-gradient-text {
+            background: linear-gradient(90deg, #34d399, #10b981, #6ee7b7, #059669, #34d399);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: anim-text-flow 4s linear infinite;
+        }
+        @keyframes anim-text-flow {
+            0% { background-position: 0% center; }
+            100% { background-position: 300% center; }
+        }
+
+        /* Hero floating orbs */
+        .hero-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            animation: hero-orb-float 10s ease-in-out infinite;
+        }
+        @keyframes hero-orb-float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-40px) scale(1.08); }
+        }
+
+        /* Hero badge shimmer */
+        .hero-badge {
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-badge::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
+            transform: translateX(-100%);
+            animation: badge-shine 2.5s ease infinite;
+        }
+        @keyframes badge-shine {
+            0% { transform: translateX(-100%); }
+            60%, 100% { transform: translateX(100%); }
+        }
+
+        /* Animated heading underline */
+        .anim-underline {
+            position: relative;
+            display: inline-block;
+        }
+        .anim-underline::after {
+            content: '';
+            position: absolute;
+            left: 0; bottom: -4px;
+            height: 3px;
+            width: 0;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            border-radius: 9999px;
+            transition: width 0.8s ease;
+        }
+        .anim-underline.visible::after { width: 100%; }
+
+        /* Counter number animation */
+        .counter-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .counter-card:hover {
+            transform: translateY(-8px) scale(1.03);
+        }
+
+        /* Section divider wave pulse */
+        @keyframes wave-pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
         /* Custom Pagination Swiper */
         .swiper-pagination-bullet {
             background: white;
@@ -41,7 +144,6 @@
             width: 10px;
             height: 10px;
         }
-
         .swiper-pagination-bullet-active {
             background: #34d399;
             opacity: 1;
@@ -50,21 +152,49 @@
             transition: all 0.3s;
         }
 
-        /* Text Shadow persis seperti dinkeskalsel.id */
+        /* Text Shadow */
         .hero-text h2,
         .hero-text p,
         .hero-text span {
-            text-shadow: 0 0 3px rgba(0, 0, 0, 0.9), 0 0 6px rgba(0, 0, 0, 0.7), 0 0 9px rgba(0, 0, 0, 0.6);
+            text-shadow: 0 0 3px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.7), 0 0 9px rgba(0,0,0,0.6);
         }
-
         .hero-text h2 {
             border-left: 4px solid #34d399;
-            /* Garis kiri emerald */
             padding-left: 14px;
         }
+        .hero-text p { font-weight: 500; }
 
-        .hero-text p {
-            font-weight: 500;
+        /* Hero CTA button pulse */
+        .hero-cta-btn {
+            animation: hero-btn-pulse 3s ease-in-out infinite;
+        }
+        @keyframes hero-btn-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5); }
+            50% { box-shadow: 0 0 0 12px rgba(52, 211, 153, 0); }
+        }
+
+        /* Floating card animation on hero image */
+        .hero-img-wrapper {
+            animation: hero-img-float 5s ease-in-out infinite;
+        }
+        @keyframes hero-img-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        /* Program cards */
+        .program-card {
+            transition: transform 0.4s cubic-bezier(.4,0,.2,1), box-shadow 0.4s ease;
+        }
+        .program-card:hover {
+            transform: translateY(-10px) scale(1.01);
+            box-shadow: 0 20px 60px rgba(16,185,129,0.15);
+        }
+        .program-card:hover .program-card-img {
+            transform: scale(1.1);
+        }
+        .program-card-img {
+            transition: transform 0.6s ease;
         }
     </style>
 </head>
@@ -213,6 +343,10 @@
     <section id="beranda" class="relative text-white flex items-center overflow-hidden"
         style="height:95vh; min-height:600px;">
 
+        <!-- Animated Hero Orbs -->
+        <div class="hero-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(52,211,153,0.25),transparent);top:-100px;left:-100px;animation-duration:12s;"></div>
+        <div class="hero-orb" style="width:350px;height:350px;background:radial-gradient(circle,rgba(16,185,129,0.2),transparent);bottom:0;right:0;animation-duration:9s;animation-delay:-4s;"></div>
+
         <!-- Background Layer -->
         <div class="absolute inset-0 z-[1]">
             <div class="absolute inset-0 bg-cover bg-center"
@@ -232,26 +366,25 @@
                     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full -mt-20 md:-mt-32">
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
                             <div class="hero-text text-white">
-                                <span
-                                    class="bg-white/20 border border-white/30 backdrop-blur-md px-3 py-1.5 rounded text-sm font-semibold inline-flex items-center gap-2 mb-4">
+                                <span class="hero-badge bg-white/20 border border-white/30 backdrop-blur-md px-3 py-1.5 rounded text-sm font-semibold inline-flex items-center gap-2 mb-4">
                                     <i class="fa-solid fa-house-medical"></i> Portal Pemantauan PTM
                                 </span>
                                 <h2 class="text-4xl lg:text-5xl font-bold mb-4 leading-tight drop-shadow-xl text-white">
-                                    Selamat Datang di Portal <span class="text-emerald-400">Aplikasi Manajemen Data dan
-                                        Monitoring PTM</span></h2>
-                                <p class="text-lg opacity-95 mb-8 drop-shadow-md leading-relaxed text-white">Aplikasi
-                                    berbasis web untuk mendukung pengelolaan data, pemantauan, verifikasi, dan pelaporan
-                                    Penyakit Tidak Menular
-                                    (PTM) secara terintegrasi.</p>
+                                    Selamat Datang di Portal <span class="text-white">Aplikasi Manajemen Data dan Monitoring PTM</span>
+                                </h2>
+                                <p class="text-lg opacity-95 mb-8 drop-shadow-md leading-relaxed text-white">Aplikasi berbasis web untuk mendukung pengelolaan data, pemantauan, evaluasi, dan monitoring Penyakit Tidak Menular (PTM) secara terintegrasi.</p>
                                 <div class="flex gap-4">
-                                    <a href="{{ route('frontend.profil') }}"
-                                        class="bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition">Profil
-                                        Instansi</a>
+                                    <a href="{{ route('frontend.profil') }}" class="hero-cta-btn bg-emerald-500 hover:bg-emerald-400 text-white px-6 py-3 rounded-lg font-semibold shadow-lg transition">Profil Instansi</a>
+                                    <a href="#cek-ptm" class="bg-white/20 hover:bg-white/30 backdrop-blur border border-white/30 text-white px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2">
+                                        <i class="fa-solid fa-notes-medical"></i> Cek Hasil PTM
+                                    </a>
                                 </div>
                             </div>
                             <div class="text-center hidden md:block">
-                                <img src="https://dinkeskalsel.id/public/images/ketua.jpg" alt="Sambutan"
-                                    class="h-64 w-64 lg:h-[22rem] lg:w-[22rem] rounded-2xl mx-auto shadow-2xl object-cover border-4 border-white/20 backdrop-blur-sm" />
+                                <div class="hero-img-wrapper">
+                                    <img src="https://dinkeskalsel.id/public/images/ketua.jpg" alt="Sambutan"
+                                        class="h-64 w-64 lg:h-[22rem] lg:w-[22rem] rounded-2xl mx-auto shadow-2xl object-cover border-4 border-white/20 backdrop-blur-sm" />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -318,61 +451,261 @@
     </section>
 
     <!-- SECTION CEK HASIL SKRINING PTM PASIEN (PUBLIC) -->
-    <section id="cek-ptm" class="py-16 bg-gradient-to-b from-emerald-50 via-teal-50/30 to-white border-y border-emerald-100/60 relative">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-8">
-                <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-100/80 text-emerald-800 font-bold text-xs uppercase tracking-widest rounded-full mb-3 border border-emerald-200">
-                    <i class="fa-solid fa-notes-medical"></i> Portal Pasien
-                </span>
-                <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Cek Hasil Skrining PTM Pasien</h2>
-                <p class="text-gray-600 mt-2 text-sm md:text-base max-w-xl mx-auto">Masukkan NIK dan Tanggal Lahir Anda sesuai KTP untuk melihat riwayat dan hasil pemeriksaan kesehatan PTM.</p>
+    <section id="cek-ptm" class="py-20 relative overflow-hidden" style="background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 40%, #f8fafc 100%);">
+        
+        <!-- Animated Background Orbs -->
+        <div class="absolute inset-0 pointer-events-none overflow-hidden">
+            <div class="ptm-orb ptm-orb-1"></div>
+            <div class="ptm-orb ptm-orb-2"></div>
+            <div class="ptm-orb ptm-orb-3"></div>
+            <!-- Floating particles -->
+            <div class="ptm-particle" style="left:10%;top:20%;animation-delay:0s;"></div>
+            <div class="ptm-particle" style="left:85%;top:15%;animation-delay:0.8s;"></div>
+            <div class="ptm-particle" style="left:25%;top:75%;animation-delay:1.5s;"></div>
+            <div class="ptm-particle" style="left:70%;top:70%;animation-delay:0.4s;"></div>
+            <div class="ptm-particle" style="left:50%;top:10%;animation-delay:2s;"></div>
+            <div class="ptm-particle" style="left:90%;top:50%;animation-delay:1.2s;"></div>
+        </div>
+
+        <style>
+            /* ANIMATED ORBS */
+            .ptm-orb {
+                position: absolute;
+                border-radius: 50%;
+                filter: blur(60px);
+                opacity: 0.35;
+                animation: ptm-float 8s ease-in-out infinite;
+            }
+            .ptm-orb-1 {
+                width: 400px; height: 400px;
+                background: radial-gradient(circle, #6ee7b7, #34d399);
+                top: -100px; left: -100px;
+                animation-duration: 9s;
+            }
+            .ptm-orb-2 {
+                width: 300px; height: 300px;
+                background: radial-gradient(circle, #a7f3d0, #059669);
+                bottom: -80px; right: -80px;
+                animation-duration: 11s;
+                animation-delay: -3s;
+            }
+            .ptm-orb-3 {
+                width: 200px; height: 200px;
+                background: radial-gradient(circle, #d1fae5, #10b981);
+                top: 50%; left: 55%;
+                animation-duration: 7s;
+                animation-delay: -1.5s;
+            }
+            @keyframes ptm-float {
+                0%, 100% { transform: translateY(0px) scale(1); }
+                50% { transform: translateY(-30px) scale(1.05); }
+            }
+
+            /* FLOATING PARTICLES */
+            .ptm-particle {
+                position: absolute;
+                width: 8px; height: 8px;
+                background: #10b981;
+                border-radius: 50%;
+                opacity: 0.4;
+                animation: ptm-particle-float 4s ease-in-out infinite;
+            }
+            @keyframes ptm-particle-float {
+                0%, 100% { transform: translateY(0); opacity: 0.4; }
+                50% { transform: translateY(-20px); opacity: 0.8; }
+            }
+
+            /* ANIMATED GRADIENT BORDER CARD */
+            .ptm-card-wrapper {
+                position: relative;
+                border-radius: 1.5rem;
+                padding: 3px;
+                background: linear-gradient(135deg, #10b981, #34d399, #059669, #0d9488, #10b981);
+                background-size: 300% 300%;
+                animation: ptm-border-spin 4s linear infinite;
+                box-shadow: 0 0 40px rgba(16, 185, 129, 0.3), 0 25px 50px rgba(0,0,0,0.1);
+            }
+            @keyframes ptm-border-spin {
+                0% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+                100% { background-position: 0% 50%; }
+            }
+            .ptm-card-inner {
+                background: white;
+                border-radius: calc(1.5rem - 3px);
+                padding: 2rem 2.5rem;
+                position: relative;
+                overflow: hidden;
+            }
+            @media (max-width: 768px) {
+                .ptm-card-inner { padding: 1.5rem; }
+            }
+
+            /* GLOW PULSE on the wrapper */
+            .ptm-card-wrapper::after {
+                content: '';
+                position: absolute;
+                inset: -4px;
+                border-radius: 1.6rem;
+                background: inherit;
+                filter: blur(12px);
+                opacity: 0.5;
+                z-index: -1;
+                animation: ptm-border-spin 4s linear infinite;
+            }
+
+            /* BADGE ANIMATION */
+            .ptm-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 6px 16px;
+                background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+                color: #065f46;
+                font-weight: 800;
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.12em;
+                border-radius: 999px;
+                border: 1px solid #6ee7b7;
+                animation: ptm-badge-pulse 2.5s ease-in-out infinite;
+                margin-bottom: 0.75rem;
+            }
+            @keyframes ptm-badge-pulse {
+                0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+                50% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            }
+            .ptm-badge .ptm-dot {
+                width: 8px; height: 8px;
+                background: #10b981;
+                border-radius: 50%;
+                animation: ptm-dot-blink 1.2s ease-in-out infinite;
+            }
+            @keyframes ptm-dot-blink {
+                0%, 100% { opacity: 1; transform: scale(1); }
+                50% { opacity: 0.3; transform: scale(0.6); }
+            }
+
+            /* SUBMIT BUTTON */
+            .ptm-btn {
+                width: 100%;
+                background: linear-gradient(135deg, #059669, #10b981, #0d9488);
+                background-size: 200% 200%;
+                color: white;
+                font-weight: 800;
+                padding: 1rem 2rem;
+                border-radius: 0.875rem;
+                border: none;
+                cursor: pointer;
+                font-size: 1rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                transition: all 0.3s;
+                animation: ptm-btn-gradient 3s ease infinite;
+                box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+                position: relative;
+                overflow: hidden;
+            }
+            .ptm-btn::before {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+                transform: translateX(-100%);
+                animation: ptm-btn-shine 2.5s ease infinite;
+            }
+            @keyframes ptm-btn-shine {
+                0% { transform: translateX(-100%); }
+                60%, 100% { transform: translateX(100%); }
+            }
+            @keyframes ptm-btn-gradient {
+                0%, 100% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+            }
+            .ptm-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 30px rgba(16, 185, 129, 0.55);
+            }
+        </style>
+
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            
+            <!-- Header -->
+            <div class="text-center mb-10">
+                <div class="ptm-badge">
+                    <span class="ptm-dot"></span>
+                    <i class="fa-solid fa-notes-medical"></i> Portal Pasien — Aktif
+                </div>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                    Cek Hasil Skrining Kesehatan Anda
+                </h2>
+                <p class="text-gray-600 mt-3 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
+                    Masukkan NIK dan Tanggal Lahir Anda sesuai KTP untuk melihat riwayat dan hasil pemeriksaan kesehatan PTM.
+                </p>
             </div>
 
-            <!-- Card Form Pencarian -->
-            <div class="bg-white rounded-2xl shadow-xl border border-emerald-100 p-6 md:p-8 relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none"></div>
+            <!-- Animated Border Card -->
+            <div class="ptm-card-wrapper">
+                <div class="ptm-card-inner">
+                    <!-- Inner light effect -->
+                    <div class="absolute top-0 left-0 w-48 h-48 bg-emerald-400/5 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute bottom-0 right-0 w-40 h-40 bg-teal-400/5 rounded-full blur-2xl pointer-events-none"></div>
 
-                <form action="{{ route('frontend.cek_riwayat') }}" method="POST" class="space-y-4">
-                    @csrf
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Input NIK -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nomor Induk Kependudukan (NIK)</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                                    <i class="fa-solid fa-id-card"></i>
+                    <form action="{{ route('frontend.cek_riwayat') }}" method="POST" class="space-y-5" autocomplete="off">
+                        @csrf
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <!-- Input NIK -->
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">
+                                    <i class="fa-solid fa-id-card text-emerald-500 mr-1"></i>
+                                    Nomor Induk Kependudukan (NIK)
+                                </label>
+                                <div class="relative">
+                                    <input type="text" name="nik" value="{{ old('nik') }}" maxlength="16"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+                                        placeholder="Contoh: 6371012345670001" required autocomplete="new-password"
+                                        class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-300 text-gray-800 font-medium text-sm bg-gray-50/50 focus:bg-white">
                                 </div>
-                                <input type="text" name="nik" value="{{ old('nik') }}" maxlength="16" oninput="this.value = this.value.replace(/[^0-9]/g, '');" placeholder="Contoh: 6371012345670001" required
-                                    class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition text-gray-800 font-medium">
+                                @error('nik')
+                                    <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1"><i class="fa-solid fa-circle-exclamation"></i> {{ $message }}</p>
+                                @enderror
                             </div>
-                            @error('nik')
-                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                            @enderror
+
+                            <!-- Input Tanggal Lahir -->
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">
+                                    <i class="fa-solid fa-calendar-day text-emerald-500 mr-1"></i>
+                                    Tanggal Lahir <span class="text-xs text-emerald-600 font-normal">(pilih tanggal)</span>
+                                </label>
+                                <div class="relative">
+                                    <input type="text" id="tanggal_lahir_input" name="tanggal_lahir"
+                                        value="{{ old('tanggal_lahir') }}" placeholder="Pilih tanggal lahir Anda"
+                                        required readonly autocomplete="off"
+                                        class="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all duration-300 text-gray-800 font-medium text-sm bg-gray-50/50 focus:bg-white cursor-pointer">
+                                </div>
+                                @error('tanggal_lahir')
+                                    <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1"><i class="fa-solid fa-circle-exclamation"></i> {{ $message }}</p>
+                                @enderror
+                            </div>
                         </div>
 
-                        <!-- Input Tanggal Lahir -->
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Tanggal Lahir <span class="text-xs text-emerald-600 font-normal">(pilih tanggal)</span></label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                                    <i class="fa-solid fa-calendar-day"></i>
-                                </div>
-                                <input type="text" id="tanggal_lahir_input" name="tanggal_lahir" value="{{ old('tanggal_lahir') }}" placeholder="Pilih tanggal lahir Anda" required readonly
-                                    class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition text-gray-800 font-medium bg-white cursor-pointer">
-                            </div>
-                            @error('tanggal_lahir')
-                                <p class="text-xs text-red-500 mt-1">{{ $message }}</p>
-                            @enderror
-                        </div>
-                    </div>
+                        <!-- Info hint -->
+                        <p class="text-xs text-gray-400 text-center flex items-center justify-center gap-1.5">
+                            <i class="fa-solid fa-shield-halved text-emerald-400"></i>
+                            Data Anda aman dan hanya dapat diakses oleh Anda sendiri.
+                        </p>
 
-                    <div class="pt-2">
-                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-emerald-600/30 transition flex items-center justify-center space-x-2">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            <span>Cek Hasil Skrining Saya</span>
-                        </button>
-                    </div>
-                </form>
+                        <div>
+                            <button type="submit" class="ptm-btn">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <span>Cek Hasil Skrining Saya</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <!-- TAMPILAN NOTIFIKASI TIDAK DITEMUKAN -->
@@ -386,221 +719,19 @@
                 </div>
             @endif
 
-            <!-- MODAL POPUP HASIL SKRINING PASIEN (FORMAT OFFICIAL SURAT KEDINASAN PEMERINTAHAN) -->
-            @if(session('hasilPeserta'))
-                @php
-                    $p = session('hasilPeserta');
-                    $deteksi = $p->deteksiDiniPTM;
-                    $faktor = $p->faktorResikoPTM;
-                    $tindakLanjut = $p->tindakLanjutPTM->first();
-
-                    // Ambil Nama Petugas Pemeriksa
-                    $namaPetugas = '-';
-                    if ($deteksi && $deteksi->petugas) {
-                        $namaPetugas = $deteksi->petugas->nama_pegawai ?? '-';
-                    } elseif ($tindakLanjut && $tindakLanjut->petugas) {
-                        $namaPetugas = $tindakLanjut->petugas->nama_pegawai ?? '-';
-                    }
-
-                    // Penentuan Status Hasil Skrining / Diagnosa
-                    $status = $deteksi->hasil_skrining ?? $deteksi->diagnosa_penyakit ?? $deteksi->status_risiko ?? ($tindakLanjut->diagnosa ?? 'Normal');
-                @endphp
-
-                <div id="modalHasilSkrining" class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-gray-900/80 backdrop-blur-md transition-all duration-300 animate-fadeIn">
-                    <!-- Container Boks Modal Formal Kertas Surat Kedinasan -->
-                    <div class="bg-white rounded-2xl shadow-2xl border border-gray-300 max-w-3xl w-full max-h-[94vh] overflow-y-auto relative flex flex-col justify-between p-6 sm:p-10 font-serif text-gray-900">
-                        <!-- Tombol Close Modal (X) -->
-                        <button onclick="closeModalHasil()" class="absolute top-4 right-4 z-20 bg-gray-100 hover:bg-gray-200 text-gray-700 w-9 h-9 rounded-full flex items-center justify-center transition focus:outline-none border border-gray-300 shadow-sm font-sans" title="Tutup Pop Up">
-                            <i class="fa-solid fa-xmark text-lg"></i>
-                        </button>
-
-                        <!-- Content Lembar Surat Dinas -->
-                        <div class="space-y-6">
-                            <!-- KOP SURAT RESMI PEMERINTAHAN -->
-                            <div class="border-b-4 border-double border-gray-900 pb-3 mb-6 text-center">
-                                <h4 class="text-xs sm:text-sm font-bold uppercase tracking-widest text-gray-800">PEMERINTAH PROVINSI KALIMANTAN SELATAN</h4>
-                                <h3 class="text-sm sm:text-base font-bold uppercase text-gray-900 tracking-wider">DINAS KESEHATAN</h3>
-                                <h2 class="text-base sm:text-xl font-bold uppercase text-gray-900 tracking-wide mt-0.5">{{ strtoupper($p->puskesmas->nama_puskesmas ?? 'PUSKESMAS TERMINAL') }}</h2>
-                                <p class="text-[11px] text-gray-600 font-sans italic mt-0.5">Alamat: {{ $p->puskesmas->alamat ?? 'Fasilitas Pelayanan Kesehatan Skrining PTM' }}</p>
-                            </div>
-
-                            <!-- JUDUL SURAT RESMI KEDINASAN -->
-                            <div class="text-center my-4 font-serif">
-                                <h3 class="text-base sm:text-lg font-bold text-gray-900 uppercase underline decoration-2 underline-offset-4 tracking-wide">LAPORAN DETEKSI DINI PENYAKIT TIDAK MENULAR (PTM)</h3>
-                                <p class="text-xs text-gray-600 font-sans mt-1">Surat Keterangan Hasil Skrining & Pemeriksaan Kesehatan Mandiri</p>
-                            </div>
-
-                            <!-- BIODATA RESMI KEDINASAN (TITIK DUA SEJAJAR) -->
-                            <div class="font-serif text-xs sm:text-sm space-y-3">
-                                <p class="text-gray-800 leading-relaxed">Yang bertanda tangan di bawah ini, Petugas Pemeriksa pada <strong>{{ $p->puskesmas->nama_puskesmas ?? 'Puskesmas' }}</strong>, dengan ini menerangkan bahwa:</p>
-
-                                <table class="w-full font-serif text-xs sm:text-sm border-separate border-spacing-y-1.5">
-                                    <tr>
-                                        <td class="w-48 text-gray-700 font-semibold align-top">Nama Lengkap</td>
-                                        <td class="w-4 font-bold text-gray-900 align-top">:</td>
-                                        <td class="font-bold text-gray-900 align-top">{{ $p->nama_lengkap }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-gray-700 font-semibold align-top">Nomor Induk Kependudukan</td>
-                                        <td class="font-bold text-gray-900 align-top">:</td>
-                                        <td class="font-mono font-bold text-gray-900 align-top">{{ $p->nik }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-gray-700 font-semibold align-top">Jenis Kelamin</td>
-                                        <td class="font-bold text-gray-900 align-top">:</td>
-                                        <td class="text-gray-900 align-top">{{ $p->jenis_kelamin ?? '-' }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-gray-700 font-semibold align-top">Tanggal Lahir / Umur</td>
-                                        <td class="font-bold text-gray-900 align-top">:</td>
-                                        <td class="text-gray-900 align-top">{{ ($p->tanggal_lahir ? $p->tanggal_lahir->translatedFormat('d F Y') : '-') . ' (' . (\Carbon\Carbon::parse($p->tanggal_lahir)->age ?? '-') . ' Tahun)' }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-gray-700 font-semibold align-top">Alamat Tempat Tinggal</td>
-                                        <td class="font-bold text-gray-900 align-top">:</td>
-                                        <td class="text-gray-900 align-top">{{ $p->alamat ?? '-' }}{{ !empty($p->kecamatan) ? ', Kec. ' . $p->kecamatan : '' }}</td>
-                                    </tr>
-                                </table>
-
-                                <p class="text-gray-800 leading-relaxed pt-2">Telah melakukan pemeriksaan kesehatan / Skrining Penyakit Tidak Menular (PTM) pada tanggal <strong>{{ !empty($deteksi->tanggal_pemeriksaan) ? \Carbon\Carbon::parse($deteksi->tanggal_pemeriksaan)->translatedFormat('d F Y') : now()->translatedFormat('d F Y') }}</strong>, dengan hasil pemeriksaan klinis sebagai berikut:</p>
-                            </div>
-
-                            <!-- TABEL FORMAL RESULT (BLACK BORDER TABLE HASIL KLINIS) -->
-                            <div class="font-sans my-4">
-                                <table class="w-full text-xs sm:text-sm border-collapse border border-gray-900">
-                                    <thead>
-                                        <tr class="bg-gray-100 font-bold text-gray-900 text-left border-b border-gray-900">
-                                            <th class="border border-gray-900 px-4 py-2.5 w-1/2">Parameter Pemeriksaan</th>
-                                            <th class="border border-gray-900 px-4 py-2.5 w-1/2">Hasil Pemeriksaan Klinis</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-900">
-                                        <tr>
-                                            <td class="border border-gray-900 px-4 py-2 font-medium">Tekanan Darah</td>
-                                            <td class="border border-gray-900 px-4 py-2 font-bold">{{ $deteksi->tekanan_darah ?? '-' }} mmHg</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="border border-gray-900 px-4 py-2 font-medium">Gula Darah Sewaktu</td>
-                                            <td class="border border-gray-900 px-4 py-2 font-bold">{{ $deteksi->gula_darah ?? '-' }} mg/dL</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="border border-gray-900 px-4 py-2 font-medium">Kolesterol Total</td>
-                                            <td class="border border-gray-900 px-4 py-2 font-bold">{{ $deteksi->kolesterol ?? '-' }} mg/dL</td>
-                                        </tr>
-                                        <tr>
-                                            <td class="border border-gray-900 px-4 py-2 font-medium">Indeks Massa Tubuh (IMT)</td>
-                                            <td class="border border-gray-900 px-4 py-2 font-bold">{{ $deteksi->imt ?? '-' }} ({{ ($deteksi->berat_badan ?? '-') . ' kg / ' . ($deteksi->tinggi_badan ?? '-') . ' cm' }})</td>
-                                        </tr>
-                                        <tr class="bg-emerald-50/50">
-                                            <td class="border border-gray-900 px-4 py-2.5 font-bold text-gray-900">Diagnosa / Hasil Skrining</td>
-                                            <td class="border border-gray-900 px-4 py-2.5 font-extrabold text-emerald-800 uppercase">{{ $status }}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- CATATAN MEDIS & REKOMENDASI PETUGAS -->
-                            @php
-                                $catatanText = $tindakLanjut->catatan_petugas ?? $tindakLanjut->saran ?? 'Pertahankan pola hidup sehat CERDIK dan lakukan pemeriksaan rutin setiap bulan.';
-                            @endphp
-                            <div class="font-serif text-xs sm:text-sm space-y-3 pt-2">
-                                <p class="font-bold text-gray-900">Catatan Medis & Rekomendasi Tindak Lanjut:</p>
-                                <div class="border border-gray-400 p-4 rounded-lg bg-gray-50/60 font-sans text-xs text-gray-800 leading-relaxed whitespace-pre-line">
-                                    {{ $catatanText }}
-                                </div>
-
-                                <p class="text-gray-800 leading-relaxed pt-2">Demikian surat keterangan hasil skrining kesehatan ini dibuat dengan sebenarnya, untuk dapat dipergunakan sebagaimana mestinya.</p>
-                            </div>
-
-                            <!-- PENGESAHAN TANDA TANGAN PETUGAS PEMERIKSA -->
-                            <div class="flex justify-end pt-6 font-sans text-xs">
-                                <div class="text-center w-64">
-                                    <p class="text-gray-800">{{ $p->puskesmas->nama_puskesmas ?? 'Puskesmas' }}, {{ now()->translatedFormat('d F Y') }}</p>
-                                    <p class="font-bold text-gray-900 mt-1">Petugas Pemeriksa Kesehatan,</p>
-                                    <div class="h-16"></div>
-                                    <p class="font-bold text-gray-900 underline text-sm">{{ $namaPetugas }}</p>
-                                    <p class="text-gray-600 text-xs">Petugas Skrining PTM</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Footer Action Buttons -->
-                        <div class="mt-8 pt-4 border-t border-gray-300 flex flex-col sm:flex-row justify-between items-center gap-3 font-sans">
-                            <a href="{{ route('frontend.cetak_skrining', $p->id) }}" target="_blank" class="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-6 py-3 rounded-xl shadow transition flex items-center justify-center space-x-2 text-xs sm:text-sm">
-                                <i class="fa-solid fa-file-pdf"></i>
-                                <span>Cetak Dokumen PDF Resmi</span>
-                            </a>
-
-                            <button onclick="closeModalHasil()" class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-xl transition flex items-center justify-center space-x-2 text-xs sm:text-sm">
-                                <i class="fa-solid fa-xmark"></i>
-                                <span>Tutup Pop Up</span>
-                            </button>
-                        </div>
+            <!-- TAMPILAN NOTIFIKASI SESI BERAKHIR -->
+            @if(session('status_pencarian') === 'session_expired')
+                <div class="mt-6 bg-blue-50 border border-blue-200 rounded-2xl p-5 text-blue-800 flex items-start space-x-3 shadow-sm">
+                    <i class="fa-solid fa-info-circle text-xl text-blue-500 mt-0.5"></i>
+                    <div>
+                        <h4 class="font-bold text-sm md:text-base">Sesi Telah Berakhir</h4>
+                        <p class="text-xs md:text-sm mt-1 text-blue-700">Sesi Anda telah berakhir atau Anda belum login. Silakan masukkan kembali NIK dan Tanggal Lahir Anda untuk masuk ke Portal Pasien.</p>
                     </div>
                 </div>
-
-                <script>
-                    function closeModalHasil() {
-                        const modal = document.getElementById('modalHasilSkrining');
-                        if (modal) {
-                            modal.classList.add('hidden');
-                        }
-                    }
-                </script>
             @endif
         </div>
     </section>
 
-    <!-- 3. PROFIL LEMBAGA -->
-    <section id="profil-lembaga" class="py-16 bg-white relative">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid lg:grid-cols-2 gap-12 items-center">
-                <!-- Gambar Profil -->
-                <div class="relative">
-                    <img src="https://smart.kalselprov.go.id/uploads/foto/KESEHATAN.jpeg" alt="Dinas Kesehatan Kalsel"
-                        class="rounded-2xl shadow-2xl w-full h-[400px] object-cover border-4 border-emerald-50">
-                    <!-- Aksen dekoratif -->
-                    <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-emerald-100 rounded-full -z-10"></div>
-                </div>
-                <!-- Teks Profil -->
-                <div class="space-y-8">
-                    <div>
-                        <span
-                            class="inline-block px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs uppercase tracking-widest rounded mb-3">Tentang
-                            Kami</span>
-                        <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Dinas Kesehatan Provinsi
-                            Kalimantan Selatan</h2>
-                        <div class="w-20 h-1.5 bg-yellow-400 rounded-full mt-4"></div>
-                    </div>
-
-                    <div class="space-y-6 text-gray-600 leading-relaxed text-lg">
-                        <p>
-                            Dinas Kesehatan Provinsi Kalimantan Selatan merupakan unsur pelaksana urusan pemerintahan di
-                            bidang kesehatan yang
-                            berkedudukan di bawah dan bertanggung jawab kepada Gubernur Kalimantan Selatan.
-                        </p>
-                        <p>
-                            Kami berkomitmen penuh untuk menyelenggarakan pelayanan kesehatan yang bermutu, merata, dan
-                            terjangkau bagi
-                            seluruh lapisan masyarakat, dengan berfokus pada upaya promotif, preventif, serta deteksi
-                            dini Penyakit
-                            Tidak Menular (PTM).
-                        </p>
-                    </div>
-
-                    <div class="pt-2">
-                        <a href="{{ route('frontend.profil') }}"
-                            class="inline-flex items-center text-emerald-700 font-bold hover:text-emerald-800 transition duration-300 group text-lg">
-                            Selengkapnya
-                            <span class="ml-2 transition-transform duration-300 group-hover:translate-x-2">
-                                <i class="fa-solid fa-arrow-right"></i>
-                            </span>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- 3.5 STATISTIK COUNTER SECTION -->
     <section id="statistik-counter"
@@ -615,57 +746,44 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                 <!-- Card 1 -->
-                <div
-                    class="bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-2xl text-center shadow-xl hover:scale-105 hover:bg-white/10 transition-all duration-300 group">
-                    <div
-                        class="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-400/30 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                <div class="reveal counter-card bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-2xl text-center shadow-xl hover:bg-white/10 transition-all duration-300 group">
+                    <div class="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-400/30 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
                         <i class="fa-solid fa-hospital-user text-2xl text-emerald-400 group-hover:text-white"></i>
                     </div>
-                    <h3 class="text-4xl font-extrabold tracking-tight mb-2">30+</h3>
-                    <p class="text-emerald-100 text-sm font-semibold uppercase tracking-wider">Puskesmas Terintegrasi
-                    </p>
-                    <div
-                        class="w-12 h-1 bg-yellow-400 rounded-full mx-auto mt-4 opacity-70 group-hover:w-20 transition-all duration-300">
-                    </div>
+                    <h3 class="text-4xl font-extrabold tracking-tight mb-2" data-count="30" data-suffix="+">30+</h3>
+                    <p class="text-emerald-100 text-sm font-semibold uppercase tracking-wider">Puskesmas Terintegrasi</p>
+                    <div class="w-12 h-1 bg-yellow-400 rounded-full mx-auto mt-4 opacity-70 group-hover:w-20 transition-all duration-300"></div>
                 </div>
 
                 <!-- Card 2 -->
-                <div
-                    class="bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-2xl text-center shadow-xl hover:scale-105 hover:bg-white/10 transition-all duration-300 group">
-                    <div
-                        class="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-400/30 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                <div class="reveal counter-card bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-2xl text-center shadow-xl hover:bg-white/10 transition-all duration-300 group">
+                    <div class="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-400/30 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
                         <i class="fa-solid fa-file-medical text-2xl text-emerald-400 group-hover:text-white"></i>
                     </div>
-                    <h3 class="text-4xl font-extrabold tracking-tight mb-2">15.000+</h3>
+                    <h3 class="text-4xl font-extrabold tracking-tight mb-2" data-count="15000" data-suffix="+">15.000+</h3>
                     <p class="text-emerald-100 text-sm font-semibold uppercase tracking-wider">Skrining Deteksi Dini</p>
-                    <div
-                        class="w-12 h-1 bg-yellow-400 rounded-full mx-auto mt-4 opacity-70 group-hover:w-20 transition-all duration-300">
-                    </div>
+                    <div class="w-12 h-1 bg-yellow-400 rounded-full mx-auto mt-4 opacity-70 group-hover:w-20 transition-all duration-300"></div>
                 </div>
 
                 <!-- Card 3 -->
-                <div
-                    class="bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-2xl text-center shadow-xl hover:scale-105 hover:bg-white/10 transition-all duration-300 group">
-                    <div
-                        class="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-400/30 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                <div class="reveal counter-card bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-2xl text-center shadow-xl hover:bg-white/10 transition-all duration-300 group">
+                    <div class="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-400/30 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
                         <i class="fa-solid fa-heart-circle-check text-2xl text-emerald-400 group-hover:text-white"></i>
                     </div>
-                    <h3 class="text-4xl font-extrabold tracking-tight mb-2">85%</h3>
+                    <h3 class="text-4xl font-extrabold tracking-tight mb-2" data-count="85" data-suffix="%">85%</h3>
                     <p class="text-emerald-100 text-sm font-semibold uppercase tracking-wider">Kepatuhan Rujukan</p>
-                    <div
-                        class="w-12 h-1 bg-yellow-400 rounded-full mx-auto mt-4 opacity-70 group-hover:w-20 transition-all duration-300">
-                    </div>
+                    <div class="w-12 h-1 bg-yellow-400 rounded-full mx-auto mt-4 opacity-70 group-hover:w-20 transition-all duration-300"></div>
                 </div>
 
                 <!-- Card 4 -->
-                <div
-                    class="bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-2xl text-center shadow-xl hover:scale-105 hover:bg-white/10 transition-all duration-300 group">
-                    <div
-                        class="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-400/30 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
+                <div class="reveal counter-card bg-white/5 backdrop-blur-sm border border-white/10 p-8 rounded-2xl text-center shadow-xl hover:bg-white/10 transition-all duration-300 group">
+                    <div class="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-400/30 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
                         <i class="fa-solid fa-clipboard-list text-2xl text-emerald-400 group-hover:text-white"></i>
                     </div>
-                    <h3 class="text-4xl font-extrabold tracking-tight mb-2">6</h3>
+                    <h3 class="text-4xl font-extrabold tracking-tight mb-2" data-count="6" data-suffix="">6</h3>
                     <p class="text-emerald-100 text-sm font-semibold uppercase tracking-wider">Program Prioritas PTM</p>
+                    <div class="w-12 h-1 bg-yellow-400 rounded-full mx-auto mt-4 opacity-70 group-hover:w-20 transition-all duration-300"></div>
+                </div>
                     <div
                         class="w-12 h-1 bg-yellow-400 rounded-full mx-auto mt-4 opacity-70 group-hover:w-20 transition-all duration-300">
                     </div>
@@ -1066,6 +1184,57 @@
         </div>
     </section>
 
+    <!-- 3. PROFIL LEMBAGA (Dipindah ke bawah) -->
+    <section id="profil-lembaga" class="py-16 bg-white relative border-t border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Gambar Profil -->
+                <div class="relative">
+                    <img src="https://smart.kalselprov.go.id/uploads/foto/KESEHATAN.jpeg" alt="Dinas Kesehatan Kalsel"
+                        class="rounded-2xl shadow-2xl w-full h-[400px] object-cover border-4 border-emerald-50">
+                    <!-- Aksen dekoratif -->
+                    <div class="absolute -bottom-6 -left-6 w-24 h-24 bg-emerald-100 rounded-full -z-10"></div>
+                </div>
+                <!-- Teks Profil -->
+                <div class="space-y-8">
+                    <div>
+                        <span
+                            class="inline-block px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs uppercase tracking-widest rounded mb-3">Tentang
+                            Kami</span>
+                        <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Dinas Kesehatan Provinsi
+                            Kalimantan Selatan</h2>
+                        <div class="w-20 h-1.5 bg-yellow-400 rounded-full mt-4"></div>
+                    </div>
+
+                    <div class="space-y-6 text-gray-600 leading-relaxed text-lg">
+                        <p>
+                            Dinas Kesehatan Provinsi Kalimantan Selatan merupakan unsur pelaksana urusan pemerintahan di
+                            bidang kesehatan yang
+                            berkedudukan di bawah dan bertanggung jawab kepada Gubernur Kalimantan Selatan.
+                        </p>
+                        <p>
+                            Kami berkomitmen penuh untuk menyelenggarakan pelayanan kesehatan yang bermutu, merata, dan
+                            terjangkau bagi
+                            seluruh lapisan masyarakat, dengan berfokus pada upaya promotif, preventif, serta deteksi
+                            dini Penyakit
+                            Tidak Menular (PTM).
+                        </p>
+                    </div>
+
+                    <div class="pt-2">
+                        <a href="{{ route('frontend.profil') }}"
+                            class="inline-flex items-center text-emerald-700 font-bold hover:text-emerald-800 transition duration-300 group text-lg">
+                            Selengkapnya
+                            <span class="ml-2 transition-transform duration-300 group-hover:translate-x-2">
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Tambahkan Alpine.js untuk fungsi interaktifnya (tambahkan sebelum penutup </body>) -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
@@ -1177,6 +1346,59 @@
                 navbar.classList.remove('bg-emerald-950/95', 'backdrop-blur-md', 'shadow-xl', 'py-3', 'border-b', 'border-emerald-800/60');
             }
         });
+
+        // =============================================
+        //  SCROLL REVEAL ANIMATION
+        // =============================================
+        (function () {
+            const selectors = '.reveal, .reveal-left, .reveal-right, .anim-underline';
+            const elements = document.querySelectorAll(selectors);
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry, i) => {
+                    if (entry.isIntersecting) {
+                        // Stagger delay based on sibling index
+                        const siblings = entry.target.parentElement.querySelectorAll(selectors);
+                        let idx = 0;
+                        siblings.forEach((el, j) => { if (el === entry.target) idx = j; });
+                        setTimeout(() => {
+                            entry.target.classList.add('visible');
+                        }, idx * 120);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.12 });
+
+            elements.forEach(el => observer.observe(el));
+        })();
+
+        // =============================================
+        //  COUNTER NUMBER ANIMATION
+        // =============================================
+        (function () {
+            const counters = document.querySelectorAll('[data-count]');
+            const counterObs = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) return;
+                    const el = entry.target;
+                    const target = parseFloat(el.getAttribute('data-count'));
+                    const suffix = el.getAttribute('data-suffix') || '';
+                    const duration = 1800;
+                    const step = target / (duration / 16);
+                    let current = 0;
+                    const timer = setInterval(() => {
+                        current += step;
+                        if (current >= target) {
+                            clearInterval(timer);
+                            current = target;
+                        }
+                        el.textContent = (Number.isInteger(target) ? Math.floor(current) : current.toFixed(0)) + suffix;
+                    }, 16);
+                    counterObs.unobserve(el);
+                });
+            }, { threshold: 0.5 });
+            counters.forEach(el => counterObs.observe(el));
+        })();
     </script>
 
     <!-- Flatpickr JS (Format dd/mm/yyyy Indonesia) -->
@@ -1199,4 +1421,3 @@
 </body>
 
 </html>
-```

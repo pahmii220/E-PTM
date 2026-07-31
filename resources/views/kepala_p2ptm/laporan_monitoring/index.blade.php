@@ -16,33 +16,42 @@
             </h2>
             <p class="text-muted mb-0 small">Tinjau dan setujui laporan hasil monitoring yang diajukan oleh Pegawai Dinkes.</p>
         </div>
-        <div>
-            <a href="{{ route('kepala.laporan_monitoring.cetak_semua', ['start_date' => request('start_date'), 'end_date' => request('end_date')]) }}" 
-               target="_blank" class="btn btn-teal rounded-pill px-4 fw-bold shadow-sm">
-                <i class="bi bi-printer me-2"></i> Cetak Laporan
-            </a>
-        </div>
     </div>
 
-    {{-- ===== FILTER TANGGAL ===== --}}
+    {{-- ===== FILTER TANGGAL & BULAN ===== --}}
     <div class="card border-0 shadow-sm rounded-4 mb-4">
         <div class="card-body p-4">
             <form method="GET" action="{{ route('kepala.laporan_monitoring.index') }}" class="row g-3 align-items-end">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label small fw-semibold text-muted mb-1"><i class="bi bi-calendar-event me-1 text-primary"></i> Tanggal Awal</label>
                     <input type="date" name="start_date" class="form-select border-0 bg-light rounded-3" value="{{ request('start_date') }}">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label small fw-semibold text-muted mb-1"><i class="bi bi-calendar-event me-1 text-primary"></i> Tanggal Akhir</label>
                     <input type="date" name="end_date" class="form-select border-0 bg-light rounded-3" value="{{ request('end_date') }}">
                 </div>
-                <div class="col-md-4 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold w-100">
-                        <i class="bi bi-funnel-fill me-1"></i> Filter Data
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold text-muted mb-1"><i class="bi bi-calendar-month me-1 text-primary"></i> Bulan</label>
+                    <select name="bulan" class="form-select border-0 bg-light rounded-3">
+                        <option value="">-- Semua Bulan --</option>
+                        @php
+                            $bulanIndo = ['1' => 'Januari', '2' => 'Februari', '3' => 'Maret', '4' => 'April', '5' => 'Mei', '6' => 'Juni', '7' => 'Juli', '8' => 'Agustus', '9' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'];
+                        @endphp
+                        @foreach($bulanIndo as $num => $nama)
+                            <option value="{{ sprintf('%02d', $num) }}" {{ request('bulan') == sprintf('%02d', $num) ? 'selected' : '' }}>{{ $nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary rounded-pill px-3 fw-semibold w-100">
+                        <i class="bi bi-funnel-fill me-1"></i> Filter
                     </button>
-                    @if(request('start_date') || request('end_date'))
-                    <a href="{{ route('kepala.laporan_monitoring.index') }}" class="btn btn-outline-secondary rounded-pill px-3 fw-semibold">
-                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                    <button type="submit" formaction="{{ route('kepala.laporan_monitoring.cetak_semua') }}" formtarget="_blank" class="btn btn-teal rounded-pill px-3 fw-bold w-100 shadow-sm">
+                        <i class="bi bi-printer me-1"></i> Cetak
+                    </button>
+                    @if(request('start_date') || request('end_date') || request('bulan'))
+                    <a href="{{ route('kepala.laporan_monitoring.index') }}" class="btn btn-outline-secondary rounded-pill px-3 fw-semibold" title="Reset Filter">
+                        <i class="bi bi-arrow-counterclockwise"></i>
                     </a>
                     @endif
                 </div>

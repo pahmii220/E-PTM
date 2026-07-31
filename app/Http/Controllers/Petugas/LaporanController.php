@@ -32,6 +32,30 @@ class LaporanController extends Controller
             ->get()
             ->unique('peserta_id');
 
+        // Cari pasien di puskesmas ini yang didaftarkan tetapi belum memilik data deteksi dini
+        $pesertaTanpaSkrining = \App\Models\Peserta::where('puskesmas_id', $puskesmasId)
+            ->whereBetween('dibuat_pada', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->whereDoesntHave('deteksiDinis')
+            ->get();
+
+        foreach ($pesertaTanpaSkrining as $p) {
+            $draftRow = new DeteksiDiniPTM([
+                'id'                  => null,
+                'peserta_id'          => $p->id,
+                'puskesmas_id'        => $puskesmasId,
+                'tanggal_pemeriksaan' => $p->dibuat_pada ? \Carbon\Carbon::parse($p->dibuat_pada)->format('Y-m-d') : date('Y-m-d'),
+                'tekanan_darah'       => '-',
+                'gula_darah'          => null,
+                'kolesterol'          => null,
+                'imt'                 => '-',
+                'diagnosa_penyakit'   => 'Belum Skrining',
+                'status_verifikasi'   => 'draft',
+            ]);
+            $draftRow->setRelation('peserta', $p);
+            $draftRow->setRelation('tindakLanjut', null);
+            $laporan->push($draftRow);
+        }
+
         // Ambil data faktor risiko dalam rentang waktu yang sama
         $faktorRisikoList = FaktorResikoPTM::where('puskesmas_id', $puskesmasId)
             ->whereBetween('tanggal_pemeriksaan', [$startDate, $endDate])
@@ -87,7 +111,7 @@ class LaporanController extends Controller
         }
 
         if ($deteksiDiniDraft->isEmpty()) {
-            return redirect()->back()->with('error', 'Tidak ada data dengan status Draft yang bisa diajukan.');
+            return redirect()->back()->with('error', 'Petugas baru mendaftarkan Data Pasien tetapi belum mengisi pemeriksaan Deteksi Dini PTM. Untuk mengirimkan laporan ke Dinas Kesehatan, minimal harus mengisi 1 data pemeriksaan Deteksi Dini PTM pasien.');
         }
 
         $countApproved = 0;

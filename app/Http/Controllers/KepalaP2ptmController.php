@@ -38,7 +38,7 @@ public function dashboard()
     $data = [
         'totalPeserta'   => \App\Models\Peserta::count(),
         'totalDeteksi'   => \App\Models\DeteksiDiniPTM::count(),
-        'totalRisiko'    => \App\Models\FaktorResikoPTM::count(),
+        'totalRisiko'    => $skRisiko,
         'totalPuskesmas' => $totalPuskesmas,
         'persentase'     => $persentase,
         'sudah'          => $puskesmasMelapor, // Ini key yang menyebabkan error jika tidak ada
@@ -160,6 +160,7 @@ public function verifikasiLaporan(\Illuminate\Http\Request $request)
 
         $startDate = $request->input('start_date');
         $endDate   = $request->input('end_date');
+        $bulan     = $request->input('bulan');
 
         if ($startDate && $endDate) {
             $query->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
@@ -169,9 +170,13 @@ public function verifikasiLaporan(\Illuminate\Http\Request $request)
             $query->where('created_at', '<=', $endDate . ' 23:59:59');
         }
 
+        if ($bulan) {
+            $query->whereMonth('created_at', $bulan);
+        }
+
         $laporan = $query->latest()->get();
 
-        return view('kepala_p2ptm.laporan_monitoring.index', compact('laporan', 'startDate', 'endDate'));
+        return view('kepala_p2ptm.laporan_monitoring.index', compact('laporan', 'startDate', 'endDate', 'bulan'));
     }
 
     public function accLaporanMonitoring(Request $request, $id)
@@ -211,6 +216,7 @@ public function verifikasiLaporan(\Illuminate\Http\Request $request)
 
         $startDate = $request->input('start_date');
         $endDate   = $request->input('end_date');
+        $bulan     = $request->input('bulan');
 
         if ($startDate && $endDate) {
             $query->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
@@ -220,6 +226,10 @@ public function verifikasiLaporan(\Illuminate\Http\Request $request)
             $query->where('created_at', '<=', $endDate . ' 23:59:59');
         }
 
+        if ($bulan) {
+            $query->whereMonth('created_at', $bulan);
+        }
+
         $laporan = $query->latest()->get();
 
         \Carbon\Carbon::setLocale('id');
@@ -227,6 +237,6 @@ public function verifikasiLaporan(\Illuminate\Http\Request $request)
 
         $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
 
-        return view('kepala_p2ptm.laporan_monitoring.print_semua', compact('laporan', 'startDate', 'endDate', 'tanggal', 'kepalaAktif'));
+        return view('kepala_p2ptm.laporan_monitoring.print_semua', compact('laporan', 'startDate', 'endDate', 'bulan', 'tanggal', 'kepalaAktif'));
     }
 }

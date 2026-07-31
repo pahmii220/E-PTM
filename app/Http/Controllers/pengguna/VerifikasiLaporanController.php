@@ -34,11 +34,58 @@ class VerifikasiLaporanController extends Controller
      */
     public function index(Request $request)
     {
-        $bulanInput   = $request->input('bulan', Carbon::now()->format('m'));
+        // 0. Handling Reset Semua
+        if ($request->has('reset')) {
+            $request->session()->forget([
+                'verifikasi_filter_bulan',
+                'verifikasi_filter_kota',
+                'verifikasi_filter_kecamatan',
+                'verifikasi_filter_status'
+            ]);
+            return redirect()->route('pengguna.verifikasi_laporan.index');
+        }
+
+        $allPuskesmas = Puskesmas::orderBy('nama_kabupaten')->orderBy('kecamatan')->orderBy('nama_puskesmas')->get();
+        $kotaList     = $allPuskesmas->pluck('nama_kabupaten')->unique()->filter()->sort()->values();
+
+        // Filter Kota: Ambil dari request jika ada. Jika tidak ada di request, ambil dari session (default: null).
+        if ($request->has('kota')) {
+            $kotaFilter = $request->input('kota');
+            if (empty($kotaFilter)) {
+                session()->forget('verifikasi_filter_kota');
+                $kotaFilter = null;
+            } else {
+                session(['verifikasi_filter_kota' => $kotaFilter]);
+            }
+        } else {
+            $kotaFilter = session('verifikasi_filter_kota', null);
+        }
+
+        // Filter Bulan: Ambil dari request jika ada, lalu simpan ke session.
+        if ($request->has('bulan')) {
+            $bulanInput = $request->input('bulan');
+            session(['verifikasi_filter_bulan' => $bulanInput]);
+        } else {
+            $bulanInput = session('verifikasi_filter_bulan', Carbon::now()->format('m'));
+        }
+
+        // Filter Kecamatan: Ambil dari request jika ada, lalu simpan ke session.
+        if ($request->has('kecamatan')) {
+            $kecFilter = $request->input('kecamatan');
+            session(['verifikasi_filter_kecamatan' => $kecFilter]);
+        } else {
+            $kecFilter = session('verifikasi_filter_kecamatan', null);
+        }
+
+        // Filter Status: Ambil dari request jika ada, lalu simpan ke session.
+        if ($request->has('status_filter')) {
+            $statusFilter = $request->input('status_filter');
+            session(['verifikasi_filter_status' => $statusFilter]);
+        } else {
+            $statusFilter = session('verifikasi_filter_status', 'semua');
+        }
+
         $tahunInput   = Carbon::now()->format('Y');
-        $kotaFilter   = $request->input('kota');
-        $kecFilter    = $request->input('kecamatan');
-        $statusFilter = $request->input('status_filter', 'semua');
 
         // Handling jika dikirim format Y-m (fallback dari browser history)
         if (strpos($bulanInput, '-') !== false) {
@@ -50,9 +97,7 @@ class VerifikasiLaporanController extends Controller
         $bulanInput = str_pad($bulanInput, 2, '0', STR_PAD_LEFT);
         $startDate  = "{$tahunInput}-{$bulanInput}-01";
         $endDate    = Carbon::create($tahunInput, $bulanInput)->endOfMonth()->format('Y-m-d');
-
-        $allPuskesmas = Puskesmas::orderBy('nama_kabupaten')->orderBy('kecamatan')->orderBy('nama_puskesmas')->get();
-        $kotaList     = $allPuskesmas->pluck('nama_kabupaten')->unique()->filter()->sort()->values();
+        $filterBulan = "{$tahunInput}-{$bulanInput}";
 
         $kecamatanList = collect();
         if ($kotaFilter) {
@@ -82,18 +127,33 @@ class VerifikasiLaporanController extends Controller
         $kelompokUsia = ['remaja' => 0, 'dewasa' => 0, 'pra_lansia' => 0, 'lansia' => 0];
 
         if ($kotaFilter) {
-            $puskesmasList = $targetPkm->map(function ($p) use ($startDate, $endDate) {
+            $laporanMonitoringMap = \App\Models\LaporanHasilMonitoring::whereIn('puskesmas_id', $targetPkm->pluck('id'))
+                ->get()
+                ->groupBy('puskesmas_id');
+
+            $puskesmasList = $targetPkm->map(function ($p) use ($startDate, $endDate, $filterBulan, $laporanMonitoringMap) {
                 $query = DeteksiDiniPTM::with('peserta')
                     ->where('puskesmas_id', $p->id)
                     ->whereBetween('tanggal_pemeriksaan', [$startDate, $endDate]);
 
                 $data = $query->get();
 
-                $p->jumlah_data  = $data->count();
-                $p->jml_pending  = $data->where('status_verifikasi', 'pending')->count();
-                $p->jml_approved = $data->whereIn('status_verifikasi', ['approved', 'terverifikasi'])->count();
-                $p->jml_draft    = $data->where('status_verifikasi', 'draft')->count();
-                $p->jml_rejected = $data->where('status_verifikasi', 'rejected')->count();
+                $p->jumlah_data       = $data->count();
+                $p->jml_pending       = $data->where('status_verifikasi', 'pending')->count();
+                $p->jml_approved      = $data->whereIn('status_verifikasi', ['approved', 'terverifikasi'])->count();
+                $p->jml_draft         = $data->where('status_verifikasi', 'draft')->count();
+                $p->jml_rejected      = $data->where('status_verifikasi', 'rejected')->count();
+                $p->jml_risiko_tinggi = $data->where('hasil_skrining', 'Risiko Tinggi')->count();
+                $p->jml_dicurigai     = $data->where('hasil_skrining', 'Dicurigai PTM')->count();
+                $p->jml_normal        = $data->where('hasil_skrining', 'Normal')->count();
+
+                $mList = $laporanMonitoringMap->get($p->id, collect());
+                $filteredMList = $mList->filter(function($m) use ($startDate, $endDate, $filterBulan) {
+                    $tgl = $m->tanggal_kunjungan ? $m->tanggal_kunjungan->format('Y-m-d') : ($m->created_at ? $m->created_at->format('Y-m-d') : '');
+                    return ($tgl >= $startDate && $tgl <= $endDate) || str_starts_with($tgl, $filterBulan);
+                });
+                $p->jml_laporan_monitoring = $filteredMList->count();
+                $p->laporan_monitoring_terakhir = $filteredMList->last();
 
                 if ($p->jml_pending > 0) {
                     $p->status_laporan = 'pending';

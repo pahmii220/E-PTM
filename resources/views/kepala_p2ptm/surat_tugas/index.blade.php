@@ -42,7 +42,7 @@
                                 <span class="text-primary fw-semibold d-block">
                                     <i class="bi bi-geo-alt-fill text-danger me-1"></i>
                                     @if($surat->puskesmas_id)
-                                        Puskesmas {{ $surat->puskesmas->nama_puskesmas }}
+                                        {{ Str::startsWith($surat->puskesmas->nama_puskesmas ?? '', 'Puskesmas') ? $surat->puskesmas->nama_puskesmas : 'Puskesmas ' . ($surat->puskesmas->nama_puskesmas ?? '') }}
                                     @else
                                         {{ $surat->lokasi_tujuan }}
                                     @endif
@@ -89,10 +89,6 @@
                                         <button type="button" class="btn btn-xs btn-danger fw-bold" data-bs-toggle="modal" data-bs-target="#modalTolak{{ $surat->id }}">
                                             <i class="bi bi-x-lg"></i> Tolak
                                         </button>
-                                    @elseif($surat->status_persetujuan == 'disetujui')
-                                        <a href="{{ route('pengguna.surat_tugas.print', $surat->id) }}" target="_blank" class="btn btn-xs btn-dark fw-bold">
-                                            <i class="bi bi-printer"></i> Cetak SPT
-                                        </a>
                                     @endif
 
                                     <form action="{{ route('kepala.surat_tugas.destroy', $surat->id) }}" method="POST" class="d-inline">
@@ -162,7 +158,7 @@
                                 <td class="py-2">:</td>
                                 <td class="py-2 fw-semibold text-primary">
                                     @if($surat->puskesmas_id)
-                                        Puskesmas {{ $surat->puskesmas->nama_puskesmas }}
+                                        {{ Str::startsWith($surat->puskesmas->nama_puskesmas ?? '', 'Puskesmas') ? $surat->puskesmas->nama_puskesmas : 'Puskesmas ' . ($surat->puskesmas->nama_puskesmas ?? '') }}
                                     @else
                                         {{ $surat->lokasi_tujuan }}
                                     @endif

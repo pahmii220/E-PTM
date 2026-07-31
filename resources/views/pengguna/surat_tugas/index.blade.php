@@ -49,7 +49,7 @@
                                 <span class="text-primary fw-semibold d-block">
                                     <i class="bi bi-geo-alt-fill text-danger me-1"></i>
                                     @if($surat->puskesmas_id)
-                                        Puskesmas {{ $surat->puskesmas->nama_puskesmas }}
+                                        {{ Str::startsWith($surat->puskesmas->nama_puskesmas ?? '', 'Puskesmas') ? $surat->puskesmas->nama_puskesmas : 'Puskesmas ' . ($surat->puskesmas->nama_puskesmas ?? '') }}
                                     @else
                                         {{ $surat->lokasi_tujuan }}
                                     @endif

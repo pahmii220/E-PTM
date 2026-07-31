@@ -199,7 +199,7 @@
                         @endif
 
                         <button type="button" class="btn btn-light text-primary rounded-pill fw-bold w-100 py-2 shadow-sm transition-all hover-scale" data-bs-toggle="modal" data-bs-target="#contactModal">
-                            <i class="bi bi-envelope-fill me-2 text-primary"></i> Kirim Pesan ke Admin
+                            <i class="bi bi-envelope-fill me-2 text-primary"></i> Kirim Pesan ke Administrator
                         </button>
                     </div>
                 </div>
@@ -255,7 +255,6 @@
                             <option value="" disabled selected>Pilih jenis kendala...</option>
                             <option value="Kendala Login/Akun">Kendala Login / Akun</option>
                             <option value="Error Input Data">Error Input Data Pasien</option>
-                            <option value="Pertanyaan Verifikasi">Pertanyaan seputar Verifikasi</option>
                             <option value="Saran/Lainnya">Saran / Kendala Lainnya</option>
                         </select>
                     </div>

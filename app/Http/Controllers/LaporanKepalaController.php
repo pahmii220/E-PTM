@@ -305,15 +305,20 @@ class LaporanKepalaController extends Controller
 
         $dataPuskesmas = $dataPuskesmasQuery->withCount([
             'peserta as total_peserta' => function($q) use ($waktuDibuatPada) {
-                $q->whereIn('status_verifikasi', ['approved', 'terverifikasi']);
                 $waktuDibuatPada($q);
             },
             'deteksiDini as total_skrining' => $waktuPemeriksaan,
             'deteksiDini as total_risiko' => function($q) use ($waktuPemeriksaan) {
                 $waktuPemeriksaan($q);
-                $q->where('hasil_skrining', 'Risiko Tinggi');
+                $q->where(function($sub) {
+                    $sub->where('hasil_skrining', 'LIKE', '%Risiko%')
+                        ->orWhere('hasil_skrining', 'LIKE', '%Tinggi%')
+                        ->orWhere('hasil_skrining', 'LIKE', '%Hipertensi%')
+                        ->orWhere('gula_darah', '>', 200);
+                });
             },
-            'tindakLanjut as total_tindak_lanjut' => $waktuTindakLanjut
+            'tindakLanjut as total_tindak_lanjut' => $waktuTindakLanjut,
+            'faktorResiko as total_faktor' => $waktuPemeriksaan,
         ])->with(['deteksiDini' => function($q) use ($waktuPemeriksaan) {
             $waktuPemeriksaan($q);
             $q->whereNotNull('diagnosa_penyakit')->where('diagnosa_penyakit', '!=', '')->where('diagnosa_penyakit', '!=', 'Sehat');
@@ -340,7 +345,7 @@ class LaporanKepalaController extends Controller
         };
 
         // --- DATA TAB 2: KELOMPOK USIA ---
-        $usiaQuery = \App\Models\Peserta::whereIn('status_verifikasi', ['approved', 'terverifikasi']);
+        $usiaQuery = \App\Models\Peserta::query();
         if ($filterKota || $filterKec || $filterPusk) {
             $usiaQuery->whereHas('puskesmas', $filterLokasiPuskesmas);
         }
@@ -354,9 +359,7 @@ class LaporanKepalaController extends Controller
         ];
 
         // --- DATA TAB 3 & BARU: SKRINING & JENIS PENYAKIT ---
-        $skriningQuery = \App\Models\DeteksiDiniPTM::whereHas('peserta', function($q) {
-            $q->whereIn('status_verifikasi', ['approved', 'terverifikasi']);
-        });
+        $skriningQuery = \App\Models\DeteksiDiniPTM::query();
         if ($filterKota || $filterKec || $filterPusk) {
             $skriningQuery->whereHas('puskesmas', $filterLokasiPuskesmas);
         }
@@ -364,14 +367,30 @@ class LaporanKepalaController extends Controller
 
         $dataSkrining = (clone $skriningQuery)->selectRaw('hasil_skrining, COUNT(*) as jumlah')->groupBy('hasil_skrining')->get();
         
-        $dataPenyakit = (clone $skriningQuery)->whereNotNull('diagnosa_penyakit')
-                                              ->where('diagnosa_penyakit', '!=', '')
-                                              ->where('diagnosa_penyakit', '!=', 'Sehat')
-                                              ->where('diagnosa_penyakit', '!=', 'Normal')
-                                              ->selectRaw('diagnosa_penyakit, COUNT(*) as jumlah')
-                                              ->groupBy('diagnosa_penyakit')
-                                              ->orderBy('jumlah', 'desc')
-                                              ->get();
+        $rawPenyakit = (clone $skriningQuery)->whereNotNull('diagnosa_penyakit')
+                                             ->where('diagnosa_penyakit', '!=', '')
+                                             ->where('diagnosa_penyakit', '!=', 'Sehat')
+                                             ->where('diagnosa_penyakit', '!=', 'Normal')
+                                             ->pluck('diagnosa_penyakit');
+
+        $penyakitCount = [];
+        foreach ($rawPenyakit as $diagStr) {
+            $items = array_map('trim', explode(',', $diagStr));
+            foreach ($items as $item) {
+                if (!empty($item) && $item !== 'Sehat' && $item !== 'Normal') {
+                    $penyakitCount[$item] = ($penyakitCount[$item] ?? 0) + 1;
+                }
+            }
+        }
+        arsort($penyakitCount);
+
+        $dataPenyakit = collect();
+        foreach ($penyakitCount as $nama => $jumlah) {
+            $dataPenyakit->push((object)[
+                'diagnosa_penyakit' => $nama,
+                'jumlah' => $jumlah
+            ]);
+        }
 
 
         // --- DATA DETAIL PASIEN PUSKESMAS ---
@@ -464,32 +483,86 @@ class LaporanKepalaController extends Controller
             'deteksiDini as total_skrining' => $waktuPemeriksaan,
             'deteksiDini as total_risiko' => function($q) use ($waktuPemeriksaan) {
                 $waktuPemeriksaan($q);
-                $q->where('hasil_skrining', 'Risiko Tinggi');
+                $q->where(function($sub) {
+                    $sub->where('hasil_skrining', 'LIKE', '%Risiko%')
+                        ->orWhere('hasil_skrining', 'LIKE', '%Dicurigai%')
+                        ->orWhere('hasil_skrining', 'LIKE', '%Tinggi%');
+                });
             },
             'tindakLanjut as total_tindak_lanjut' => $waktuTindakLanjut,
-            'deteksiDini as total_hipertensi' => function($q) use ($waktuPemeriksaan) { clone $q; $waktuPemeriksaan($q); $q->where('diagnosa_penyakit', 'LIKE', '%Hipertensi%'); },
-            'deteksiDini as total_diabetes' => function($q) use ($waktuPemeriksaan) { clone $q; $waktuPemeriksaan($q); $q->where(function($sub){ $sub->where('diagnosa_penyakit', 'LIKE', '%Diabetes%')->orWhere('diagnosa_penyakit', 'LIKE', '%DM%'); }); },
-            'deteksiDini as total_kolesterol' => function($q) use ($waktuPemeriksaan) { clone $q; $waktuPemeriksaan($q); $q->where('diagnosa_penyakit', 'LIKE', '%Kolesterol%'); },
-        ])->get();
+        ])->with(['deteksiDini' => function($q) use ($waktuPemeriksaan) {
+            $waktuPemeriksaan($q);
+            $q->whereNotNull('diagnosa_penyakit')
+              ->where('diagnosa_penyakit', '!=', '')
+              ->where('diagnosa_penyakit', '!=', 'Normal')
+              ->where('diagnosa_penyakit', '!=', 'Sehat');
+        }])->get();
 
         $dataWilayah = $dataPuskesmas->groupBy('kecamatan')->map(function($items, $kecamatan) {
-            $sumHipertensi = $items->sum('total_hipertensi');
-            $sumDiabetes   = $items->sum('total_diabetes');
-            $sumKolesterol = $items->sum('total_kolesterol');
-            $sumRisiko     = $items->sum('total_risiko');
-            $sumPeserta    = $items->sum('total_peserta');
+            $sumRisiko       = $items->sum('total_risiko');
+            $sumPeserta      = $items->sum('total_peserta');
+            $sumSkrining     = $items->sum('total_skrining');
             $sumTindakLanjut = $items->sum('total_tindak_lanjut');
 
-            // Hitung penyakit dominan
-            $penyakitMap = [
-                'Hipertensi' => $sumHipertensi,
-                'Diabetes Melitus' => $sumDiabetes,
-                'Kolesterol' => $sumKolesterol,
-            ];
-            arsort($penyakitMap);
-            $topPenyakit = array_key_first($penyakitMap);
-            $maxVal = reset($penyakitMap);
-            $penyakitDominan = ($maxVal > 0) ? $topPenyakit . " ({$maxVal})" : "Nihil / Normal";
+            // Map hitung semua diagnosa penyakit di tingkat kecamatan
+            $kecCountMap = [];
+
+            // Rincian data tiap puskesmas
+            $puskesmasList = $items->map(function($p) use (&$kecCountMap) {
+                $pCountMap = [];
+                if ($p->deteksiDini) {
+                    foreach ($p->deteksiDini as $det) {
+                        $diagStr = $det->diagnosa_penyakit;
+                        if (!empty($diagStr)) {
+                            $itemsArr = array_map('trim', explode(',', $diagStr));
+                            foreach ($itemsArr as $item) {
+                                if (!empty($item) && $item !== 'Normal' && $item !== 'Sehat') {
+                                    $pCountMap[$item] = ($pCountMap[$item] ?? 0) + 1;
+                                    $kecCountMap[$item] = ($kecCountMap[$item] ?? 0) + 1;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!empty($pCountMap)) {
+                    arsort($pCountMap);
+                    $topName = array_key_first($pCountMap);
+                    $topVal  = reset($pCountMap);
+                    $pDominan = "{$topName} ({$topVal})";
+                } else {
+                    $pDominan = "Nihil / Normal";
+                }
+
+                $risikoP = $p->total_risiko ?? 0;
+                if ($risikoP > 10) {
+                    $stRisiko = "Risiko Tinggi";
+                } elseif ($risikoP > 0) {
+                    $stRisiko = "Risiko Sedang";
+                } else {
+                    $stRisiko = "Aman / Rendah";
+                }
+
+                return (object) [
+                    'id' => $p->id,
+                    'nama_puskesmas' => $p->nama_puskesmas,
+                    'total_peserta' => $p->total_peserta ?? 0,
+                    'total_skrining' => $p->total_skrining ?? 0,
+                    'penyakit_dominan' => $pDominan,
+                    'status_risiko' => $stRisiko,
+                    'total_tindak_lanjut' => $p->total_tindak_lanjut ?? 0,
+                ];
+            })->values();
+
+            // Hitung penyakit dominan untuk tingkat subtotal kecamatan
+            if (!empty($kecCountMap)) {
+                arsort($kecCountMap);
+                $topKecName = array_key_first($kecCountMap);
+                $topKecVal  = reset($kecCountMap);
+                $penyakitDominanKec = "{$topKecName} ({$topKecVal})";
+            } else {
+                $penyakitDominanKec = "Nihil / Normal";
+            }
 
             // Status Risiko Wilayah
             if ($sumRisiko > 10) {
@@ -504,11 +577,12 @@ class LaporanKepalaController extends Controller
                 'kecamatan' => $kecamatan ?: 'Tidak Diketahui',
                 'nama_kabupaten' => $items->first()->nama_kabupaten ?: '-',
                 'jumlah_puskesmas' => $items->count(),
+                'puskesmas_list' => $puskesmasList,
                 'total_peserta' => $sumPeserta,
-                'total_skrining' => $items->sum('total_skrining'),
+                'total_skrining' => $sumSkrining,
                 'total_risiko' => $sumRisiko,
                 'total_tindak_lanjut' => $sumTindakLanjut,
-                'penyakit_dominan' => $penyakitDominan,
+                'penyakit_dominan' => $penyakitDominanKec,
                 'status_risiko' => $statusRisiko,
             ];
         })->values();
@@ -518,6 +592,12 @@ class LaporanKepalaController extends Controller
 
         // Mengambil view untuk dicetak
         return view('pengguna.laporan.print_wilayah', compact('dataWilayah', 'qrToken', 'kepalaAktif'));
+    }
+
+    public function pegawai(Request $request)
+    {
+        $dataPegawai = \App\Models\PegawaiDinkes::with('user')->get();
+        return view('kepala_p2ptm.laporan.pegawai', compact('dataPegawai'));
     }
 
     public function cetakPegawai(Request $request)
@@ -532,7 +612,28 @@ class LaporanKepalaController extends Controller
 
     public function evaluasi(Request $request)
     {
-        $semuaData = \App\Models\EvaluasiSus::with('user.pegawaiDinkes')->orderBy('created_at', 'desc')->get();
+        $filterWaktu   = $request->input('filter_waktu');
+        $inputBulan    = $request->input('bulan');
+        $inputTglAwal  = $request->input('tgl_awal');
+        $inputTglAkhir = $request->input('tgl_akhir');
+        $filterPusk    = $request->input('puskesmas_id');
+
+        $query = \App\Models\EvaluasiSus::with('user.pegawaiDinkes');
+
+        if ($filterPusk) {
+            $query->whereHas('user.petugas', function($q) use ($filterPusk) {
+                $q->where('puskesmas_id', $filterPusk);
+            });
+        }
+
+        if ($filterWaktu == 'tanggal' && !empty($inputTglAwal) && !empty($inputTglAkhir)) {
+            $query->whereBetween('created_at', [$inputTglAwal . ' 00:00:00', $inputTglAkhir . ' 23:59:59']);
+        } elseif (!empty($inputBulan) && $filterWaktu != 'tanggal' && $filterWaktu != 'semua') {
+            $query->whereMonth('created_at', $inputBulan)
+                  ->whereYear('created_at', $request->input('tahun', date('Y')));
+        }
+
+        $semuaData = $query->orderBy('created_at', 'desc')->get();
         $totalResponden = $semuaData->count();
         $rataRataSkor = $totalResponden > 0 ? round($semuaData->avg('skor_sus'), 1) : 0;
 
@@ -545,12 +646,35 @@ class LaporanKepalaController extends Controller
             $predikat = 'Acceptable (Cukup Layak)';
         }
 
-        return view('kepala_p2ptm.laporan.evaluasi', compact('semuaData', 'totalResponden', 'rataRataSkor', 'predikat'));
+        $semuaPuskesmasMaster = \App\Models\Puskesmas::select('id', 'nama_puskesmas', 'kecamatan', 'nama_kabupaten')->get();
+
+        return view('kepala_p2ptm.laporan.evaluasi', compact('semuaData', 'totalResponden', 'rataRataSkor', 'predikat', 'semuaPuskesmasMaster'));
     }
 
     public function cetakEvaluasi(Request $request)
     {
-        $semuaData = \App\Models\EvaluasiSus::with('user.pegawaiDinkes')->orderBy('created_at', 'desc')->get();
+        $filterWaktu   = $request->input('filter_waktu');
+        $inputBulan    = $request->input('bulan');
+        $inputTglAwal  = $request->input('tgl_awal');
+        $inputTglAkhir = $request->input('tgl_akhir');
+        $filterPusk    = $request->input('puskesmas_id');
+
+        $query = \App\Models\EvaluasiSus::with('user.pegawaiDinkes');
+
+        if ($filterPusk) {
+            $query->whereHas('user.petugas', function($q) use ($filterPusk) {
+                $q->where('puskesmas_id', $filterPusk);
+            });
+        }
+
+        if ($filterWaktu == 'tanggal' && !empty($inputTglAwal) && !empty($inputTglAkhir)) {
+            $query->whereBetween('created_at', [$inputTglAwal . ' 00:00:00', $inputTglAkhir . ' 23:59:59']);
+        } elseif (!empty($inputBulan) && $filterWaktu != 'tanggal' && $filterWaktu != 'semua') {
+            $query->whereMonth('created_at', $inputBulan)
+                  ->whereYear('created_at', $request->input('tahun', date('Y')));
+        }
+
+        $semuaData = $query->orderBy('created_at', 'desc')->get();
         $totalResponden = $semuaData->count();
         $rataRataSkor = $totalResponden > 0 ? round($semuaData->avg('skor_sus'), 1) : 0;
 
@@ -601,6 +725,29 @@ class LaporanKepalaController extends Controller
         $dataPerlengkapan = $query->orderBy('created_at', 'desc')->get();
 
         return view('kepala_p2ptm.laporan.logistik', compact('dataPerlengkapan'));
+    }
+
+    public function suratTugas(Request $request)
+    {
+        $query = \App\Models\SuratTugasLuar::with(['pegawai', 'puskesmas', 'pengikut'])
+            ->where('status_persetujuan', 'disetujui');
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('tanggal_mulai', [$request->start_date, $request->end_date]);
+        } elseif ($request->filled('start_date')) {
+            $query->where('tanggal_mulai', '>=', $request->start_date);
+        } elseif ($request->filled('end_date')) {
+            $query->where('tanggal_selesai', '<=', $request->end_date);
+        }
+
+        if ($request->filled('month')) {
+            $query->whereMonth('tanggal_mulai', $request->month);
+        }
+
+        $suratTugas = $query->orderBy('tanggal_disetujui', 'desc')->paginate(10);
+        $suratTugas->appends($request->all());
+
+        return view('kepala_p2ptm.laporan.surat_tugas', compact('suratTugas'));
     }
 
     public function cetakPerlengkapanTugas($id)
@@ -794,7 +941,7 @@ class LaporanKepalaController extends Controller
         };
 
         $waktuPemeriksaan = function($query) use ($filterWaktu, $inputBulan, $inputTglAwal, $inputTglAkhir) {
-            if ($filterWaktu == 'bulan' && !empty($inputBulan)) {
+            if (!empty($inputBulan) && $filterWaktu != 'tanggal') {
                 $query->whereMonth('tanggal_pemeriksaan', $inputBulan)
                       ->whereYear('tanggal_pemeriksaan', date('Y'));
             } elseif ($filterWaktu == 'tanggal' && !empty($inputTglAwal) && !empty($inputTglAkhir)) {
@@ -812,19 +959,39 @@ class LaporanKepalaController extends Controller
 
         $dataSkrining = (clone $skriningQuery)->selectRaw('hasil_skrining, COUNT(*) as jumlah')->groupBy('hasil_skrining')->get();
         
-        $dataPenyakit = (clone $skriningQuery)->whereNotNull('diagnosa_penyakit')
-                                              ->where('diagnosa_penyakit', '!=', '')
-                                              ->where('diagnosa_penyakit', '!=', 'Sehat')
-                                              ->where('diagnosa_penyakit', '!=', 'Normal')
-                                              ->selectRaw('diagnosa_penyakit, COUNT(*) as jumlah')
-                                              ->groupBy('diagnosa_penyakit')
-                                              ->orderBy('jumlah', 'desc')
-                                              ->get();
+        $rawPenyakit = (clone $skriningQuery)->whereNotNull('diagnosa_penyakit')
+                                             ->where('diagnosa_penyakit', '!=', '')
+                                             ->where('diagnosa_penyakit', '!=', 'Sehat')
+                                             ->where('diagnosa_penyakit', '!=', 'Normal')
+                                             ->pluck('diagnosa_penyakit');
+
+        $penyakitCount = [];
+        foreach ($rawPenyakit as $diagStr) {
+            $items = array_map('trim', explode(',', $diagStr));
+            foreach ($items as $item) {
+                if (!empty($item) && $item !== 'Sehat' && $item !== 'Normal') {
+                    $penyakitCount[$item] = ($penyakitCount[$item] ?? 0) + 1;
+                }
+            }
+        }
+        arsort($penyakitCount);
+
+        $dataPenyakit = collect();
+        foreach ($penyakitCount as $nama => $jumlah) {
+            $dataPenyakit->push((object)[
+                'diagnosa_penyakit' => $nama,
+                'jumlah' => $jumlah
+            ]);
+        }
 
         $namaWilayah = 'Seluruh Wilayah';
         if ($filterPusk) {
             $pusk = \App\Models\Puskesmas::find($filterPusk);
-            $namaWilayah = $pusk ? 'Puskesmas ' . $pusk->nama_puskesmas : $namaWilayah;
+            if ($pusk) {
+                $namaWilayah = str_contains(strtolower($pusk->nama_puskesmas), 'puskesmas') 
+                    ? $pusk->nama_puskesmas 
+                    : 'Puskesmas ' . $pusk->nama_puskesmas;
+            }
         } elseif ($filterKec) {
             $namaWilayah = 'Kecamatan ' . $filterKec;
         } elseif ($filterKota) {

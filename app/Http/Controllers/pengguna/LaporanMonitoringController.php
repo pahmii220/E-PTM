@@ -97,7 +97,7 @@ class LaporanMonitoringController extends Controller
         $pegawai = Auth::user()->pegawaiDinkes;
         $pegawaiId = $pegawai ? $pegawai->id : (\App\Models\PegawaiDinkes::first()->id ?? 1);
 
-        LaporanHasilMonitoring::create([
+        $laporan = LaporanHasilMonitoring::create([
             'pegawai_id' => $pegawaiId,
             'puskesmas_id' => $request->puskesmas_id,
             'tanggal_kunjungan' => $request->tanggal_kunjungan ?? date('Y-m-d'),
@@ -108,6 +108,13 @@ class LaporanMonitoringController extends Controller
             'rekomendasi_tindakan' => $request->rekomendasi_tindakan,
             'status_laporan' => 'pending'
         ]);
+
+        // Kirim Notifikasi Lonceng ke Kepala P2PTM
+        $namaPegawai = $pegawai->nama_pegawai ?? Auth::user()->name ?? 'Pegawai Dinkes';
+        $kepalaUsers = \App\Models\User::whereIn('role_name', ['kepala_p2ptm', 'kepala'])->get();
+        foreach ($kepalaUsers as $kepala) {
+            $kepala->notify(new \App\Notifications\PengajuanLaporanMonitoringNotification($laporan, $namaPegawai));
+        }
 
         return redirect()->back()->with('success', 'Laporan Hasil Monitoring berhasil dikirim ke Kepala P2PTM!');
     }
@@ -154,6 +161,13 @@ class LaporanMonitoringController extends Controller
             'status_laporan' => 'pending', // Reset ke pending
             'catatan_kepala' => null // Hapus catatan penolakan jika ada
         ]);
+
+        // Kirim Notifikasi Lonceng ke Kepala P2PTM
+        $namaPegawai = Auth::user()->pegawaiDinkes->nama_pegawai ?? Auth::user()->name ?? 'Pegawai Dinkes';
+        $kepalaUsers = \App\Models\User::whereIn('role_name', ['kepala_p2ptm', 'kepala'])->get();
+        foreach ($kepalaUsers as $kepala) {
+            $kepala->notify(new \App\Notifications\PengajuanLaporanMonitoringNotification($laporan, $namaPegawai));
+        }
 
         return redirect()->route('pengguna.laporan_monitoring.index')
             ->with('success', 'Laporan Monitoring berhasil diperbarui dan diajukan ulang.');

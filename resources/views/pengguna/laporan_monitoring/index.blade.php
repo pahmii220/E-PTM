@@ -258,8 +258,9 @@
 
                             selectPuskesmas.addEventListener('change', function() {
                                 const selectedOption = this.options[this.selectedIndex];
-                                const jumlahPasien = selectedOption.getAttribute('data-pasien');
-                                const penyakitDominan = selectedOption.getAttribute('data-dominan');
+                                const jumlahPasien = selectedOption.getAttribute('data-pasien') || '0';
+                                const penyakitDominan = selectedOption.getAttribute('data-dominan') || '-';
+                                const puskesmasNama = selectedOption.text.trim();
 
                                 if(this.value !== "") {
                                     infoBox.style.display = 'block';
@@ -269,6 +270,22 @@
                                     infoBox.style.display = 'none';
                                 }
                             });
+
+                            // Auto show modal if puskesmas_id URL param is passed
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const autoPuskesmasId = urlParams.get('puskesmas_id');
+                            if (autoPuskesmasId) {
+                                selectPuskesmas.value = autoPuskesmasId;
+                                selectPuskesmas.dispatchEvent(new Event('change'));
+                                const modalElem = document.getElementById('modalBuatLaporan') || document.getElementById('modalCreateLaporan');
+                                if (modalElem) {
+                                    const modal = new bootstrap.Modal(modalElem);
+                                    modal.show();
+                                    
+                                    // Bersihkan parameter puskesmas_id dari URL agar tidak muncul lagi saat di-refresh (F5)
+                                    window.history.replaceState({}, document.title, window.location.pathname);
+                                }
+                            }
                         });
 
                         function setRekomendasi(puskesmasId, puskesmasNama, totalKasus) {
@@ -281,12 +298,16 @@
                             selectPuskesmas.dispatchEvent(event);
 
                             // Auto-fill Judul Laporan
-                            const judulInput = document.querySelector('input[name="judul_laporan"]');
-                            judulInput.value = `Tindak Lanjut Lonjakan ${totalKasus} Kasus Risiko Tinggi di ${puskesmasNama}`;
+                            const judulInput = document.querySelector('#modalBuatLaporan input[name="judul_laporan"]');
+                            if (judulInput) {
+                                judulInput.value = `Tindak Lanjut Lonjakan ${totalKasus} Kasus Risiko Tinggi di ${puskesmasNama}`;
+                            }
 
                             // Auto-fill Deskripsi
-                            const deskripsiInput = document.querySelector('textarea[name="deskripsi_temuan"]');
-                            deskripsiInput.value = `Berdasarkan data pantauan sistem bulan ini, terpantau adanya lonjakan signifikan pasien dengan status Risiko Tinggi (Total: ${totalKasus} Kasus) di ${puskesmasNama}. Kondisi ini memerlukan intervensi segera dari pihak Dinas Kesehatan.`;
+                            const deskripsiInput = document.querySelector('#modalBuatLaporan textarea[name="deskripsi_temuan"]');
+                            if (deskripsiInput) {
+                                deskripsiInput.value = `Berdasarkan data pantauan sistem bulan ini, terpantau adanya lonjakan signifikan pasien dengan status Risiko Tinggi (Total: ${totalKasus} Kasus) di ${puskesmasNama}. Kondisi ini memerlukan intervensi segera dari pihak Dinas Kesehatan.`;
+                            }
                         }
                     </script>
 
@@ -298,11 +319,11 @@
                         <div class="col-md-6">
                             <label class="form-label fw-bold text-muted small">Kategori Temuan Pemantauan</label>
                             <select name="kategori_temuan" class="form-select border-2" required>
-                                <option value="Lonjakan Kasus PTM">📈 Lonjakan Kasus PTM (Hipertensi/Diabetes)</option>
-                                <option value="Kekurangan Logistik Alkes">📦 Kekurangan Stok Alkes &amp; Logistik PTM</option>
-                                <option value="Keaktifan Posbindu & Kader">👥 Keaktifan Posbindu &amp; Kader PTM</option>
-                                <option value="Pelayanan & SOP FKTP">🏥 Pelayanan &amp; Kepatuhan SOP Puskesmas</option>
-                                <option value="Pemantauan Wilayah Rutin" selected>🌐 Pemantauan Wilayah Rutin</option>
+                                <option value="Lonjakan Kasus PTM">Lonjakan Kasus PTM</option>
+                                <option value="Kekurangan Logistik Alkes">Kekurangan Stok Alkes &amp; Logistik PTM</option>
+                                <option value="Keaktifan Posbindu & Kader">Keaktifan Posbindu &amp; Kader PTM</option>
+                                <option value="Pelayanan & SOP FKTP">Pelayanan &amp; Kepatuhan SOP Puskesmas</option>
+                                <option value="Pemantauan Wilayah Rutin" selected>Pemantauan Wilayah Rutin</option>
                             </select>
                         </div>
                     </div>
@@ -397,11 +418,11 @@
                         <div class="mb-3">
                             <label class="form-label fw-bold text-muted small">Kategori Temuan Pemantauan</label>
                             <select name="kategori_temuan" class="form-select border-2" required>
-                                <option value="Lonjakan Kasus PTM" {{ $row->kategori_temuan == 'Lonjakan Kasus PTM' ? 'selected' : '' }}>📈 Lonjakan Kasus PTM (Hipertensi/Diabetes)</option>
-                                <option value="Kekurangan Logistik Alkes" {{ $row->kategori_temuan == 'Kekurangan Logistik Alkes' ? 'selected' : '' }}>📦 Kekurangan Stok Alkes &amp; Logistik PTM</option>
-                                <option value="Keaktifan Posbindu & Kader" {{ $row->kategori_temuan == 'Keaktifan Posbindu & Kader' ? 'selected' : '' }}>👥 Keaktifan Posbindu &amp; Kader PTM</option>
-                                <option value="Pelayanan & SOP FKTP" {{ $row->kategori_temuan == 'Pelayanan & SOP FKTP' ? 'selected' : '' }}>🏥 Pelayanan &amp; Kepatuhan SOP Puskesmas</option>
-                                <option value="Pemantauan Wilayah Rutin" {{ ($row->kategori_temuan ?? 'Pemantauan Wilayah Rutin') == 'Pemantauan Wilayah Rutin' ? 'selected' : '' }}>🌐 Pemantauan Wilayah Rutin</option>
+                                <option value="Lonjakan Kasus PTM" {{ $row->kategori_temuan == 'Lonjakan Kasus PTM' ? 'selected' : '' }}>Lonjakan Kasus PTM (Hipertensi/Diabetes)</option>
+                                <option value="Kekurangan Logistik Alkes" {{ $row->kategori_temuan == 'Kekurangan Logistik Alkes' ? 'selected' : '' }}>Kekurangan Stok Alkes &amp; Logistik PTM</option>
+                                <option value="Keaktifan Posbindu & Kader" {{ $row->kategori_temuan == 'Keaktifan Posbindu & Kader' ? 'selected' : '' }}>Keaktifan Posbindu &amp; Kader PTM</option>
+                                <option value="Pelayanan & SOP FKTP" {{ $row->kategori_temuan == 'Pelayanan & SOP FKTP' ? 'selected' : '' }}>Pelayanan &amp; Kepatuhan SOP Puskesmas</option>
+                                <option value="Pemantauan Wilayah Rutin" {{ ($row->kategori_temuan ?? 'Pemantauan Wilayah Rutin') == 'Pemantauan Wilayah Rutin' ? 'selected' : '' }}>Pemantauan Wilayah Rutin</option>
                             </select>
                         </div>
                         <div class="mb-3">

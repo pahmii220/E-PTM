@@ -32,7 +32,7 @@
                                 value="{{ session('reset_username') }}">
                         </div>
 
-                        <button class="btn btn-success w-100">
+                        <button id="btnKirimPermintaan" class="btn btn-success w-100">
                             Kirim Permintaan
                         </button>
                     </form>
@@ -65,6 +65,7 @@
             const username = "{{ session('reset_username') }}";
             const alertBox = document.getElementById('statusAlert');
             const setPasswordBox = document.getElementById('setPasswordBox');
+            const btnKirimPermintaan = document.getElementById('btnKirimPermintaan');
 
             function checkStatus() {
                 fetch(`/reset-status/${username}`)
@@ -73,13 +74,17 @@
                         if (data.status === 'pending') {
                             alertBox.classList.remove('d-none');
                             alertBox.className = 'alert alert-info';
-                            alertBox.innerText = '⏳ Permintaan reset sedang menunggu persetujuan admin...';
+                            alertBox.innerText = '⏳ Permintaan Anda telah diterima dan sedang dalam proses peninjauan oleh Administrator. Silakan periksa email Anda secara berkala.';
                         }
 
                         if (data.status === 'approved') {
+                            alertBox.classList.remove('d-none');
                             alertBox.className = 'alert alert-success';
                             alertBox.innerText = '✅ Permintaan disetujui! Silakan buat password baru.';
                             setPasswordBox.classList.remove('d-none');
+                            if (btnKirimPermintaan) {
+                                btnKirimPermintaan.classList.add('d-none');
+                            }
                         }
                     });
             }

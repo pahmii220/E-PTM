@@ -29,15 +29,6 @@
                         </select>
                     </div>
 
-                    <div class="col-md-3">
-                        <select id="filterStatus" class="form-select">
-                            <option value="">Semua Status</option>
-                            <option value="Diterima">Diterima</option>
-                            <option value="Ditolak">Ditolak / Revisi</option>
-                            <option value="Tertunda">Tertunda</option>
-                        </select>
-                    </div>
-
                     @if(in_array(auth()->user()->role_name, ['admin', 'pegawai']))
                         <div class="col-md-3">
                             <select id="filterPuskesmas" class="form-select">
@@ -146,13 +137,22 @@
                                     </a>
 
                                     {{-- 🗑️ DELETE --}}
-                                    <form action="{{ route('petugas.peserta.destroy', $p->id) }}" method="POST" class="d-inline"
-                                        onsubmit="return confirm('Yakin hapus data?')">
-                                        @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-danger" title="Hapus Pasien">
+                                    @php
+                                        $isSubmitted = $p->deteksiDinis && $p->deteksiDinis->whereIn('status_verifikasi', ['approved', 'terverifikasi'])->count() > 0;
+                                    @endphp
+                                    @if($isSubmitted)
+                                        <button class="btn btn-sm btn-secondary disabled" title="Tidak dapat dihapus karena laporan pemeriksaan sudah terkirim ke Dinas Kesehatan" disabled>
                                             <i class="bi bi-trash"></i>
                                         </button>
-                                    </form>
+                                    @else
+                                        <form action="{{ route('petugas.peserta.destroy', $p->id) }}" method="POST" class="d-inline"
+                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus data pasien ini?')">
+                                            @csrf @method('DELETE')
+                                            <button class="btn btn-sm btn-danger" title="Hapus Pasien">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </td>
 
                             </tr>
@@ -200,12 +200,6 @@
                 table.column(4).search(this.value).draw();
             });
 
-            // Kolom Status sekarang bergeser to index 9
-            $('#filterStatus').on('change', function () {
-                table.column(9).search(this.value).draw();
-                updatePrintUrl();
-            });
-
             // Kolom Puskesmas sekarang bergeser to index 8
             if ($('#filterPuskesmas').length) {
                 $('#filterPuskesmas').on('change', function () {
@@ -221,7 +215,7 @@
 
             // ✅ UPDATE URL CETAK
             function updatePrintUrl() {
-                let status = $('#filterStatus').val();
+                let status = $('#filterStatus').length ? $('#filterStatus').val() : '';
                 let puskesmas = $('#filterPuskesmas').length
                     ? $('#filterPuskesmas').val()
                     : '';

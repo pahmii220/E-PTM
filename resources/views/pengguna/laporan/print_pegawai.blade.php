@@ -156,7 +156,8 @@
                 <div class="prov">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
                 <div class="dinas">DINAS KESEHATAN</div>
                 <div class="addr">
-                    Jalan Belitung Darat No.118 — Telp: (0511) 3355661 — Banjarmasin 70116
+                    Jalan Dharma Praja, Banjarbaru, Kalimantan Selatan Kode Pos 70732 <br>
+(Kawasan Perkantoran Pemerintah Provinsi Kalimantan Selatan)
                 </div>
             </div>
             <div class="clear"></div>
@@ -167,8 +168,7 @@
         {{-- JUDUL --}}
         <div style="width:100%; text-align:center; margin-bottom:15px;">
             <h3 style="margin:0; font-size:15px; letter-spacing:0.6px; font-weight:700;">
-                LAPORAN DATA PEGAWAI P2PTM DINAS KESEHATAN <br>
-                PROVINSI KALIMANTAN SELATAN
+                LAPORAN DATA PEGAWAI SUB BAGIAN P2PTM
             </h3>
         </div>
 

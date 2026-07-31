@@ -78,11 +78,15 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.85rem;">Tanggal Awal</label>
-                    <input type="date" name="start_date" class="form-control" value="{{ $startDate }}" required>
+                    <input type="date" name="start_date" class="form-control" value="{{ $startDate }}" required
+                        oninvalid="this.setCustomValidity('Tanggal awal wajib diisi.')"
+                        oninput="this.setCustomValidity('')">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-muted fw-bold mb-1" style="font-size: 0.85rem;">Tanggal Akhir</label>
-                    <input type="date" name="end_date" class="form-control" value="{{ $endDate }}" required>
+                    <input type="date" name="end_date" class="form-control" value="{{ $endDate }}" required
+                        oninvalid="this.setCustomValidity('Tanggal akhir wajib diisi.')"
+                        oninput="this.setCustomValidity('')">
                 </div>
                 <div class="col-md-3">
                     <button type="submit" class="btn btn-primary w-100">
@@ -99,30 +103,47 @@
             @csrf
             <input type="hidden" name="start_date" value="{{ $startDate }}">
             <input type="hidden" name="end_date" value="{{ $endDate }}">
-            <button type="button" onclick="konfirmasiAjukan()" class="btn btn-teal fw-bold shadow-sm" {{ $totalDraft == 0 ? 'disabled' : '' }}>
-                <i class="bi bi-send-fill"></i> Ajukan Laporan Bulan Ini ({{ $totalDraft }} Draft)
+            <button type="button" onclick="konfirmasiAjukan({{ $totalDraft }})" class="btn btn-teal fw-bold shadow-sm">
+                <i class="bi bi-send-fill me-1"></i> Ajukan Laporan Bulan Ini ({{ $totalDraft }} Draft)
             </button>
         </form>
     </div>
     <br>
 
     <script>
-        function konfirmasiAjukan() {
+        function konfirmasiAjukan(totalDraft) {
+            if (totalDraft <= 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Data Deteksi Dini Belum Ada!',
+                    html: '<div style="font-size:14px; color:#475569;">Petugas baru mendaftarkan Data Pasien tetapi <b>belum mengisi pemeriksaan Deteksi Dini PTM</b>.<br><br>Untuk mengirimkan laporan ke Dinas Kesehatan, minimal harus mengisi <b>1 data pemeriksaan Deteksi Dini PTM</b> pasien.</div>',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#0f766e',
+                    customClass: {
+                        popup: 'rounded-4 shadow-lg border-0'
+                    }
+                });
+                return;
+            }
+
             Swal.fire({
-                title: 'Ajukan Laporan?',
-                text: "Apakah Anda yakin ingin mengajukan laporan ini ke Dinas Kesehatan? Data yang diajukan tidak dapat diubah lagi.",
-                icon: 'warning',
+                title: 'Ajukan Laporan Bulan Ini?',
+                text: "Apakah Anda yakin ingin mengajukan laporan ini ke Dinas Kesehatan?",
+                icon: 'question',
                 width: '450px',
                 showCancelButton: true,
                 confirmButtonColor: '#0d9488',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, Ajukan!',
-                cancelButtonText: 'Batal'
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Ajukan Laporan!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-4 shadow-lg border-0'
+                }
             }).then((result) => {
                 if (result.isConfirmed) {
                     document.getElementById('formAjukanLaporan').submit();
                 }
-            })
+            });
         }
     </script>
 
@@ -208,6 +229,32 @@
                 if (startDate && endDate && startDateInput && endDateInput) {
                     startDateInput.value = startDate;
                     endDateInput.value = endDate;
+                } else if (!monthVal) {
+                    startDateInput.value = '';
+                    endDateInput.value = '';
+                }
+            });
+        }
+
+        const filterForm = document.querySelector('form[action*="petugas/laporan"]');
+        if (filterForm) {
+            filterForm.addEventListener('submit', function(e) {
+                if (!this.checkValidity()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Harap Isi Bidang Ini!',
+                            html: '<div style="font-size:14px; color:#475569;">Mohon pilih <b>Bulan Laporan</b> atau isi <b>Tanggal Awal & Tanggal Akhir</b> sebelum menampilkan laporan.</div>',
+                            confirmButtonText: 'Oke, Mengerti',
+                            confirmButtonColor: '#0f766e',
+                            customClass: {
+                                popup: 'rounded-4 shadow-lg border-0'
+                            }
+                        });
+                    }
+                    return false;
                 }
             });
         }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\PasswordResetRequest;
+use Illuminate\Support\Facades\Mail;
 
 class ForgotPasswordManualController extends Controller
 {
@@ -31,15 +32,32 @@ class ForgotPasswordManualController extends Controller
                 'approved_at' => null,
                 'dibuat_pada' => now(),
             ]);
+            $resetRequest = $reset;
         } else {
-            PasswordResetRequest::create([
+            $resetRequest = PasswordResetRequest::create([
                 'username' => $request->username,
                 'status'   => 'pending',
             ]);
         }
 
+        // ✉️ Kirim notifikasi email ke Administrator
+        try {
+            $user = User::where('Username', $request->username)->first();
+            if ($user) {
+                $adminUsers = User::where('role_name', 'admin')->get();
+                foreach ($adminUsers as $admin) {
+                    $adminEmail = $admin->email ?? null;
+                    if (!empty($adminEmail)) {
+                        Mail::to($adminEmail)->send(new \App\Mail\PermintaanResetPasswordMail($user, $resetRequest));
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // Log/Abaikan exception email agar pengajuan tetap sukses disimpan jika SMTP offline
+        }
+
         return back()
-            ->with('success', 'Permintaan reset password berhasil dikirim.')
+            ->with('success', 'Permintaan reset password berhasil dikirimkan ke Admin.')
             ->with('reset_username', $request->username);
     }
 }

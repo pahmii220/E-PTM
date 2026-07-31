@@ -8,7 +8,7 @@
         /* ====== SETTING CETAK ====== */
         @page {
             size: landscape;
-            margin: 15mm 12mm;
+            margin: 0;
         }
 
         body {
@@ -156,6 +156,16 @@
 
         /* ====== PRINT FALLBACK ====== */
         @media print {
+            @page {
+                margin: 0;
+            }
+            body {
+                margin: 10mm 12mm;
+            }
+            .no-print {
+                display: none;
+            }
+
             table.grid {
                 -webkit-print-color-adjust: exact;
                 box-shadow: inset -1px 0 0 #111;
@@ -190,12 +200,28 @@
             <div class="center">
                 <div class="prov">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
                 <div class="dinas">DINAS KESEHATAN</div>
-                <div class="addr">Jalan Belitung Darat No.118 — Telp: (0511) 3355661 — Banjarmasin 70116</div>
+                <div class="addr">Jalan Dharma Praja, Banjarbaru, Kalimantan Selatan Kode Pos 70732 <br>
+(Kawasan Perkantoran Pemerintah Provinsi Kalimantan Selatan)</div>
             </div>
             <div class="clear"></div>
         </div>
 
         <hr class="top">
+
+        @php
+            $namaBulanIndo = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            if (request('filter_waktu') == 'tanggal' && request('tgl_awal') && request('tgl_akhir')) {
+                $tAwal = \Carbon\Carbon::parse(request('tgl_awal'));
+                $tAkhir = \Carbon\Carbon::parse(request('tgl_akhir'));
+                $textPeriode = $tAwal->format('d') . ' ' . $namaBulanIndo[(int)$tAwal->format('m')] . ' ' . $tAwal->format('Y') . ' s/d ' . $tAkhir->format('d') . ' ' . $namaBulanIndo[(int)$tAkhir->format('m')] . ' ' . $tAkhir->format('Y');
+            } elseif (request('bulan')) {
+                $bIdx = (int) request('bulan');
+                $textPeriode = ($namaBulanIndo[$bIdx] ?? '') . ' ' . request('tahun', date('Y'));
+            } else {
+                $now = \Carbon\Carbon::now();
+                $textPeriode = $namaBulanIndo[(int)$now->format('m')] . ' ' . $now->format('Y');
+            }
+        @endphp
 
         {{-- JUDUL --}}
         <div class="title">
@@ -203,24 +229,26 @@
             TINGKAT KECAMATAN
         </div>
 
-        {{-- PENJELASAN SINGKAT --}}
-        <div style="background-color: #f8f9fa; border-left: 4px solid #198754; padding: 12px 15px; margin-bottom: 15px; font-size: 12px; line-height: 1.5; text-align: justify;">
+        {{-- PENJELASAN SINGKAT & PERIODE --}}
+        <div style="background-color: #f8f9fa; border-left: 4px solid #198754; padding: 10px 15px; margin-bottom: 15px; font-size: 12px; line-height: 1.5; text-align: justify;">
             Laporan ini menyajikan akumulasi data riwayat pemeriksaan skrining PTM, deteksi penyakit dominan, tingkat status risiko kesehatan masyarakat, serta total penanganan tindak lanjut per wilayah kecamatan.
+            <div style="margin-top: 5px; font-weight: bold; color: #166534;">
+                Periode Laporan: {{ $textPeriode }}
+            </div>
         </div>
 
         {{-- TABEL DATA --}}
         <table class="grid">
             <thead>
                 <tr>
-                    <th style="width:3%;">No</th>
-                    <th style="width:18%;">Wilayah (Kecamatan)</th>
-                    <th style="width:15%;">Kota / Kabupaten</th>
-                    <th style="width:11%;">Jumlah Faskes</th>
-                    <th style="width:11%;">Total Pasien</th>
-                    <th style="width:10%;">Riwayat Skrining</th>
-                    <th style="width:16%;">Penyakit Dominan</th>
-                    <th style="width:12%;">Status Risiko</th>
-                    <th style="width:4%;">Penanganan Selesai</th>
+                    <th style="width:4%;">No</th>
+                    <th style="width:17%;">Wilayah (Kecamatan)</th>
+                    <th style="width:16%;">Kota / Kabupaten</th>
+                    <th style="width:23%;">Nama Puskesmas / Faskes</th>
+                    <th style="width:9%;">Total Pasien</th>
+                    <th style="width:9%;">Riwayat Skrining</th>
+                    <th style="width:13%;">Penyakit Dominan</th>
+                    <th style="width:9%;">Penanganan Selesai</th>
                 </tr>
             </thead>
             <tbody>
@@ -235,37 +263,58 @@
                         $sumSkrining += $item->total_skrining;
                         $sumRisiko += $item->total_risiko;
                         $sumTindakLanjut += $item->total_tindak_lanjut;
-
-                        $statusBadge = match($item->status_risiko ?? 'Aman / Rendah') {
-                            'Risiko Tinggi' => 'background:#fee2e2;color:#991b1b;padding:2px 6px;border-radius:4px;font-weight:bold;',
-                            'Risiko Sedang' => 'background:#fef3c7;color:#92400e;padding:2px 6px;border-radius:4px;font-weight:bold;',
-                            default         => 'background:#dcfce7;color:#166534;padding:2px 6px;border-radius:4px;font-weight:bold;',
-                        };
+                        $pCount = count($item->puskesmas_list);
                     @endphp
-                    <tr>
-                        <td>{{ $loop->iteration }}</td>
-                        <td class="left"><strong>{{ $item->kecamatan }}</strong></td>
-                        <td>{{ $item->nama_kabupaten }}</td>
-                        <td>{{ $item->jumlah_puskesmas }} Puskesmas</td>
-                        <td><strong>{{ $item->total_peserta }}</strong></td>
-                        <td>{{ $item->total_skrining }}</td>
-                        <td style="font-weight:600;">{{ $item->penyakit_dominan ?? 'Nihil / Normal' }}</td>
-                        <td><span style="{{ $statusBadge }}">{{ $item->status_risiko ?? 'Aman / Rendah' }}</span></td>
-                        <td>{{ $item->total_tindak_lanjut }}</td>
-                    </tr>
+
+                    @if($pCount > 0)
+                        @foreach($item->puskesmas_list as $pIndex => $pusk)
+                            <tr>
+                                @if($pIndex === 0)
+                                    <td rowspan="{{ $pCount }}" style="vertical-align: middle;">{{ $loop->parent->iteration }}</td>
+                                    <td rowspan="{{ $pCount }}" class="left" style="vertical-align: middle;"><strong>{{ $item->kecamatan }}</strong></td>
+                                    <td rowspan="{{ $pCount }}" style="vertical-align: middle;">{{ $item->nama_kabupaten }}</td>
+                                @endif
+                                <td class="left"><strong>{{ $pusk->nama_puskesmas }}</strong></td>
+                                <td><strong>{{ $pusk->total_peserta }}</strong></td>
+                                <td>{{ $pusk->total_skrining }}</td>
+                                <td style="font-weight:600;">{{ $pusk->penyakit_dominan ?? 'Nihil / Normal' }}</td>
+                                <td>{{ $pusk->total_tindak_lanjut }}</td>
+                            </tr>
+                        @endforeach
+                        {{-- SUB-TOTAL PER KECAMATAN --}}
+                        <tr style="font-weight: bold; background-color: #e2e8f0; color: #0f172a;">
+                            <td colspan="4" style="text-align: right; padding-right: 15px; font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; background-color: #e2e8f0; border-top: 1.5px solid #334155; border-bottom: 2px solid #334155;">
+                                &Sigma; SUBTOTAL KEC. {{ strtoupper($item->kecamatan) }} ({{ $item->jumlah_puskesmas }} Faskes)
+                            </td>
+                            <td style="font-weight: 800; font-size: 11px; background-color: #e2e8f0; border-top: 1.5px solid #334155; border-bottom: 2px solid #334155;">{{ $item->total_peserta }}</td>
+                            <td style="font-weight: 800; font-size: 11px; background-color: #e2e8f0; border-top: 1.5px solid #334155; border-bottom: 2px solid #334155;">{{ $item->total_skrining }}</td>
+                            <td style="font-weight: 700; font-size: 10px; background-color: #e2e8f0; border-top: 1.5px solid #334155; border-bottom: 2px solid #334155;">{{ $item->penyakit_dominan }}</td>
+                            <td style="font-weight: 800; font-size: 11px; background-color: #e2e8f0; border-top: 1.5px solid #334155; border-bottom: 2px solid #334155;">{{ $item->total_tindak_lanjut }}</td>
+                        </tr>
+                    @else
+                        <tr>
+                            <td>{{ $loop->iteration }}</td>
+                            <td class="left"><strong>{{ $item->kecamatan }}</strong></td>
+                            <td>{{ $item->nama_kabupaten }}</td>
+                            <td class="left" style="color:#94a3b8; font-style:italic;">Tidak ada puskesmas</td>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>Nihil / Normal</td>
+                            <td>0</td>
+                        </tr>
+                    @endif
                 @empty
                     <tr>
-                        <td colspan="9">Tidak ada data wilayah yang dapat ditampilkan.</td>
+                        <td colspan="8">Tidak ada data wilayah yang dapat ditampilkan.</td>
                     </tr>
                 @endforelse
                 
                 @if($dataWilayah->count() > 0)
-                    <tr style="font-weight: bold; background-color: #f1f1f1;">
+                    <tr style="font-weight: bold; background-color: #e2e8f0; font-size: 11px;">
                         <td colspan="3" style="text-align: right; padding-right: 15px;">TOTAL KESELURUHAN</td>
                         <td>{{ $sumFaskes }} Puskesmas</td>
-                        <td>{{ $sumPasien }}</td>
+                        <td>{{ $sumPasien }} Pasien</td>
                         <td>{{ $sumSkrining }}</td>
-                        <td>-</td>
                         <td>-</td>
                         <td>{{ $sumTindakLanjut }}</td>
                     </tr>
@@ -304,9 +353,10 @@
                     <div class="qr-container">
                         @if(isset($qrToken))
                             @php
+                                $namaBulanIndoQr = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
                                 $bulanAngka = (int) request('bulan', now()->month);
                                 $tahun = request('tahun', now()->year);
-                                $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
+                                $periode = ($namaBulanIndoQr[$bulanAngka] ?? '') . ' ' . $tahun;
                                 $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
 
                                 $namaPejabat = $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah';

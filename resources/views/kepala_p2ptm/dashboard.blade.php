@@ -35,6 +35,7 @@
 
     // --- DATA TAMBAHAN UNTUK PEGAWAI & PUSKESMAS ---
     $totalPetugas = User::where('role_name', 'petugas')->count();
+    $totalPegawai = \App\Models\PegawaiDinkes::count();
 
     // Data untuk Chart Puskesmas
     $puskesmasList = Puskesmas::all();
@@ -86,15 +87,16 @@
         <div class="row g-4 mb-4">
             @php 
                 $cards = [
-        ['title' => 'Total Pasien', 'value' => $data['totalPeserta'], 'icon' => 'bi-people', 'color' => 'primary'],
-        ['title' => 'Deteksi Dini', 'value' => $data['totalDeteksi'], 'icon' => 'bi-activity', 'color' => 'success'],
-        ['title' => 'Faktor Risiko', 'value' => $data['totalRisiko'], 'icon' => 'bi-exclamation-triangle', 'color' => 'danger'],
-        ['title' => 'Petugas Puskesmas', 'value' => $totalPetugas, 'icon' => 'bi-person-badge-fill', 'color' => 'info']
-    ];
+                    ['title' => 'Total Pasien', 'value' => $data['totalPeserta'], 'icon' => 'bi-people', 'color' => 'primary'],
+                    ['title' => 'Deteksi Dini', 'value' => $data['totalDeteksi'], 'icon' => 'bi-activity', 'color' => 'success'],
+                    ['title' => 'Risiko Tinggi', 'value' => $data['totalRisiko'], 'icon' => 'bi-exclamation-triangle', 'color' => 'danger'],
+                    ['title' => 'Petugas Puskesmas', 'value' => $totalPetugas, 'icon' => 'bi-person-badge-fill', 'color' => 'info'],
+                    ['title' => 'Pegawai Dinkes', 'value' => $totalPegawai, 'icon' => 'bi-person-vcard-fill', 'color' => 'warning']
+                ];
             @endphp
 
             @foreach($cards as $card)
-            <div class="col-xl-3 col-md-6">
+            <div class="col-xl col-md-4 col-sm-6">
                 <div class="card border-0 shadow-sm rounded-4 h-100 transition-hover">
                     <div class="card-body p-4 d-flex justify-content-between align-items-center">
                         <div>
@@ -220,8 +222,8 @@
                     attribution: '© OpenStreetMap'
                 });
 
-                // Default Active Layer
-                googleRoadmap.addTo(map);
+                // Default Active Layer (Langsung Peta Satelit)
+                googleSatellite.addTo(map);
 
                 // Control Switcher Layer
                 var baseMaps = {
@@ -328,7 +330,7 @@
                 data: {
                     labels: labelsPuskesmas,
                     datasets: [{
-                        label: 'Peserta Terdaftar',
+                        label: 'Pasien Terdaftar',
                         data: {!! json_encode($puskesmasData) !!},
                         backgroundColor: buatGradient(ctxPuskesmas, 59, 130, 246),
                         borderColor: 'rgba(59,130,246,1)',
@@ -426,7 +428,7 @@
             new Chart(document.getElementById('skriningChart'), {
                 type: 'doughnut',
                 data: {
-                    labels: ['Normal', 'Dicurigai', 'Risiko'],
+                    labels: ['Normal', 'Dicurigai', 'Risiko Tinggi'],
                     datasets: [{
                         data: [{{ $skNormal }}, {{ $skDicurigai }}, {{ $skRisiko }}],
                         backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],

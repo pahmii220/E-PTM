@@ -100,6 +100,10 @@ class TindakLanjutPTMController extends Controller
         $request->validate([
             'deteksi_dini_id' => 'required|exists:deteksi_dini_ptm,id',
             'jenis_tindak_lanjut' => 'required',
+        ], [
+            'deteksi_dini_id.required' => 'Data pemeriksaan deteksi dini wajib dipilih.',
+            'deteksi_dini_id.exists'   => 'Data pemeriksaan tidak ditemukan.',
+            'jenis_tindak_lanjut.required' => 'Jenis tindak lanjut wajib dipilih.',
         ]);
 
         $deteksi = DeteksiDiniPTM::with('peserta')->findOrFail($request->deteksi_dini_id);
@@ -139,9 +143,15 @@ class TindakLanjutPTMController extends Controller
 
         $tindakLanjut = $query->findOrFail($id);
 
+        if (Auth::user()->role_name !== 'admin' && $tindakLanjut->deteksiDini && in_array($tindakLanjut->deteksiDini->status_verifikasi, ['approved', 'pending', 'terverifikasi'])) {
+            return redirect()
+                ->route('petugas.tindak_lanjut.index')
+                ->with('error', 'Data tindak lanjut yang sudah diajukan/disahkan dalam laporan tidak dapat diubah.');
+        }
+
         // Cari data faktor risiko terkait
         $faktor = \App\Models\FaktorResikoPTM::where('peserta_id', $tindakLanjut->peserta_id)
-            ->where('tanggal_pemeriksaan', $tindakLanjut->deteksiDini->tanggal_pemeriksaan)
+            ->where('tanggal_pemeriksaan', $tindakLanjut->deteksiDini ? $tindakLanjut->deteksiDini->tanggal_pemeriksaan : null)
             ->first();
 
         return view('petugas.tindak_lanjut.edit', compact('tindakLanjut', 'faktor'));
@@ -157,9 +167,12 @@ class TindakLanjutPTMController extends Controller
             'tanggal_tindak_lanjut' => 'nullable|date',
             'status_tindak_lanjut' => 'required',
             'catatan_petugas' => 'nullable|string',
+        ], [
+            'jenis_tindak_lanjut.required'  => 'Jenis tindak lanjut wajib dipilih.',
+            'status_tindak_lanjut.required' => 'Status tindak lanjut wajib dipilih.',
         ]);
 
-        $query = TindakLanjutPTM::query();
+        $query = TindakLanjutPTM::with('deteksiDini');
         if (Auth::user()->role_name !== 'admin') {
             $query->whereHas('peserta', function($q) {
                 $q->where('puskesmas_id', Auth::user()->petugas->puskesmas_id);
@@ -167,6 +180,12 @@ class TindakLanjutPTMController extends Controller
         }
 
         $tindakLanjut = $query->findOrFail($id);
+
+        if (Auth::user()->role_name !== 'admin' && $tindakLanjut->deteksiDini && in_array($tindakLanjut->deteksiDini->status_verifikasi, ['approved', 'pending', 'terverifikasi'])) {
+            return redirect()
+                ->route('petugas.tindak_lanjut.index')
+                ->with('error', 'Data tindak lanjut yang sudah diajukan/disahkan dalam laporan tidak dapat diubah.');
+        }
 
         $tindakLanjut->update([
             'jenis_tindak_lanjut' => $request->jenis_tindak_lanjut,
@@ -186,7 +205,7 @@ class TindakLanjutPTMController extends Controller
      ===================== */
     public function destroy($id)
     {
-        $query = TindakLanjutPTM::query();
+        $query = TindakLanjutPTM::with('deteksiDini');
 
         if (Auth::user()->role_name !== 'admin') {
             $query->whereHas('peserta', function($q) {
@@ -194,7 +213,13 @@ class TindakLanjutPTMController extends Controller
             });
         }
 
-        $query->findOrFail($id)->delete();
+        $tindakLanjut = $query->findOrFail($id);
+
+        if (Auth::user()->role_name !== 'admin' && $tindakLanjut->deteksiDini && in_array($tindakLanjut->deteksiDini->status_verifikasi, ['approved', 'pending', 'terverifikasi'])) {
+            return back()->with('error', 'Data tindak lanjut yang sudah diajukan/disahkan dalam laporan tidak dapat dihapus.');
+        }
+
+        $tindakLanjut->delete();
 
         return back()->with('success', 'Data tindak lanjut berhasil dihapus.');
     }

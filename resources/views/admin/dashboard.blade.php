@@ -10,6 +10,7 @@
     use App\Models\DeteksiDiniPTM;
     use App\Models\User;
     use App\Models\Puskesmas;
+    use App\Models\PegawaiDinkes;
 
     // 1. Mengatur zona waktu ke WITA
     $waktuSekarang = Carbon::now('Asia/Makassar');
@@ -40,7 +41,7 @@
     // =======================================================================
     $realTotalPeserta = Peserta::count();
     $realTotalDeteksi = DeteksiDiniPTM::count();
-    $realTotalPegawai = User::where('role_name', 'pegawai')->count();
+    $realTotalPegawai = PegawaiDinkes::count();
     $realTotalPetugas = User::where('role_name', 'petugas')->count();
 
     // Data Grafik Puskesmas
@@ -92,7 +93,7 @@
                 <div class="row g-3 mb-4">
                     {{-- Card 1: Peserta --}}
                     <div class="col-6 col-lg-3">
-                        <div class="card border-0 shadow-sm rounded-2xl h-100"><div class="card-body p-4 d-flex align-items-center gap-3"><div class="w-14 h-14 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center text-3xl"><i class="bi bi-people-fill"></i></div><div><p class="text-gray-500 text-xs mb-1 font-semibold uppercase tracking-wider">Total Peserta</p><h3 class="text-gray-800 font-extrabold mb-0 text-2xl">{{ number_format($realTotalPeserta) }}</h3></div></div></div>
+                        <div class="card border-0 shadow-sm rounded-2xl h-100"><div class="card-body p-4 d-flex align-items-center gap-3"><div class="w-14 h-14 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center text-3xl"><i class="bi bi-people-fill"></i></div><div><p class="text-gray-500 text-xs mb-1 font-semibold uppercase tracking-wider">Total Pasien</p><h3 class="text-gray-800 font-extrabold mb-0 text-2xl">{{ number_format($realTotalPeserta) }}</h3></div></div></div>
                     </div>
                     {{-- Card 2: Deteksi Dini --}}
                         <div class="col-6 col-lg-3">
@@ -214,8 +215,8 @@
                     attribution: '© OpenStreetMap'
                 });
 
-                // Default Layer Active
-                googleRoadmap.addTo(map);
+                // Default Layer Active (Peta Satelit)
+                googleSatellite.addTo(map);
 
                 // Control Switcher Layer
                 var baseMaps = {
@@ -409,7 +410,7 @@
                         labels: labelsPuskesmas,
                                                     datasets: [
                                 {
-                                    label: 'Peserta Terdaftar',
+                                    label: 'Pasien Terdaftar',
                                     data: dataPeserta,
                                     backgroundColor: buatGradient(ctx, 59, 130, 246),
                                     borderColor: 'rgba(59,130,246,1)',

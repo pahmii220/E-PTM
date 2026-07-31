@@ -31,7 +31,10 @@
 
         <div class="ptm-field">
             <label class="ptm-label">Pilih Pasien <span class="ptm-req">*</span></label>
-            <select name="peserta_id" id="peserta_id" class="ptm-select ptm-select-teal @error('peserta_id') is-invalid @enderror" required>
+            <select name="peserta_id" id="peserta_id" class="ptm-select ptm-select-teal @error('peserta_id') is-invalid @enderror" required
+                oninvalid="this.setCustomValidity('Pasien wajib dipilih.')"
+                onchange="this.setCustomValidity('')"
+                oninput="this.setCustomValidity('')">
                 <option value="">-- Pilih Pasien --</option>
                 @foreach($peserta as $p)
                     <option value="{{ $p->id }}"
@@ -71,7 +74,9 @@
                 <label class="ptm-label">Tanggal Pemeriksaan <span class="ptm-req">*</span></label>
                 <input type="date" name="tanggal_pemeriksaan"
                     class="ptm-input @error('tanggal_pemeriksaan') is-invalid @enderror"
-                    value="{{ old('tanggal_pemeriksaan', date('Y-m-d')) }}" required>
+                    value="{{ old('tanggal_pemeriksaan', date('Y-m-d')) }}" required
+                    oninvalid="this.setCustomValidity('Tanggal pemeriksaan wajib diisi.')"
+                    oninput="this.setCustomValidity('')">
                 @error('tanggal_pemeriksaan')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
         </div>
@@ -82,15 +87,21 @@
         <h6 class="ptm-section-title"><span class="ptm-num">2</span> Pemeriksaan Fisik &amp; Klinis</h6>
 
         {{-- Tekanan Darah --}}
-        <p class="ptm-sublabel">Tekanan Darah</p>
+        <p class="ptm-sublabel">Tekanan Darah <span class="ptm-req">*</span></p>
         <div class="row g-3 mb-3">
             <div class="col-md-4">
-                <label class="ptm-label-sm">Sistolik (mmHg)</label>
-                <input type="number" name="sistolik" id="sistolik" class="ptm-input" placeholder="120" value="{{ old('sistolik') }}">
+                <label class="ptm-label-sm">Sistolik (mmHg) <span class="ptm-req">*</span></label>
+                <input type="number" name="sistolik" id="sistolik" class="ptm-input @error('sistolik') is-invalid @enderror" placeholder="120" value="{{ old('sistolik') }}" required
+                    oninvalid="this.setCustomValidity('Tekanan darah Sistolik wajib diisi.')"
+                    oninput="this.setCustomValidity('')">
+                @error('sistolik')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
             </div>
             <div class="col-md-4">
-                <label class="ptm-label-sm">Diastolik (mmHg)</label>
-                <input type="number" name="diastolik" id="diastolik" class="ptm-input" placeholder="80" value="{{ old('diastolik') }}">
+                <label class="ptm-label-sm">Diastolik (mmHg) <span class="ptm-req">*</span></label>
+                <input type="number" name="diastolik" id="diastolik" class="ptm-input @error('diastolik') is-invalid @enderror" placeholder="80" value="{{ old('diastolik') }}" required
+                    oninvalid="this.setCustomValidity('Tekanan darah Diastolik wajib diisi.')"
+                    oninput="this.setCustomValidity('')">
+                @error('diastolik')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
             </div>
             <div class="col-md-4">
                 <label class="ptm-label-sm">Gula Darah Sewaktu</label>
@@ -117,7 +128,9 @@
                 <div class="ptm-input-unit">
                     <input type="number" step="0.1" name="tinggi_badan" id="tinggi_badan"
                         class="ptm-input @error('tinggi_badan') is-invalid @enderror"
-                        placeholder="170" value="{{ old('tinggi_badan') }}" required>
+                        placeholder="170" value="{{ old('tinggi_badan') }}" required
+                        oninvalid="this.setCustomValidity('Tinggi badan wajib diisi.')"
+                        oninput="this.setCustomValidity('')">
                     <span class="ptm-unit">cm</span>
                 </div>
                 @error('tinggi_badan')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
@@ -127,7 +140,9 @@
                 <div class="ptm-input-unit">
                     <input type="number" step="0.01" name="berat_badan" id="berat_badan"
                         class="ptm-input @error('berat_badan') is-invalid @enderror"
-                        placeholder="65" value="{{ old('berat_badan') }}" required>
+                        placeholder="65" value="{{ old('berat_badan') }}" required
+                        oninvalid="this.setCustomValidity('Berat badan wajib diisi.')"
+                        oninput="this.setCustomValidity('')">
                     <span class="ptm-unit">kg</span>
                 </div>
                 @error('berat_badan')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
@@ -232,13 +247,12 @@
         <select class="form-control select2-manual" name="diagnosa_penyakit[]" multiple="multiple" style="width: 100%;">
             @php
                 $ptmList = [
-                    'Gangguan Jantung','Jantung Koroner','Jantung Kongenital','Jantung Lainnya',
-                    'Hipertensi','Diabetes Melitus','Obesitas','Gangguan Stroke',
-                    'Kanker Payudara','Kanker Serviks','Kanker Paru','Kanker Kolorektal',
-                    'Thalassemia',
-                    'Gangguan Pendengaran','Gangguan Pendengaran Otitis (OMSK)','Gangguan Pendengaran Presbikusis',
-                    'Gangguan Penglihatan Katarak','Gangguan Penglihatan Miopia',
-                    'PPOK Umum','PPOK Stabil','PPOK Eksaserbasi'
+                    'Hipertensi','Diabetes Melitus','Pre-Hipertensi','Prediabetes',
+                    'Obesitas','Kolesterol Tinggi',
+                    'Gangguan Penglihatan Miopia','Gangguan Penglihatan Katarak',
+                    'Gangguan Pendengaran','Gangguan Pendengaran Presbikusis',
+                    'Gangguan Jantung','Jantung Koroner','Gangguan Stroke','PPOK Umum',
+                    'Kanker Payudara','Kanker Serviks','Kanker Paru','Kanker Kolorektal','Thalassemia'
                 ];
             @endphp
             @foreach($ptmList as $ptm)

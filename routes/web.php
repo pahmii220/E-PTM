@@ -86,6 +86,10 @@ Route::get('/struktur', [HomeController::class, 'struktur'])->name('frontend.str
 Route::post('/cek-riwayat-ptm', [HomeController::class, 'cekRiwayatPTM'])->name('frontend.cek_riwayat');
 Route::get('/cek-riwayat-ptm/{id}/cetak', [HomeController::class, 'cetakSkriningPublic'])->name('frontend.cetak_skrining');
 
+// DASHBOARD PASIEN
+Route::get('/portal-pasien', [HomeController::class, 'dashboardPasien'])->name('frontend.pasien.dashboard');
+Route::post('/portal-pasien/keluar', [HomeController::class, 'logoutPasien'])->name('frontend.pasien.logout');
+
 /*
 |--------------------------------------------------------------------------
 | AUTH (LOGIN, REGISTER, LOGOUT)
@@ -212,7 +216,7 @@ Route::prefix('admin')
     Route::put('master_pengguna/{id}/akses', [MasterPenggunaController::class, 'updateAccess'])
         ->name('master_pengguna.updateAccess');
     // Laporan
-    Route::get('/laporan', fn () => view('laporan.index'))
+    Route::get('/laporan', [\App\Http\Controllers\LaporanKepalaController::class, 'eksekutif'])
         ->name('laporan.index');
 
     // Reset Password Approval
@@ -358,7 +362,7 @@ Route::prefix('petugas')
 | PENGGUNA  / PEGAWAI (DINAS KESEHATAN)
 |--------------------------------------------------------------------------
 */
-Route::prefix('pengguna')
+Route::prefix('pegawai')
     ->name('pengguna.')
     ->middleware(['auth','active'])
     ->group(function () {
@@ -498,8 +502,7 @@ Route::get(
 
         Route::get('/evaluasi-laporan', [EvaluasiController::class, 'laporanEvaluasi'])->name('evaluasi.report');
         Route::get('/evaluasi-laporan/cetak', [EvaluasiController::class, 'cetakLaporan'])->name('evaluasi.cetak');
-        
-
+        Route::delete('/evaluasi-laporan/{id}', [EvaluasiController::class, 'destroy'])->name('evaluasi.destroy');
 });
 
 
@@ -507,7 +510,7 @@ Route::get(
 
 
 
-Route::middleware(['auth', 'active', 'role:kepala_p2ptm'])->prefix('kepala-p2ptm')->group(function () {
+Route::middleware(['auth', 'active', 'role:kepala_p2ptm,admin'])->prefix('kepala-p2ptm')->group(function () {
     
     // 1. Dashboard Utama (Tetap menggunakan controller lama)
     Route::get('/dashboard', [KepalaP2ptmController::class, 'dashboard'])->name('kepala.dashboard');
@@ -543,6 +546,7 @@ Route::middleware(['auth', 'active', 'role:kepala_p2ptm'])->prefix('kepala-p2ptm
         // 5. PUSAT LAPORAN EKSEKUTIF (TAB GABUNGAN)
         // ==========================================
         Route::get('/eksekutif', [LaporanKepalaController::class, 'eksekutif'])->name('eksekutif');
+        Route::get('/pegawai', [LaporanKepalaController::class, 'pegawai'])->name('pegawai');
 
         Route::get('/eksekutif/cetak-puskesmas', [LaporanKepalaController::class, 'cetakPuskesmas'])->name('eksekutif.cetak_puskesmas');
         Route::get('/eksekutif/cetak-wilayah', [LaporanKepalaController::class, 'cetakWilayah'])->name('eksekutif.cetak_wilayah');
@@ -559,6 +563,7 @@ Route::middleware(['auth', 'active', 'role:kepala_p2ptm'])->prefix('kepala-p2ptm
         Route::get('/evaluasi/cetak', [LaporanKepalaController::class, 'cetakEvaluasi'])->name('evaluasi.cetak');
         Route::get('/perlengkapan-tugas', [LaporanKepalaController::class, 'perlengkapanTugas'])->name('perlengkapan_tugas');
         Route::get('/perlengkapan-tugas/{id}/cetak', [LaporanKepalaController::class, 'cetakPerlengkapanTugas'])->name('perlengkapan_tugas.cetak');
+        Route::get('/surat-tugas', [LaporanKepalaController::class, 'suratTugas'])->name('surat_tugas');
     });
     
     // Validasi Tugas Luar Pegawai

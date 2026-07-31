@@ -6,16 +6,35 @@
     <style>
         @page {
             size: A4 landscape;
-            margin: 10mm;
+            margin: 0;
+        }
+
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 0;
+            }
+            body {
+                margin: 0 !important;
+                padding: 12mm 15mm !important;
+            }
+            a[href]:after {
+                content: none !important;
+            }
+            a {
+                text-decoration: none !important;
+                color: inherit !important;
+            }
         }
 
         body {
             font-family: "Times New Roman", serif;
-            margin: 10mm;
-            padding: 0;
+            margin: 0;
+            padding: 12mm 15mm;
             background: #fff;
             color: #000;
             -webkit-print-color-adjust: exact;
+            box-sizing: border-box;
         }
 
         .container {
@@ -176,7 +195,15 @@
             <h3 style="margin:0; font-size:16px; text-transform:uppercase;">LAPORAN HASIL MONITORING Penyakit Tidak Menular (PTM)</h3>
             <div style="font-size: 12px; margin-top: 4px; color: #333;">
                 Periode: 
-                @if(!empty($startDate) && !empty($endDate))
+                @php
+                    $bulanIndo = [
+                        '1' => 'Januari', '2' => 'Februari', '3' => 'Maret', '4' => 'April', '5' => 'Mei', '6' => 'Juni', '7' => 'Juli', '8' => 'Agustus', '9' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember',
+                        '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April', '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus', '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+                    ];
+                @endphp
+                @if(!empty($bulan) && isset($bulanIndo[$bulan]))
+                    <strong>Bulan {{ $bulanIndo[$bulan] }} {{ \Carbon\Carbon::now()->year }}</strong>
+                @elseif(!empty($startDate) && !empty($endDate))
                     <strong>{{ \Carbon\Carbon::parse($startDate)->translatedFormat('d F Y') }} — {{ \Carbon\Carbon::parse($endDate)->translatedFormat('d F Y') }}</strong>
                 @elseif(!empty($startDate))
                     <strong>Mulai {{ \Carbon\Carbon::parse($startDate)->translatedFormat('d F Y') }}</strong>

@@ -229,29 +229,14 @@
             <p class="ptm-sublabel">Jenis PTM Lainnya <span class="ptm-opt">(Opsional, pilih manual)</span></p>
             <select class="form-control select2-manual" name="diagnosa_penyakit[]" multiple="multiple" style="width: 100%;">
                 @php
-    $ptmList = [
-        'Gangguan Jantung',
-        'Jantung Koroner',
-        'Jantung Kongenital',
-        'Jantung Lainnya',
-        'Hipertensi',
-        'Diabetes Melitus',
-        'Obesitas',
-        'Gangguan Stroke',
-        'Kanker Payudara',
-        'Kanker Serviks',
-        'Kanker Paru',
-        'Kanker Kolorektal',
-        'Thalassemia',
-        'Gangguan Pendengaran',
-        'Gangguan Pendengaran Otitis (OMSK)',
-        'Gangguan Pendengaran Presbikusis',
-        'Gangguan Penglihatan Katarak',
-        'Gangguan Penglihatan Miopia',
-        'PPOK Umum',
-        'PPOK Stabil',
-        'PPOK Eksaserbasi'
-    ];
+                    $ptmList = [
+                        'Hipertensi','Diabetes Melitus','Pre-Hipertensi','Prediabetes',
+                        'Obesitas','Kolesterol Tinggi',
+                        'Gangguan Penglihatan Miopia','Gangguan Penglihatan Katarak',
+                        'Gangguan Pendengaran','Gangguan Pendengaran Presbikusis',
+                        'Gangguan Jantung','Jantung Koroner','Gangguan Stroke','PPOK Umum',
+                        'Kanker Payudara','Kanker Serviks','Kanker Paru','Kanker Kolorektal','Thalassemia'
+                    ];
                 @endphp
                 @foreach($ptmList as $ptm)
                     <option value="{{ $ptm }}" {{ in_array($ptm, $savedDiagnoses) ? 'selected' : '' }}>

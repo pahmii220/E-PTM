@@ -108,19 +108,25 @@
                             </a>
 
                             @if(auth()->user()->role_name === 'petugas')
-                                <a href="{{ route('petugas.tindak_lanjut.edit', $t->id) }}"
-                                    class="btn btn-sm btn-warning me-1">
-                                    <i class="bi bi-pencil-square"></i>
-                                </a>
+                                @if($t->deteksiDini && in_array($t->deteksiDini->status_verifikasi, ['approved', 'pending', 'terverifikasi']))
+                                    <span class="badge bg-secondary-subtle text-secondary border px-2 py-1" style="font-size: 11px;" title="Laporan sudah diajukan/disahkan">
+                                        <i class="bi bi-lock-fill me-1"></i> Terkunci
+                                    </span>
+                                @else
+                                    <a href="{{ route('petugas.tindak_lanjut.edit', $t->id) }}"
+                                        class="btn btn-sm btn-warning me-1">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
 
-                                <form action="{{ route('petugas.tindak_lanjut.destroy', $t->id) }}"
-                                    method="POST" class="d-inline"
-                                    onsubmit="return confirm('Yakin hapus data?')">
-                                    @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
+                                    <form action="{{ route('petugas.tindak_lanjut.destroy', $t->id) }}"
+                                        method="POST" class="d-inline"
+                                        onsubmit="return confirm('Yakin hapus data?')">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             @else
                                 <span class="badge bg-info">Monitoring</span>
                             @endif

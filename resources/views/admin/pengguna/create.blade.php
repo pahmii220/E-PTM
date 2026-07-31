@@ -136,11 +136,7 @@
                                 <textarea name="alamat" class="form-control" rows="3" placeholder="Contoh: Jl. Ahmad Yani No. 12, Kel. Pemurus Luar, Kec. Banjarmasin Timur">{{ old('alamat') }}</textarea>
                             </div>
 
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Foto Profil (Opsional)</label>
-                                <input type="file" name="foto" class="form-control" accept="image/*">
-                                <small class="text-muted">Format gambar (JPG, PNG, WEBP), Maksimal 2MB.</small>
-                            </div>
+                           
                         </div>
 
                         <div class="mt-4 pt-3 border-top text-end">

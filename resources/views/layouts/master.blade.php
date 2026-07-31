@@ -668,13 +668,22 @@ if (Auth::check()) {
         @endif
 
         @if(session('error'))
-            <div class="container-fluid px-4 mb-3">
-                <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            </div>
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Data Deteksi Dini Belum Ada!',
+                            html: '<div style="font-size:14px; color:#475569;">Petugas baru mendaftarkan Data Pasien tetapi <b>belum mengisi pemeriksaan Deteksi Dini PTM</b>.<br><br>Untuk mengirimkan laporan ke Dinas Kesehatan, minimal harus mengisi <b>1 data pemeriksaan Deteksi Dini PTM</b> pasien.</div>',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#0f766e',
+                            customClass: {
+                                popup: 'rounded-4 shadow-lg border-0'
+                            }
+                        });
+                    }
+                });
+            </script>
         @endif
         {{-- =============== END ALERT GLOBAL =============== --}}
 

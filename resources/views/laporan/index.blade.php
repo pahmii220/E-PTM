@@ -125,7 +125,6 @@
         $data = $semuaData;
 
     } elseif ($tab === 'usia') {
-
         $pesertas = \App\Models\Peserta::all();
         $usiaData = [
             'remaja' => 0,
@@ -133,9 +132,6 @@
             'pra_lansia' => 0,
             'lansia' => 0
         ];
-
-
-
         foreach ($pesertas as $p) {
             if (!$p->tanggal_lahir)
                 continue;
@@ -149,6 +145,17 @@
             } else {
                 $usiaData['lansia']++;
             }
+        }
+
+    } elseif ($tab === 'wilayah') {
+        $data = \App\Models\Puskesmas::select('kecamatan', 'nama_kabupaten', \DB::raw('COUNT(id) as total_puskesmas'))
+            ->groupBy('kecamatan', 'nama_kabupaten')
+            ->get();
+
+    } elseif ($tab === 'pegawai') {
+        $data = \App\Models\PegawaiDinkes::with('user')->orderBy('nama_pegawai', 'asc')->get();
+        if ($data->isEmpty()) {
+            $data = \App\Models\Petugas::with(['puskesmas', 'user'])->orderBy('nama_pegawai', 'asc')->get();
         }
     }
 
@@ -167,115 +174,115 @@
                             </p>
                         </div>
 
-                        {{-- ================= KATEGORI 1: LAPORAN REGISTRASI & MASTER ================= --}}
+                        {{-- ================= DAFTAR 7 LAPORAN UTAMA P2PTM ================= --}}
                         <div class="mb-4">
                             <div class="border-bottom pb-1 mb-3">
-                                <span class="fw-bold text-primary small text-uppercase">
-                                    <i class="bi bi-folder-fill me-1"></i> Laporan Registrasi & Master
+                                <span class="fw-bold text-success small text-uppercase">
+                                    <i class="bi bi-collection-fill me-1"></i> Kategori Laporan P2PTM (7 Tab Utama)
                                 </span>
                             </div>
                             <div class="row g-3">
 
-                                <!-- KEGIATAN PTM -->
-                                <div class="col-lg-3 col-md-4 col-sm-6">
-                                    <a href="?tab=kegiatan#preview-section" class="text-decoration-none">
-                                        <div
-                                            class="report-card d-flex align-items-center gap-3 {{ $tab === 'kegiatan' ? 'active-card border-dark' : '' }}">
-                                            <div class="icon-box bg-dark-soft flex-shrink-0">
-                                                <i class="bi bi-calendar-event text-dark"></i>
-                                            </div>
-                                            <div class="text-start">
-                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">Laporan Kegiatan PTM</h6>
-                                                <p class="text-muted mb-0" style="font-size: 11px; line-height: 1.2;">Rekap pelaksanaan
-                                                    kegiatan</p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- ================= KATEGORI 2: LAPORAN SKRINING & KLINIS ================= --}}
-                        <div class="mb-4">
-                            <div class="border-bottom pb-1 mb-3">
-                                <span class="fw-bold text-danger small text-uppercase">
-                                    <i class="bi bi-folder-fill me-1"></i> Laporan Skrining & Medis
-                                </span>
-                            </div>
-                            <div class="row g-3">
-
-                                <!-- HASIL SKRINING PTM -->
-                                <div class="col-lg-3 col-md-4 col-sm-6">
-                                    <a href="?tab=status_ptm#preview-section" class="text-decoration-none">
-                                        <div
-                                            class="report-card d-flex align-items-center gap-3 {{ $tab === 'status_ptm' ? 'active-card border-secondary' : '' }}">
-                                            <div class="icon-box bg-secondary-soft flex-shrink-0">
-                                                <i class="bi bi-clipboard-pulse text-secondary"></i>
-                                            </div>
-                                            <div class="text-start">
-                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">Hasil Skrining PTM</h6>
-                                                <p class="text-muted mb-0" style="font-size: 11px; line-height: 1.2;">Rekap hasil status
-                                                    skrining</p>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- ================= KATEGORI 3: LAPORAN ANALITIS & ESTIMASI TREN ================= --}}
-                        <div class="mb-4">
-                            <div class="border-bottom pb-1 mb-3">
-                                <span class="fw-bold text-info-emphasis small text-uppercase">
-                                    <i class="bi bi-folder-fill me-1 text-info"></i> Laporan Analitis & Estimasi Tren
-                                </span>
-                            </div>
-                            <div class="row g-3">
-                                <!-- REKAP PUSKESMAS -->
-                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                <!-- 1. LAPORAN DATA PUSKESMAS -->
+                                <div class="col-lg-4 col-md-6">
                                     <a href="?tab=puskesmas#preview-section" class="text-decoration-none">
-                                        <div
-                                            class="report-card d-flex align-items-center gap-3 {{ $tab === 'puskesmas' ? 'active-card border-info' : '' }}">
+                                        <div class="report-card d-flex align-items-center gap-3 {{ $tab === 'puskesmas' ? 'active-card border-info' : '' }}">
                                             <div class="icon-box bg-info-soft flex-shrink-0">
-                                                <i class="bi bi-bar-chart-fill text-info"></i>
+                                                <i class="bi bi-hospital-fill text-info"></i>
                                             </div>
                                             <div class="text-start">
-                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">Rekap Puskesmas</h6>
-                                                <p class="text-muted mb-0" style="font-size: 11px; line-height: 1.2;">Rekap data PTM per
-                                                    puskesmas</p>
+                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">Laporan Data Puskesmas</h6>
+                                                <p class="text-muted mb-0" style="font-size: 11px; line-height: 1.2;">Rekap data PTM per puskesmas</p>
                                             </div>
                                         </div>
                                     </a>
                                 </div>
 
-                                <!-- KELOMPOK USIA -->
-                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                <!-- 2. LAPORAN WILAYAH -->
+                                <div class="col-lg-4 col-md-6">
+                                    <a href="?tab=wilayah#preview-section" class="text-decoration-none">
+                                        <div class="report-card d-flex align-items-center gap-3 {{ $tab === 'wilayah' ? 'active-card border-success' : '' }}">
+                                            <div class="icon-box bg-success-soft flex-shrink-0">
+                                                <i class="bi bi-map-fill text-success"></i>
+                                            </div>
+                                            <div class="text-start">
+                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">Laporan Per Wilayah</h6>
+                                                <p class="text-muted mb-0" style="font-size: 11px; line-height: 1.2;">Rekap sebaran PTM per kecamatan/wilayah</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <!-- 3. LAPORAN TREN DEMOGRAFI USIA -->
+                                <div class="col-lg-4 col-md-6">
                                     <a href="?tab=usia#preview-section" class="text-decoration-none">
-                                        <div
-                                            class="report-card d-flex align-items-center gap-3 {{ $tab === 'usia' ? 'active-card border-purple' : '' }}">
+                                        <div class="report-card d-flex align-items-center gap-3 {{ $tab === 'usia' ? 'active-card border-purple' : '' }}">
                                             <div class="icon-box bg-purple-soft flex-shrink-0">
                                                 <i class="bi bi-person-lines-fill text-purple"></i>
                                             </div>
                                             <div class="text-start">
-                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">PTM Kelompok Usia</h6>
-                                                <p class="text-muted mb-0" style="font-size: 11px; line-height: 1.2;">Rekap berdasarkan
-                                                    kelompok usia</p>
+                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">Laporan Tren Demografi (Usia)</h6>
+                                                <p class="text-muted mb-0" style="font-size: 11px; line-height: 1.2;">Rekap berdasarkan kelompok usia</p>
                                             </div>
                                         </div>
                                     </a>
                                 </div>
-                                <!-- LAPORAN EVALUASI SISTEM -->
-                                <div class="col-lg-3 col-md-4 col-sm-6">
+
+                                <!-- 4. LAPORAN SKRINING & PENYAKIT -->
+                                <div class="col-lg-4 col-md-6">
+                                    <a href="?tab=status_ptm#preview-section" class="text-decoration-none">
+                                        <div class="report-card d-flex align-items-center gap-3 {{ $tab === 'status_ptm' ? 'active-card border-secondary' : '' }}">
+                                            <div class="icon-box bg-secondary-soft flex-shrink-0">
+                                                <i class="bi bi-clipboard-data-fill text-secondary"></i>
+                                            </div>
+                                            <div class="text-start">
+                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">Laporan Skrining & Penyakit</h6>
+                                                <p class="text-muted mb-0" style="font-size: 11px; line-height: 1.2;">Rekap hasil status skrining & penyakit</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <!-- 5. LAPORAN DATA PEGAWAI P2PTM -->
+                                <div class="col-lg-4 col-md-6">
+                                    <a href="?tab=pegawai#preview-section" class="text-decoration-none">
+                                        <div class="report-card d-flex align-items-center gap-3 {{ $tab === 'pegawai' ? 'active-card border-primary' : '' }}">
+                                            <div class="icon-box bg-primary-soft flex-shrink-0">
+                                                <i class="bi bi-person-badge-fill text-primary"></i>
+                                            </div>
+                                            <div class="text-start">
+                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">Laporan Data Pegawai P2PTM</h6>
+                                                <p class="text-muted mb-0" style="font-size: 11px; line-height: 1.2;">Rekap data pegawai & petugas P2PTM</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <!-- 6. LAPORAN EVALUASI SYSTEM -->
+                                <div class="col-lg-4 col-md-6">
                                     <a href="?tab=evaluasi#preview-section" class="text-decoration-none">
-                                        <div
-                                            class="report-card d-flex align-items-center gap-3 {{ $tab === 'evaluasi' ? 'active-card border-teal' : '' }}">
+                                        <div class="report-card d-flex align-items-center gap-3 {{ $tab === 'evaluasi' ? 'active-card border-teal' : '' }}">
                                             <div class="icon-box bg-teal-soft flex-shrink-0">
                                                 <i class="bi bi-patch-check-fill text-teal"></i>
                                             </div>
                                             <div class="text-start">
-                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">Evaluasi Sistem Oleh Pegawai </h6>
-                                                <p class="text-muted mb-0" style="font-size: 11px; line-height: 1.2;">Rekap penilaian usability sistem
-                                                </p>
+                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">Laporan Evaluasi System</h6>
+                                                <p class="text-muted mb-0" style="font-size: 11px; line-height: 1.2;">Rekap penilaian usability sistem (SUS)</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <!-- 7. LAPORAN KEGIATAN PTM -->
+                                <div class="col-lg-4 col-md-6">
+                                    <a href="?tab=kegiatan#preview-section" class="text-decoration-none">
+                                        <div class="report-card d-flex align-items-center gap-3 {{ $tab === 'kegiatan' ? 'active-card border-dark' : '' }}">
+                                            <div class="icon-box bg-dark-soft flex-shrink-0">
+                                                <i class="bi bi-calendar-event-fill text-dark"></i>
+                                            </div>
+                                            <div class="text-start">
+                                                <h6 class="fw-bold text-dark mb-1" style="font-size: 13.5px;">Laporan Kegiatan PTM</h6>
+                                                <p class="text-muted mb-0" style="font-size: 11px; line-height: 1.2;">Rekap pelaksanaan kegiatan PTM</p>
                                             </div>
                                         </div>
                                     </a>
@@ -305,15 +312,17 @@
                                                                 <h5 class="fw-bold mb-0" style="font-size: 15px;">
                                                                     <i class="bi bi-eye-fill me-2"></i>
                                                                     Preview:
-                                                                    @if($tab === 'peserta') Laporan Peserta
+                                                                    @if($tab === 'peserta') Laporan Peserta PTM
                                                                     @elseif($tab === 'kegiatan') Laporan Kegiatan PTM
                                                                     @elseif($tab === 'deteksi') Laporan Deteksi Dini
                                                                     @elseif($tab === 'faktor') Laporan Faktor Risiko
                                                                     @elseif($tab === 'tindak_lanjut') Laporan Tindak Lanjut
-                                                                    @elseif($tab === 'status_ptm') Laporan Hasil Skrining
-                                                                    @elseif($tab === 'evaluasi') Laporan Evaluasi Sistem (SUS)
-                                                                    @elseif($tab === 'puskesmas') Rekap Puskesmas
-                                                                    @elseif($tab === 'usia') PTM Berdasarkan Kelompok Usia
+                                                                    @elseif($tab === 'status_ptm') Laporan Skrining & Penyakit
+                                                                    @elseif($tab === 'evaluasi') Laporan Evaluasi System
+                                                                    @elseif($tab === 'puskesmas') Laporan Data Puskesmas
+                                                                    @elseif($tab === 'wilayah') Laporan Per Wilayah
+                                                                    @elseif($tab === 'usia') Laporan Tren Demografi (Usia)
+                                                                    @elseif($tab === 'pegawai') Laporan Data Pegawai P2PTM
                                                                     @endif
                                                                 </h5>
                                                                 <small class="opacity-75" style="font-size: 11px;">Tabel di bawah menampilkan preview baris data
@@ -360,15 +369,25 @@
                                                                         class="btn btn-warning btn-sm rounded-pill fw-bold shadow-sm px-3" style="font-size: 12px;">
                                                                         <i class="bi bi-printer-fill me-1"></i> Cetak Laporan
                                                                     </a>
+                                                                @elseif($tab === 'wilayah')
+                                                                    <a href="{{ route('kepala.laporan.eksekutif.cetak_wilayah') }}" target="_blank"
+                                                                        class="btn btn-warning btn-sm rounded-pill fw-bold shadow-sm px-3" style="font-size: 12px;">
+                                                                        <i class="bi bi-printer-fill me-1"></i> Cetak Laporan
+                                                                    </a>
                                                                 @elseif($tab === 'usia')
                                                                     <a href="{{ route('pengguna.laporan.kelompok_usia.print') }}" target="_blank"
                                                                         class="btn btn-warning btn-sm rounded-pill fw-bold shadow-sm px-3" style="font-size: 12px;">
                                                                         <i class="bi bi-printer-fill me-1"></i> Cetak Laporan
                                                                     </a>
-                                                                    @elseif($tab === 'evaluasi')
-                                <a href="{{ route('pengguna.evaluasi.cetak') }}" target="_blank" class="btn btn-warning btn-sm rounded-pill fw-bold shadow-sm px-3" style="font-size: 12px;">
-                                    <i class="bi bi-printer-fill me-1"></i> Cetak Laporan
-                                </a>
+                                                                @elseif($tab === 'pegawai')
+                                                                    <a href="{{ route('kepala.laporan.eksekutif.cetak_pegawai') }}" target="_blank"
+                                                                        class="btn btn-warning btn-sm rounded-pill fw-bold shadow-sm px-3" style="font-size: 12px;">
+                                                                        <i class="bi bi-printer-fill me-1"></i> Cetak Laporan
+                                                                    </a>
+                                                                @elseif($tab === 'evaluasi')
+                                                                    <a href="{{ route('pengguna.evaluasi.cetak') }}" target="_blank" class="btn btn-warning btn-sm rounded-pill fw-bold shadow-sm px-3" style="font-size: 12px;">
+                                                                        <i class="bi bi-printer-fill me-1"></i> Cetak Laporan
+                                                                    </a>
                                                                 @endif
                                                             </div>
                                                         </div>
@@ -775,6 +794,65 @@
                                                                             </tr>
                                                                         </tbody>
                                                                     </table>
+
+                                                                    {{-- TABEL LAPORAN WILAYAH --}}
+                                                                @elseif($tab === 'wilayah')
+                                                                    <table class="table table-hover align-middle mb-0" style="font-size: 12.5px;">
+                                                                        <thead class="table-light">
+                                                                            <tr>
+                                                                                <th class="ps-4" style="width: 60px;">No</th>
+                                                                                <th>Kecamatan / Wilayah</th>
+                                                                                <th>Kabupaten / Kota</th>
+                                                                                <th class="text-center">Jumlah Puskesmas</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            @forelse($data as $i => $row)
+                                                                                <tr>
+                                                                                    <td class="ps-4 text-muted">{{ $i + 1 }}</td>
+                                                                                    <td class="fw-bold text-dark">{{ $row->kecamatan ?? '-' }}</td>
+                                                                                    <td>{{ $row->nama_kabupaten ?? 'Kalimantan Selatan' }}</td>
+                                                                                    <td class="text-center fw-semibold text-success">{{ $row->total_puskesmas ?? 1 }} Puskesmas</td>
+                                                                                </tr>
+                                                                            @empty
+                                                                                <tr>
+                                                                                    <td colspan="4" class="text-center py-5 text-muted">Tidak ada data wilayah ditemukan.</td>
+                                                                                </tr>
+                                                                            @endforelse
+                                                                        </tbody>
+                                                                    </table>
+
+                                                                    {{-- TABEL LAPORAN PEGAWAI --}}
+                                                                @elseif($tab === 'pegawai')
+                                                                    <table class="table table-hover align-middle mb-0" style="font-size: 12.5px;">
+                                                                        <thead class="table-light">
+                                                                            <tr>
+                                                                                <th class="ps-4" style="width: 60px;">No</th>
+                                                                                <th>NIP</th>
+                                                                                <th>Nama Pegawai</th>
+                                                                                <th>Jabatan</th>
+                                                                                <th>Instansi / Wilayah</th>
+                                                                                <th class="text-center">No. Telepon</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            @forelse($data as $i => $row)
+                                                                                <tr>
+                                                                                    <td class="ps-4 text-muted">{{ $i + 1 }}</td>
+                                                                                    <td class="fw-semibold text-dark">{{ $row->nip ?? '-' }}</td>
+                                                                                    <td class="fw-bold text-dark">{{ $row->nama_pegawai ?? '-' }}</td>
+                                                                                    <td><span class="badge bg-primary-soft text-primary px-3 rounded-pill">{{ $row->jabatan ?? '-' }}</span></td>
+                                                                                    <td>{{ $row->bidang ?? (optional($row->puskesmas)->nama_puskesmas ?? 'Dinas Kesehatan Prov. Kalsel') }}</td>
+                                                                                    <td class="text-center text-muted">{{ $row->telepon ?? '-' }}</td>
+                                                                                </tr>
+                                                                            @empty
+                                                                                <tr>
+                                                                                    <td colspan="6" class="text-center py-5 text-muted">Tidak ada data pegawai/petugas P2PTM ditemukan.</td>
+                                                                                </tr>
+                                                                            @endforelse
+                                                                        </tbody>
+                                                                    </table>
+
                                                                     {{-- 9. TABEL EVALUASI SISTEM (SUS) --}}
                                                                 @elseif($tab === 'evaluasi')
                                                                         {{-- RINGKASAN SKOR SUS --}}

@@ -199,7 +199,9 @@
                                 {{-- JENIS TINDAK LANJUT --}}
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Jenis Tindak Lanjut <span class="text-danger">*</span></label>
-                                    <select name="jenis_tindak_lanjut" class="form-select rounded-3" required>
+                                    <select name="jenis_tindak_lanjut" class="form-select rounded-3 @error('jenis_tindak_lanjut') is-invalid @enderror" required
+                                        oninvalid="this.setCustomValidity('Jenis tindak lanjut wajib dipilih.')"
+                                        oninput="this.setCustomValidity('')">
                                         <option value="">-- Pilih --</option>
                                         <option value="edukasi" {{ old('jenis_tindak_lanjut') == 'edukasi' ? 'selected' : '' }}>Edukasi / Penyuluhan</option>
                                         <option value="anjuran_gaya_hidup" {{ old('jenis_tindak_lanjut') == 'anjuran_gaya_hidup' ? 'selected' : '' }}>Anjuran Gaya Hidup</option>
@@ -207,20 +209,30 @@
                                         <option value="monitoring" {{ old('jenis_tindak_lanjut') == 'monitoring' ? 'selected' : '' }}>Monitoring Berkala</option>
                                         <option value="tidak_ada" {{ old('jenis_tindak_lanjut') == 'tidak_ada' ? 'selected' : '' }}>Tidak Ada Tindakan</option>
                                     </select>
+                                    @error('jenis_tindak_lanjut')
+                                        <small class="text-danger mt-1 d-block fw-semibold"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</small>
+                                    @enderror
                                 </div>
 
                                 {{-- TANGGAL --}}
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Tanggal Tindak Lanjut</label>
                                     <input type="date" name="tanggal_tindak_lanjut" class="form-control rounded-3"
-                                        value="{{ old('tanggal_tindak_lanjut', date('Y-m-d')) }}" required>
+                                        value="{{ old('tanggal_tindak_lanjut', date('Y-m-d')) }}" required
+                                        oninvalid="this.setCustomValidity('Tanggal tindak lanjut wajib diisi.')"
+                                        oninput="this.setCustomValidity('')">
                                 </div>
 
                                 {{-- CATATAN PETUGAS / EDUKASI --}}
                                 <div class="col-12">
                                     <label class="form-label fw-bold">Catatan / Saran Medis Petugas <span class="text-danger">*</span></label>
-                                    <textarea name="catatan_petugas" class="form-control rounded-3" rows="7" required
-                                        placeholder="Ketik saran pola makan, edukasi pencegahan, rincian obat awal, atau tujuan rumah sakit rujukan di sini...">{{ old('catatan_petugas') }}</textarea>
+                                    <textarea name="catatan_petugas" class="form-control rounded-3 @error('catatan_petugas') is-invalid @enderror" rows="7" required
+                                        placeholder="Ketik saran pola makan, edukasi pencegahan, rincian obat awal, atau tujuan rumah sakit rujukan di sini..."
+                                        oninvalid="this.setCustomValidity('Catatan / saran medis petugas wajib diisi.')"
+                                        oninput="this.setCustomValidity('')">{{ old('catatan_petugas') }}</textarea>
+                                    @error('catatan_petugas')
+                                        <small class="text-danger mt-1 d-block fw-semibold"><i class="bi bi-exclamation-circle me-1"></i>{{ $message }}</small>
+                                    @enderror
                                 </div>
                             </div>
 

@@ -229,7 +229,7 @@
         {{-- JUDUL --}}
         <div style="text-align:center; margin-bottom:10px;">
             <h3 style="margin:0; font-size:15px; letter-spacing:0.6px; text-transform: uppercase;">
-                Laporan Hasil Survei Kepuasan Pengguna Sistem (Petugas Puskesmas)
+                LAPORAN HASIL SURVEI KEPUASAN PETUGAS PUSKESMAS TERHADAP SISTEM E-PTM
             </h3>
         </div>
 
@@ -238,7 +238,7 @@
             <p style="margin:0 auto; font-size:12px; line-height:1.5; max-width:850px; color:#333;">
                 Berikut merupakan hasil rata-rata survei terhadap kepuasan pelayanan sistem E-PTM Dinas Kesehatan
                 Provinsi Kalimantan Selatan, berdasarkan jawaban dari 10 pertanyaan inti System Usability Scale (SUS)
-                yang diajukan kepada pegawai.
+                yang diajukan kepada Petugas Puskesmas.
             </p>
         </div>
 
@@ -250,12 +250,34 @@
         </div>
 
         {{-- RINGKASAN HASIL EVALUASI (TOTAL KESELURUHAN) --}}
+        @php
+            $namaBulanIndoEval = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            if (request('filter_waktu') == 'tanggal' && request('tgl_awal') && request('tgl_akhir')) {
+                $tA = \Carbon\Carbon::parse(request('tgl_awal'));
+                $tB = \Carbon\Carbon::parse(request('tgl_akhir'));
+                $strPeriodeEvaluasi = $tA->format('d') . ' ' . ($namaBulanIndoEval[(int)$tA->format('m')] ?? '') . ' ' . $tA->format('Y') . ' s/d ' . $tB->format('d') . ' ' . ($namaBulanIndoEval[(int)$tB->format('m')] ?? '') . ' ' . $tB->format('Y');
+            } elseif (request('bulan')) {
+                $bNum = (int) request('bulan');
+                $strPeriodeEvaluasi = ($namaBulanIndoEval[$bNum] ?? '') . ' ' . request('tahun', date('Y'));
+            } else {
+                $nowEv = \Carbon\Carbon::now();
+                $strPeriodeEvaluasi = ($namaBulanIndoEval[(int)$nowEv->format('m')] ?? '') . ' ' . $nowEv->format('Y');
+            }
+
+            $nowMakassar = \Carbon\Carbon::now()->setTimezone('Asia/Makassar');
+            $strTglCetak = $nowMakassar->format('d') . ' ' . ($namaBulanIndoEval[(int)$nowMakassar->format('m')] ?? '') . ' ' . $nowMakassar->format('Y') . ' - ' . $nowMakassar->format('H:i');
+        @endphp
         <div class="rekap-box">
             <table style="font-size: 12px; line-height: 1.4;">
                 <tr>
-                    <td style="width: 30%;"><strong>Tanggal Cetak</strong></td>
+                    <td style="width: 30%;"><strong>Periode Laporan</strong></td>
                     <td style="width: 2%;">:</td>
-                    <td>{{ now()->setTimezone('Asia/Makassar')->translatedFormat('d F Y - H:i') }} WITA</td>
+                    <td><strong>{{ $strPeriodeEvaluasi }}</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Tanggal Cetak</strong></td>
+                    <td>:</td>
+                    <td>{{ $strTglCetak }} WITA</td>
                 </tr>
                 <tr>
                     <td><strong>Jumlah Responden</strong></td>

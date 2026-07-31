@@ -506,6 +506,49 @@ document.addEventListener('DOMContentLoaded', function () {
         $('.select2-manual').on('change', calculate);
     }
 
+    /* ========== Smooth Scroll & SweetAlert Validation Pop-up ========== */
+    const ptmForm = document.querySelector('form');
+    if (ptmForm) {
+        ptmForm.addEventListener('submit', function(e) {
+            if (!this.checkValidity()) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Highlight invalid inputs
+                const requiredEls = this.querySelectorAll('[required]');
+                requiredEls.forEach(el => {
+                    if (!el.value) {
+                        el.classList.add('is-invalid');
+                    } else {
+                        el.classList.remove('is-invalid');
+                    }
+                });
+
+                const firstInvalid = this.querySelector(':invalid');
+                if (firstInvalid) {
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => { 
+                        try { firstInvalid.focus(); } catch(err) {} 
+                    }, 300);
+                }
+
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Harap Isi Bidang Ini!',
+                        html: '<div style="font-size:14px; color:#475569;">Mohon lengkapi <b>Data Pasien</b> dan <b>Pengukuran Fisik (Tinggi/Berat Badan)</b> sebelum menyimpan.</div>',
+                        confirmButtonText: 'Oke, Mengerti',
+                        confirmButtonColor: '#0f766e',
+                        customClass: {
+                            popup: 'rounded-4 shadow-lg border-0'
+                        }
+                    });
+                }
+                return false;
+            }
+        });
+    }
+
     /* ========== Run on load ========== */
     calculate();
 });

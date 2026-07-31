@@ -90,9 +90,23 @@ class EvaluasiController extends Controller
         $keterangan = 'Sistem cukup layak digunakan namun memerlukan beberapa perbaikan minor.';
     }
 
-   $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first(); 
+    $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first(); 
     $qrToken = 'valid'; // Sesuaikan dengan logika QR Anda
 
     return view('evaluasi.cetak', compact('semuaData', 'totalResponden', 'rataRataSkor', 'predikat', 'keterangan', 'kepalaAktif', 'qrToken'));
 }
+
+    // 5. Hapus Data Evaluasi Sistem
+    public function destroy($id)
+    {
+        $user = Auth::user();
+        if (!in_array($user->role_name, ['admin', 'pegawai', 'operator'])) {
+            return redirect()->back()->with('error', 'Anda tidak memiliki hak akses untuk menghapus data evaluasi.');
+        }
+
+        $evaluasi = EvaluasiSus::findOrFail($id);
+        $evaluasi->delete();
+
+        return redirect()->back()->with('success', 'Data evaluasi sistem berhasil dihapus!');
+    }
 }

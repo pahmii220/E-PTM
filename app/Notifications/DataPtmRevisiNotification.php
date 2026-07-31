@@ -70,19 +70,19 @@ public function toMail(object $notifiable): MailMessage
         // Pastikan variabel di constructor Anda bernama $this->item 
         // (Ubah $this->deteksi menjadi $this->item di seluruh class ini jika sebelumnya berbeda)
         if (get_class($this->item) === 'App\Models\DeteksiDiniPTM') {
-            $url = url('/pengguna/verifikasi/deteksi'); // Arahkan ke halaman verifikasi Dinkes
+            $url = url('/pegawai/verifikasi/deteksi'); // Arahkan ke halaman verifikasi Dinkes
             $namaPeserta = $this->item->peserta->nama_lengkap ?? '-';
             $jenisData = 'Data Deteksi Dini';
             $tanggal = $this->item->tanggal_pemeriksaan ?? '-';
             
         } elseif (get_class($this->item) === 'App\Models\FaktorResikoPTM') {
-            $url = url('/pengguna/verifikasi/faktor'); // Arahkan ke halaman verifikasi Dinkes
+            $url = url('/pegawai/verifikasi/faktor'); // Arahkan ke halaman verifikasi Dinkes
             $namaPeserta = $this->item->peserta->nama_lengkap ?? '-';
             $jenisData = 'Data Faktor Risiko';
             $tanggal = $this->item->tanggal_pemeriksaan ?? '-';
             
         } elseif (get_class($this->item) === 'App\Models\Peserta') {
-            $url = url('/pengguna/verifikasi/peserta'); // Arahkan ke halaman verifikasi Dinkes
+            $url = url('/pegawai/verifikasi/peserta'); // Arahkan ke halaman verifikasi Dinkes
             $namaPeserta = $this->item->nama_lengkap ?? '-'; 
             $jenisData = 'Data Peserta';
             // Pasien biasanya tidak punya tanggal_pemeriksaan, gunakan created_at

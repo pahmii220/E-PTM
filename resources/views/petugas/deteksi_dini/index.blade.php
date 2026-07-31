@@ -31,17 +31,6 @@
                         </select>
                     </div>
 
-                    {{-- STATUS VERIFIKASI --}}
-                    <div class="col-md-3">
-                        <select id="filterStatus" class="form-select">
-                            <option value="">Semua Status</option>
-                            <option value="Diterima">Diterima</option>
-                            {{-- Ubah value menjadi "Revisi" agar cocok dengan teks badge di tabel --}}
-                            <option value="Revisi">Ditolak / Revisi</option>
-                            <option value="Tertunda">Tertunda</option>
-                        </select>
-                    </div>
-
                     {{-- PUSKESMAS (ADMIN & PENGGUNA) --}}
                     @if(in_array(auth()->user()->role_name, ['admin', 'pegawai']))
                         <div class="col-md-3">
@@ -168,17 +157,22 @@
                                                 </button>
                                             </form>
                                         @else
-                                            {{-- Tampil Selalu --}}
-                                            <a href="{{ route('petugas.deteksi_dini.edit', $d->id) }}" class="btn btn-sm btn-warning" title="Edit Pemeriksaan Terakhir">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </a>
-                                            <form action="{{ route('petugas.deteksi_dini.destroy', $d->id) }}" method="POST" class="d-inline"
-                                                onsubmit="return confirm('Yakin hapus data?')">
-                                                @csrf @method('DELETE')
-                                                <button class="btn btn-sm btn-danger" title="Hapus Pemeriksaan Terakhir">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
+                                            @if(in_array($d->status_verifikasi, ['approved', 'pending', 'terverifikasi']))
+                                                <span class="badge bg-secondary-subtle text-secondary border px-2 py-1" style="font-size: 11px;" title="Laporan sudah diajukan/disahkan">
+                                                    <i class="bi bi-lock-fill me-1"></i> Terkunci
+                                                </span>
+                                            @else
+                                                <a href="{{ route('petugas.deteksi_dini.edit', $d->id) }}" class="btn btn-sm btn-warning" title="Edit Pemeriksaan Terakhir">
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </a>
+                                                <form action="{{ route('petugas.deteksi_dini.destroy', $d->id) }}" method="POST" class="d-inline"
+                                                    onsubmit="return confirm('Yakin hapus data?')">
+                                                    @csrf @method('DELETE')
+                                                    <button class="btn btn-sm btn-danger" title="Hapus Pemeriksaan Terakhir">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
                                         @endif
                                     </div>
                                 </td>
@@ -226,7 +220,6 @@
 
             // Trigger Filter
             $('#filterHasil').change(() => table.column(8).search($('#filterHasil').val()).draw());
-            $('#filterStatus').change(() => table.column(10).search($('#filterStatus').val()).draw());
 
             // Trigger Custom Search untuk seluruh tabel
             $('#customSearch').keyup(() => table.search($('#customSearch').val()).draw());

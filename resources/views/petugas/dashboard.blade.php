@@ -32,7 +32,7 @@
             <div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4 animate-fade-in-up">
                 <div>
                     <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight mb-2">
-                        Dashboard Analitik PTM
+                        Dashboard Petugas Puskesmas
                     </h2>
                     <p class="text-slate-500 text-base">
                         Selamat datang kembali,

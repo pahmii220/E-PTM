@@ -43,7 +43,9 @@
                                 NIK (Nomor Induk Kependudukan) <span class="text-danger">*</span>
                             </label>
                             <input type="text" name="nik" class="form-control rounded-3 @error('nik') is-invalid @enderror"
-                                value="{{ old('nik', $peserta->nik) }}" minlength="16" maxlength="16" required>
+                                value="{{ old('nik', $peserta->nik) }}" minlength="16" maxlength="16" required
+                                oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'NIK (Nomor Induk Kependudukan) wajib diisi.' : (this.validity.tooShort || this.validity.tooLong ? 'NIK harus terdiri dari tepat 16 digit angka.' : 'NIK tidak valid.'))"
+                                oninput="this.setCustomValidity('')">
                             @error('nik')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -56,7 +58,9 @@
                             </label>
                             <input type="text" name="no_rekam_medis"
                                 class="form-control rounded-3 @error('no_rekam_medis') is-invalid @enderror"
-                                value="{{ old('no_rekam_medis', $peserta->no_rekam_medis) }}" required>
+                                value="{{ old('no_rekam_medis', $peserta->no_rekam_medis) }}" required
+                                oninvalid="this.setCustomValidity('Nomor Rekam Medis wajib diisi.')"
+                                oninput="this.setCustomValidity('')">
                             <small class="text-muted" style="font-size: 11px;">
                                 Nomor rekam medis menyertakan kode Puskesmas sebagai prefiks unik (contoh: <code>Pk-002/RM-001</code>).
                             </small>
@@ -72,7 +76,9 @@
                             </label>
                             <input type="text" name="nama_lengkap"
                                 class="form-control rounded-3 @error('nama_lengkap') is-invalid @enderror"
-                                value="{{ old('nama_lengkap', $peserta->nama_lengkap) }}" required>
+                                value="{{ old('nama_lengkap', $peserta->nama_lengkap) }}" required
+                                oninvalid="this.setCustomValidity('Nama lengkap pasien wajib diisi.')"
+                                oninput="this.setCustomValidity('')">
                             @error('nama_lengkap')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -84,7 +90,9 @@
                                 Jenis Kelamin <span class="text-danger">*</span>
                             </label>
                             <select name="jenis_kelamin" class="form-select rounded-3 @error('jenis_kelamin') is-invalid @enderror"
-                                required>
+                                required
+                                oninvalid="this.setCustomValidity('Jenis kelamin wajib dipilih.')"
+                                oninput="this.setCustomValidity('')">
                                 <option value="">-- Pilih --</option>
                                 <option value="Laki-laki" {{ old('jenis_kelamin', $peserta->jenis_kelamin) == 'Laki-laki' ? 'selected' : '' }}>
                                     Laki-laki
@@ -105,7 +113,9 @@
                             </label>
                             <input type="text" name="tempat_lahir"
                                 class="form-control rounded-3 @error('tempat_lahir') is-invalid @enderror"
-                                value="{{ old('tempat_lahir', $peserta->tempat_lahir) }}" required>
+                                value="{{ old('tempat_lahir', $peserta->tempat_lahir) }}" required
+                                oninvalid="this.setCustomValidity('Tempat lahir wajib diisi.')"
+                                oninput="this.setCustomValidity('')">
                             @error('tempat_lahir')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -118,7 +128,9 @@
                             </label>
                             <input type="date" name="tanggal_lahir"
                                 class="form-control rounded-3 @error('tanggal_lahir') is-invalid @enderror"
-                                value="{{ old('tanggal_lahir', optional($peserta->tanggal_lahir)->format('Y-m-d')) }}" required>
+                                value="{{ old('tanggal_lahir', optional($peserta->tanggal_lahir)->format('Y-m-d')) }}" required
+                                oninvalid="this.setCustomValidity('Tanggal lahir wajib diisi.')"
+                                oninput="this.setCustomValidity('')">
                             @error('tanggal_lahir')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -130,7 +142,9 @@
                                 Pekerjaan <span class="text-danger">*</span>
                             </label>
                             <input type="text" name="pekerjaan" class="form-control rounded-3 @error('pekerjaan') is-invalid @enderror"
-                                value="{{ old('pekerjaan', $peserta->pekerjaan) }}" required>
+                                value="{{ old('pekerjaan', $peserta->pekerjaan) }}" required
+                                oninvalid="this.setCustomValidity('Pekerjaan pasien wajib diisi.')"
+                                oninput="this.setCustomValidity('')">
                             @error('pekerjaan')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -142,7 +156,9 @@
                                 Nomor Kontak / HP <span class="text-danger">*</span>
                             </label>
                             <input type="text" name="kontak" class="form-control rounded-3 @error('kontak') is-invalid @enderror"
-                                value="{{ old('kontak', $peserta->kontak) }}" required>
+                                value="{{ old('kontak', $peserta->kontak) }}" required
+                                oninvalid="this.setCustomValidity('Nomor kontak / HP wajib diisi.')"
+                                oninput="this.setCustomValidity('')">
                             @error('kontak')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -153,7 +169,9 @@
                             <label class="form-label fw-semibold">
                                 Kecamatan <span class="text-danger">*</span>
                             </label>
-                            <select name="kecamatan" class="form-select rounded-3 @error('kecamatan') is-invalid @enderror" required>
+                            <select name="kecamatan" class="form-select rounded-3 @error('kecamatan') is-invalid @enderror" required
+                                oninvalid="this.setCustomValidity('Kecamatan wajib dipilih.')"
+                                oninput="this.setCustomValidity('')">
                                 <option value="">-- Pilih Kecamatan --</option>
                                 @php
                                     $daftarKecamatan = [

@@ -22,7 +22,7 @@
         </div>
         <div class="mt-3 mt-md-0 d-flex gap-2 align-items-center">
             <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill fs-6"><i class="bi bi-eye me-2"></i>Mode Pemantauan</span>
-            <a href="{{ route('pengguna.laporan_monitoring.index') }}" class="btn btn-teal rounded-pill px-3 shadow-sm font-semibold">
+            <a href="{{ route('pengguna.laporan_monitoring.index', ['puskesmas_id' => $puskesmas->id]) }}" class="btn btn-teal rounded-pill px-3 shadow-sm font-semibold">
                 <i class="bi bi-file-earmark-medical me-1"></i> Buat Laporan Monitoring
             </a>
         </div>
@@ -96,9 +96,27 @@
 
     {{-- TABEL LAPORAN PTM --}}
     <div class="card premium-card mb-4">
-        <div class="card-header premium-header-approved pt-3 pb-3 border-0">
-            <h6 class="fw-bold mb-0 text-success-emphasis fs-5"><i class="bi bi-card-list me-2 text-success"></i>Data Laporan PTM Bulan Ini</h6>
-            <small class="text-muted">Semua data pemeriksaan PTM yang dikirimkan oleh puskesmas.</small>
+        <div class="card-header premium-header-approved pt-3 pb-3 border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h6 class="fw-bold mb-0 text-success-emphasis fs-5"><i class="bi bi-card-list me-2 text-success"></i>Data Laporan PTM Bulan Ini</h6>
+                <small class="text-muted">Semua data pemeriksaan PTM yang dikirimkan oleh puskesmas.</small>
+            </div>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                @php
+                    $countRisikoTinggi = $laporan->where('hasil_skrining', 'Risiko Tinggi')->count();
+                    $countDicurigai    = $laporan->where('hasil_skrining', 'Dicurigai PTM')->count();
+                    $countNormal       = $laporan->where('hasil_skrining', 'Normal')->count();
+                @endphp
+                <span class="badge bg-danger text-white rounded-pill px-3 py-2 shadow-sm" style="font-size: 0.78rem;">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ $countRisikoTinggi }} Risiko Tinggi
+                </span>
+                <span class="badge bg-warning text-dark rounded-pill px-3 py-2 shadow-sm" style="font-size: 0.78rem;">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> {{ $countDicurigai }} Dicurigai PTM
+                </span>
+                <span class="badge bg-success text-white rounded-pill px-3 py-2 shadow-sm" style="font-size: 0.78rem;">
+                    <i class="bi bi-check-circle-fill me-1"></i> {{ $countNormal }} Normal
+                </span>
+            </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -116,6 +134,7 @@
                             <th class="px-3 text-center">Kol (mg/dL)</th>
                             <th class="px-3 text-center">IMT</th>
                             <th class="px-3">Faktor Risiko</th>
+                            <th class="px-3 text-center">Hasil Skrining PTM</th>
                             <th class="px-3">Diagnosa & Jenis Penyakit PTM</th>
                         </tr>
                     </thead>
@@ -165,6 +184,25 @@
                                 @if(!optional($row->faktorRisiko)->merokok && !optional($row->faktorRisiko)->kurang_aktivitas_fisik)
                                     <span class="badge bg-success-subtle text-success">Aman</span>
                                 @endif
+                            </td>
+                            <td class="px-3 text-center">
+                                @php
+                                    $badgeHasil = match($row->hasil_skrining ?? 'Normal') {
+                                        'Risiko Tinggi' => 'bg-danger text-white',
+                                        'Dicurigai PTM' => 'bg-warning text-dark',
+                                        'Normal'        => 'bg-success text-white',
+                                        default         => 'bg-secondary text-white'
+                                    };
+                                    $iconHasil = match($row->hasil_skrining ?? 'Normal') {
+                                        'Risiko Tinggi' => 'bi-exclamation-triangle-fill',
+                                        'Dicurigai PTM' => 'bi-exclamation-circle-fill',
+                                        'Normal'        => 'bi-check-circle-fill',
+                                        default         => 'bi-info-circle-fill'
+                                    };
+                                @endphp
+                                <span class="badge {{ $badgeHasil }} rounded-pill px-2.5 py-1.5" style="font-size:11px;">
+                                    <i class="bi {{ $iconHasil }} me-1"></i>{{ $row->hasil_skrining ?? 'Normal' }}
+                                </span>
                             </td>
                             <td class="px-3" style="max-width:130px; white-space:normal;">
                                 @if($row->diagnosa_penyakit)

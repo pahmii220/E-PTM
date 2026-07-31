@@ -1,7 +1,12 @@
+@php
+    $semuaPuskesmasMaster = $semuaPuskesmasMaster ?? \App\Models\Puskesmas::select('id', 'nama_puskesmas', 'kecamatan', 'nama_kabupaten')->get();
+@endphp
 <div class="card border-0 shadow-sm rounded-4 mb-4 bg-light filter-jenjang-container">
     <div class="card-body">
-        <form action="{{ route('kepala.laporan.eksekutif') }}" method="GET">
-            <input type="hidden" name="tab" x-model="activeTab">
+        <form action="{{ url()->current() }}" method="GET">
+            @if(request('tab'))
+                <input type="hidden" name="tab" x-model="activeTab">
+            @endif
             <div class="row g-3">
                 {{-- KOTA/KABUPATEN --}}
                 <div class="col-md-3">
@@ -44,9 +49,13 @@
                 <div class="col-md-3 input-waktu input-bulan" style="display: {{ request('filter_waktu') == 'bulan' ? 'block' : 'none' }};">
                     <label class="form-label small fw-bold text-secondary">Pilih Bulan</label>
                     <select class="form-select border-success-subtle" name="bulan">
+                        @php
+                            $namaBulanList = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                            $selectedBulan = request('bulan') ? (int) request('bulan') : (int) date('m');
+                        @endphp
                         @for($i=1; $i<=12; $i++)
-                            <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}" {{ request('bulan') == str_pad($i, 2, '0', STR_PAD_LEFT) ? 'selected' : '' }}>
-                                {{ date('F', mktime(0, 0, 0, $i, 10)) }}
+                            <option value="{{ str_pad($i, 2, '0', STR_PAD_LEFT) }}" {{ $selectedBulan == $i ? 'selected' : '' }}>
+                                {{ $namaBulanList[$i] }}
                             </option>
                         @endfor
                     </select>
@@ -64,7 +73,7 @@
 
                 {{-- TOMBOL AKSI --}}
                 <div class="col-12 d-flex justify-content-end gap-2 mt-2">
-                    <button type="button" @click="window.location = '{{ route('kepala.laporan.eksekutif') }}?tab=' + activeTab" class="btn btn-outline-secondary px-4"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+                    <button type="button" @click="window.location = '{{ url()->current() }}' + (typeof activeTab !== 'undefined' ? '?tab=' + activeTab : '')" class="btn btn-outline-secondary px-4"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
                     <button type="submit" class="btn btn-success px-4"><i class="bi bi-search"></i> Terapkan Filter</button>
                 </div>
             </div>

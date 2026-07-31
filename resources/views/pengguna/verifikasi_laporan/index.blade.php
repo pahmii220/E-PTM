@@ -47,7 +47,7 @@
                 <span class="fw-bold text-success d-flex align-items-center gap-2">
                     <i class="bi bi-funnel-fill"></i> Filter Pencarian Lanjutan
                 </span>
-                <a href="{{ route('pengguna.verifikasi_laporan.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+                <a href="{{ route('pengguna.verifikasi_laporan.index', ['reset' => 1]) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="sessionStorage.removeItem('verifikasi_active_tab')">
                     <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Semua
                 </a>
             </div>
@@ -168,25 +168,65 @@
                     
                     {{-- TAB 1: STATUS LAPORAN --}}
                     <div class="tab-pane fade show active" id="status" role="tabpanel">
-                        <div class="d-flex justify-content-between align-items-center p-4 bg-white border-bottom">
-                            <h6 class="fw-bold mb-0 d-flex align-items-center gap-2">
-                                <i class="bi bi-hospital text-primary fs-5"></i>
-                                Daftar Puskesmas
-                                @if($kecFilter) — Kec. {{ $kecFilter }}
-                                @elseif($kotaFilter) — {{ $kotaFilter }} (Semua Kecamatan)
-                                @endif
-                                <span class="badge bg-light text-dark border rounded-pill fw-normal ms-1">{{ $puskesmasList->count() }} Puskesmas</span>
-                            </h6>
+                        {{-- SUMMARY STATS HEADER --}}
+                        <div class="p-4 bg-white border-bottom">
+                            <div class="row g-3">
+                                <div class="col-md-3 col-6">
+                                    <div class="p-3 bg-light rounded-3 border d-flex align-items-center gap-3">
+                                        <div class="bg-primary bg-opacity-10 text-primary p-2.5 rounded-3 fs-5 d-flex align-items-center justify-content-center" style="width:42px; height:42px;">
+                                            <i class="bi bi-hospital"></i>
+                                        </div>
+                                        <div>
+                                            <span class="d-block text-muted small fw-semibold">Puskesmas</span>
+                                            <strong class="fs-5 text-dark">{{ $puskesmasList->count() }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="p-3 bg-light rounded-3 border d-flex align-items-center gap-3">
+                                        <div class="bg-info bg-opacity-10 text-info p-2.5 rounded-3 fs-5 d-flex align-items-center justify-content-center" style="width:42px; height:42px;">
+                                            <i class="bi bi-people-fill"></i>
+                                        </div>
+                                        <div>
+                                            <span class="d-block text-muted small fw-semibold">Total Pasien</span>
+                                            <strong class="fs-5 text-dark">{{ $puskesmasList->sum('jumlah_data') }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="p-3 bg-danger bg-opacity-10 rounded-3 border border-danger border-opacity-25 d-flex align-items-center gap-3">
+                                        <div class="bg-danger text-white p-2.5 rounded-3 fs-5 d-flex align-items-center justify-content-center" style="width:42px; height:42px;">
+                                            <i class="bi bi-exclamation-triangle-fill"></i>
+                                        </div>
+                                        <div>
+                                            <span class="d-block text-danger small fw-bold">Risiko Tinggi</span>
+                                            <strong class="fs-5 text-danger">{{ $puskesmasList->sum('jml_risiko_tinggi') }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-6">
+                                    <div class="p-3 bg-warning bg-opacity-10 rounded-3 border border-warning border-opacity-25 d-flex align-items-center gap-3">
+                                        <div class="bg-warning text-dark p-2.5 rounded-3 fs-5 d-flex align-items-center justify-content-center" style="width:42px; height:42px;">
+                                            <i class="bi bi-exclamation-circle-fill"></i>
+                                        </div>
+                                        <div>
+                                            <span class="d-block text-dark small fw-bold">Dicurigai PTM</span>
+                                            <strong class="fs-5 text-dark">{{ $puskesmasList->sum('jml_dicurigai') }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0 bg-white" style="font-size:13px;">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="ps-4">Puskesmas</th>
-                                        <th>Kecamatan</th>
-                                        <th class="text-center">Total Pasien</th>
-                                        <th class="text-center">Status Laporan</th>
-                                        <th class="text-center pe-4">Aksi</th>
+                                <thead>
+                                    <tr class="bg-light text-uppercase text-muted" style="font-size:11px; letter-spacing:0.5px;">
+                                        <th class="ps-4 py-3">Puskesmas</th>
+                                        <th class="py-3">Kecamatan</th>
+                                        <th class="text-center py-3">Total &amp; Rincian Skrining</th>
+                                        <th class="text-center py-3">Status Laporan</th>
+                                        <th class="text-center pe-4 py-3">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -200,14 +240,50 @@
                                         };
                                     @endphp
                                     <tr class="border-bottom">
-                                        <td class="ps-4">
-                                            <div class="d-flex align-items-center gap-2">
+                                        <td class="ps-4 py-3">
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
                                                 <div style="width:8px; height:8px; background:var(--bs-{{ $cfg['color'] }}); border-radius:50%; flex-shrink:0;"></div>
-                                                <span class="fw-semibold">{{ $pkm->nama_puskesmas }}</span>
+                                                <span class="fw-bold text-dark fs-6">{{ $pkm->nama_puskesmas }}</span>
+                                                @if(($pkm->jml_risiko_tinggi ?? 0) >= 3)
+                                                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-2.5 py-1" style="font-size: 0.68rem; font-weight:600;" title="Memiliki {{ $pkm->jml_risiko_tinggi }} Kasus Risiko Tinggi">
+                                                        <i class="bi bi-fire text-danger me-1"></i>Lonjakan PTM
+                                                    </span>
+                                                @endif
+                                                @if(($pkm->jml_laporan_monitoring ?? 0) > 0)
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 rounded-pill px-2.5 py-1" style="font-size: 0.68rem; font-weight:600; cursor:pointer;" data-bs-toggle="modal" data-bs-target="#modalDetailMonitoringPkm{{ $pkm->id }}" title="Klik untuk melihat Detail Laporan Hasil Monitoring (5 Ringkasan Utama)">
+                                                        <i class="bi bi-check-circle-fill text-success me-1"></i>Sudah Dimonitoring <i class="bi bi-eye-fill ms-1"></i>
+                                                    </span>
+                                                @endif
                                             </div>
                                         </td>
-                                        <td class="text-muted">{{ $pkm->kecamatan }}</td>
-                                        <td class="text-center fw-bold">{{ $pkm->jumlah_data ?: '-' }}</td>
+                                        <td class="text-muted py-3">{{ $pkm->kecamatan }}</td>
+                                        <td class="text-center py-3">
+                                            <div class="d-flex flex-column align-items-center justify-content-center">
+                                                <div class="mb-1">
+                                                    <span class="fw-bold fs-6 text-dark">{{ $pkm->jumlah_data ?: '0' }}</span>
+                                                    <span class="text-muted small">Pasien</span>
+                                                </div>
+                                                @if(($pkm->jml_risiko_tinggi ?? 0) > 0 || ($pkm->jml_dicurigai ?? 0) > 0 || ($pkm->jml_normal ?? 0) > 0)
+                                                <div class="d-flex justify-content-center gap-1.5 flex-wrap">
+                                                    @if(($pkm->jml_risiko_tinggi ?? 0) > 0)
+                                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-2 py-0.5" style="font-size: 0.68rem; font-weight:600;" title="{{ $pkm->jml_risiko_tinggi }} Pasien Risiko Tinggi">
+                                                            <i class="bi bi-exclamation-circle-fill me-1 text-danger"></i>{{ $pkm->jml_risiko_tinggi }} Risiko Tinggi
+                                                        </span>
+                                                    @endif
+                                                    @if(($pkm->jml_dicurigai ?? 0) > 0)
+                                                        <span class="badge bg-warning bg-opacity-15 text-dark border border-warning border-opacity-25 rounded-pill px-2 py-0.5" style="font-size: 0.68rem; font-weight:600;" title="{{ $pkm->jml_dicurigai }} Pasien Dicurigai PTM">
+                                                            <i class="bi bi-info-circle-fill me-1 text-warning"></i>{{ $pkm->jml_dicurigai }} Dicurigai
+                                                        </span>
+                                                    @endif
+                                                    @if(($pkm->jml_normal ?? 0) > 0)
+                                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 rounded-pill px-2 py-0.5" style="font-size: 0.68rem; font-weight:600;" title="{{ $pkm->jml_normal }} Pasien Normal">
+                                                            <i class="bi bi-check-circle-fill me-1 text-success"></i>{{ $pkm->jml_normal }} Normal
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                @endif
+                                            </div>
+                                        </td>
                                         <td class="text-center">
                                             <span class="badge bg-{{ $cfg['bg'] }} text-{{ $cfg['color'] }} border border-{{ $cfg['color'] }}-subtle rounded-pill px-2 py-1">
                                                 <i class="bi {{ $cfg['icon'] }} me-1"></i>{{ $cfg['label'] }}
@@ -225,15 +301,15 @@
                                                    class="btn btn-sm btn-primary rounded-pill px-3">
                                                     <i class="bi bi-eye me-1"></i> Tinjau
                                                 </a>
-                                                <a href="{{ route('pengguna.laporan_monitoring.index') }}"
+                                                <a href="{{ route('pengguna.laporan_monitoring.index', ['puskesmas_id' => $pkm->id]) }}"
                                                    class="btn btn-sm btn-teal rounded-pill px-3 fw-semibold shadow-sm"
-                                                   title="Ke Menu Laporan Hasil Monitoring">
+                                                   title="Buat Laporan Hasil Monitoring untuk {{ Str::startsWith($pkm->nama_puskesmas ?? '', 'Puskesmas') ? $pkm->nama_puskesmas : 'Puskesmas ' . $pkm->nama_puskesmas }}">
                                                     <i class="bi bi-file-earmark-text me-1"></i> Laporan Monitoring
                                                 </a>
                                             </div>
                                             @else
                                             <form action="{{ route('pengguna.verifikasi_laporan.pengingat', $pkm->id) }}" method="POST" class="d-inline"
-                                                  onsubmit="return confirm('Kirim notifikasi pengingat ke Puskesmas {{ $pkm->nama_puskesmas }}?');">
+                                                  onsubmit="return confirm('Kirim notifikasi pengingat ke {{ Str::startsWith($pkm->nama_puskesmas ?? '', 'Puskesmas') ? $pkm->nama_puskesmas : 'Puskesmas ' . $pkm->nama_puskesmas }}?');">
                                                 @csrf
                                                 <button type="submit" class="btn btn-sm btn-warning rounded-pill px-3 fw-semibold text-dark shadow-sm">
                                                     <i class="bi bi-bell-fill me-1"></i> Kirim Pengingat
@@ -242,6 +318,79 @@
                                             @endif
                                         </td>
                                     </tr>
+
+                                    {{-- MODAL DETAIL LAPORAN MONITORING (5 POIN UTAMA) --}}
+                                    @if(($pkm->jml_laporan_monitoring ?? 0) > 0 && isset($pkm->laporan_monitoring_terakhir))
+                                    @php $lapMon = $pkm->laporan_monitoring_terakhir; @endphp
+                                    <div class="modal fade" id="modalDetailMonitoringPkm{{ $pkm->id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                                            <div class="modal-content border-0 rounded-4 shadow-lg">
+                                                <div class="modal-header border-bottom-0 bg-teal text-white rounded-top-4 p-4">
+                                                    <h5 class="modal-title fw-bold"><i class="bi bi-file-earmark-medical me-2"></i>Detail Laporan Hasil Monitoring</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body p-4">
+                                                    <div class="p-3 bg-teal bg-opacity-10 border border-teal-subtle rounded-3 mb-4 d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <span class="d-block text-muted small fw-bold">Puskesmas Tujuan</span>
+                                                            <h6 class="fw-bold text-teal mb-0">{{ $pkm->nama_puskesmas }}</h6>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <span class="d-block text-muted small fw-bold">Status Laporan</span>
+                                                            @if($lapMon->status_laporan === 'disetujui')
+                                                                <span class="badge bg-success rounded-pill px-3 py-1"><i class="bi bi-check-circle-fill me-1"></i> Disetujui Kepala</span>
+                                                            @elseif($lapMon->status_laporan === 'pending')
+                                                                <span class="badge bg-warning text-dark rounded-pill px-3 py-1"><i class="bi bi-hourglass-split me-1"></i> Menunggu Persetujuan</span>
+                                                            @else
+                                                                <span class="badge bg-danger rounded-pill px-3 py-1"><i class="bi bi-x-circle-fill me-1"></i> Ditolak</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row g-3 mb-3">
+                                                        <div class="col-md-6">
+                                                            <div class="p-3 bg-light rounded-3 border">
+                                                                <label class="form-label fw-bold text-muted small mb-1"><i class="bi bi-calendar-event me-1 text-teal"></i> Tanggal Kunjungan Lapangan</label>
+                                                                <p class="fw-bold mb-0 text-dark">{{ \Carbon\Carbon::parse($lapMon->tanggal_kunjungan ?? $lapMon->created_at)->translatedFormat('d F Y') }}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="p-3 bg-light rounded-3 border">
+                                                                <label class="form-label fw-bold text-muted small mb-1"><i class="bi bi-tag-fill me-1 text-teal"></i> Kategori Temuan Pemantauan</label>
+                                                                <p class="fw-bold mb-0 text-dark">{{ $lapMon->kategori_temuan ?? 'Pemantauan Wilayah Rutin' }}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3 p-3 bg-light rounded-3 border">
+                                                        <label class="form-label fw-bold text-muted small mb-1"><i class="bi bi-file-earmark-text-fill me-1 text-teal"></i> Judul Laporan / Kesimpulan Utama</label>
+                                                        <p class="fw-bold mb-0 text-dark">{{ $lapMon->judul_laporan }}</p>
+                                                    </div>
+
+                                                    <div class="mb-3 p-3 bg-light rounded-3 border">
+                                                        <label class="form-label fw-bold text-muted small mb-1"><i class="bi bi-card-text me-1 text-teal"></i> Deskripsi Temuan Lapangan</label>
+                                                        <p class="mb-0 text-dark" style="white-space: pre-line;">{{ $lapMon->deskripsi_temuan }}</p>
+                                                    </div>
+
+                                                    <div class="mb-3 p-3 bg-light rounded-3 border">
+                                                        <label class="form-label fw-bold text-muted small mb-1"><i class="bi bi-lightbulb-fill me-1 text-teal"></i> Rekomendasi & Usulan Tindakan</label>
+                                                        <p class="mb-0 text-dark" style="white-space: pre-line;">{{ $lapMon->rekomendasi_tindakan }}</p>
+                                                    </div>
+
+                                                    @if($lapMon->catatan_kepala)
+                                                    <div class="p-3 bg-warning bg-opacity-10 border border-warning rounded-3">
+                                                        <label class="form-label fw-bold text-warning mb-1"><i class="bi bi-chat-quote-fill me-1"></i> Catatan Kepala P2PTM</label>
+                                                        <p class="mb-0 text-dark fst-italic">"{{ $lapMon->catatan_kepala }}"</p>
+                                                    </div>
+                                                    @endif
+                                                </div>
+                                                <div class="modal-footer border-top-0 bg-light p-3">
+                                                    <button type="button" class="btn btn-secondary px-4 rounded-pill shadow-sm" data-bs-dismiss="modal">Tutup</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
                                     @endforeach
                                 </tbody>
                             </table>
@@ -386,19 +535,41 @@
 
 <script>
 function resetTabs() {
-    document.querySelectorAll('.nav-link').forEach(function(el) {
+    document.querySelectorAll('#verifikasiTab .nav-link').forEach(function(el) {
         el.style.borderBottomColor = 'transparent';
         el.classList.remove('text-teal');
         el.classList.add('text-secondary');
     });
 }
-// Init first tab styling
+
+function switchVerifikasiTab(tabId) {
+    resetTabs();
+    const btn = document.getElementById(tabId);
+    if(btn) {
+        btn.style.borderBottomColor = '#0f766e';
+        btn.classList.remove('text-secondary');
+        btn.classList.add('text-teal');
+        sessionStorage.setItem('verifikasi_active_tab', tabId);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    let activeTab = document.querySelector('.nav-link.active');
-    if(activeTab) {
-        activeTab.style.borderBottomColor = '#0f766e';
-        activeTab.classList.remove('text-secondary');
-        activeTab.classList.add('text-teal');
+    document.querySelectorAll('#verifikasiTab .nav-link').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            switchVerifikasiTab(this.id);
+        });
+    });
+
+    const savedTabId = sessionStorage.getItem('verifikasi_active_tab');
+    if (savedTabId && document.getElementById(savedTabId)) {
+        const tabTrigger = new bootstrap.Tab(document.getElementById(savedTabId));
+        tabTrigger.show();
+        switchVerifikasiTab(savedTabId);
+    } else {
+        let activeTab = document.querySelector('#verifikasiTab .nav-link.active');
+        if(activeTab) {
+            switchVerifikasiTab(activeTab.id);
+        }
     }
 });
 </script>

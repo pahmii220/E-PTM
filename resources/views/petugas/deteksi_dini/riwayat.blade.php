@@ -203,13 +203,19 @@
                                         </a>
 
                                         {{-- 🗑️ HAPUS --}}
-                                        <form action="{{ route('petugas.deteksi_dini.destroy', $d->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus riwayat pemeriksaan ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
-                                                <i class="bi bi-trash"> Hapus</i>
-                                            </button>
-                                        </form>
+                                        @if(auth()->user()->role_name !== 'admin' && in_array($d->status_verifikasi, ['approved', 'pending', 'terverifikasi']))
+                                            <span class="badge bg-secondary-subtle text-secondary border px-2 py-1" style="font-size: 11px;" title="Laporan sudah diajukan/disahkan">
+                                                <i class="bi bi-lock-fill me-1"></i> Terkunci
+                                            </span>
+                                        @else
+                                            <form action="{{ route('petugas.deteksi_dini.destroy', $d->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus riwayat pemeriksaan ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Hapus Data">
+                                                    <i class="bi bi-trash"> Hapus</i>
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

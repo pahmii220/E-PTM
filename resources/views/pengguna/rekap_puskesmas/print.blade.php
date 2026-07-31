@@ -8,7 +8,7 @@
         /* ====== SETTING CETAK LANDSCAPE ====== */
         @page {
             size: landscape;
-            margin: 10mm 10mm;
+            margin: 0;
         }
 
         body {
@@ -28,47 +28,56 @@
         }
 
         /* ====== KOP ====== */
-        .kop {
-            text-align: center;
+        .kop-table {
+            width: 100%;
+            border-collapse: collapse;
             margin-bottom: 6px;
-            position: relative;
         }
-
-        .kop .left {
-            float: left;
+        .kop-table td.logo-cell {
+            width: 80px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .kop-table td.logo-cell img {
+            width: 70px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        .kop-table td.text-cell {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .kop-table td.spacer-cell {
             width: 80px;
         }
 
-        .kop .center {
-            display: inline-block;
-            width: calc(100% - 160px);
-            text-align: center;
-        }
-
-        .clear {
-            clear: both;
-        }
-
-        .kop .prov {
+        .prov {
             font-size: 14px;
             font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .kop .dinas {
+        .dinas {
             font-size: 18px;
             font-weight: 900;
+            text-transform: uppercase;
             margin-top: 2px;
+            letter-spacing: 0.5px;
         }
 
-        .kop .addr {
-            font-size: 12px;
-            margin-top: 6px;
+        .addr {
+            font-size: 11px;
+            margin-top: 4px;
+            font-style: italic;
+            line-height: 1.3;
         }
 
         hr.top {
             border: none;
             border-top: 2px solid #000;
-            margin: 8px 0 12px 0;
+            margin: 6px 0 12px 0;
         }
 
         /* ====== TOMBOL PRINT ====== */
@@ -78,6 +87,12 @@
         }
 
         @media print {
+            @page {
+                margin: 0;
+            }
+            body {
+                margin: 10mm 12mm;
+            }
             .no-print {
                 display: none;
             }
@@ -88,6 +103,9 @@
             text-align: center;
             font-weight: 700;
             font-size: 14px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
             margin-bottom: 15px;
             letter-spacing: 0.5px;
         }
@@ -180,28 +198,29 @@
         </div>
 
         {{-- KOP SURAT --}}
-        <div class="kop">
-            <div class="left">
-                <img src="{{ asset('images/dinkes.png') }}" alt="logo" style="width:65px; height:auto;">
-            </div>
-            <br>
-            <div class="center">
-                <div class="prov">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
-                <div class="dinas">DINAS KESEHATAN</div>
-                <div class="addr">Jalan Dharma Praja, Banjarbaru, Kalimantan Selatan Kode Pos 70732
-                    <br>
-                (Kawasan Perkantoran Pemerintah Provinsi Kalimantan Selatan)</div>
-            </div>
-            <div class="clear"></div>
-        </div>
+        <table class="kop-table">
+            <tr>
+                <td class="logo-cell">
+                    <img src="{{ asset('images/dinkes.png') }}" alt="logo">
+                </td>
+                <td class="text-cell">
+                    <div class="prov">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+                    <div class="dinas">DINAS KESEHATAN</div>
+                    <div class="addr">
+                        Jalan Dharma Praja, Banjarbaru, Kalimantan Selatan Kode Pos 70732<br>
+                        (Kawasan Perkantoran Pemerintah Provinsi Kalimantan Selatan)
+                    </div>
+                </td>
+                <td class="spacer-cell"></td>
+            </tr>
+        </table>
 
         <hr class="top">
 
         {{-- JUDUL --}}
         <div class="title">
             @if(isset($puskesmasTerpilih) && $puskesmasTerpilih)
-                LAPORAN DETAIL REGISTER PASIEN PTM<br>
-                {{ strtoupper($puskesmasTerpilih->nama_puskesmas) }}
+                LAPORAN DETAIL REGISTER PASIEN PTM
             @else
                 LAPORAN REKAP PENYAKIT TIDAK MENULAR (PTM)<br>
                 PER PUSKESMAS
@@ -283,12 +302,26 @@
 
         {{-- TABEL DETAIL REGISTER PASIEN PTM (TAMPIL HANYA JIKA MEMILIH PUSKESMAS SPESIFIK & ADA DETAIL PASIEN) --}}
         @if(isset($puskesmasTerpilih) && $puskesmasTerpilih && isset($detailPasienPuskesmas) && $detailPasienPuskesmas->count() > 0)
+            @php
+                $namaBulanIndo = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                if (request('filter_waktu') == 'tanggal' && request('tgl_awal') && request('tgl_akhir')) {
+                    $tAwal = \Carbon\Carbon::parse(request('tgl_awal'));
+                    $tAkhir = \Carbon\Carbon::parse(request('tgl_akhir'));
+                    $textPeriode = $tAwal->format('d') . ' ' . $namaBulanIndo[(int)$tAwal->format('m')] . ' ' . $tAwal->format('Y') . ' s/d ' . $tAkhir->format('d') . ' ' . $namaBulanIndo[(int)$tAkhir->format('m')] . ' ' . $tAkhir->format('Y');
+                } elseif (request('bulan')) {
+                    $bIdx = (int) request('bulan');
+                    $textPeriode = ($namaBulanIndo[$bIdx] ?? '') . ' ' . request('tahun', date('Y'));
+                } else {
+                    $now = \Carbon\Carbon::now();
+                    $textPeriode = $namaBulanIndo[(int)$now->format('m')] . ' ' . $now->format('Y');
+                }
+            @endphp
             <div style="margin-top: 20px; margin-bottom: 8px;">
                 <div style="font-size: 13px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #111; padding-bottom: 4px; margin-bottom: 6px;">
                     DATA DETAIL REGISTER PASIEN PTM @if(isset($puskesmasTerpilih) && $puskesmasTerpilih) — {{ strtoupper($puskesmasTerpilih->nama_puskesmas) }} @endif
                 </div>
                 <div style="font-size: 10.5px; color: #333; margin-bottom: 6px;">
-                    Wilayah: {{ $puskesmasTerpilih->kecamatan ?? '-' }}, {{ $puskesmasTerpilih->nama_kabupaten ?? 'Kota Banjarmasin' }} | Total Pasien: <strong>{{ $detailPasienPuskesmas->count() }} Orang</strong>
+                    Wilayah: {{ $puskesmasTerpilih->kecamatan ?? '-' }}, {{ $puskesmasTerpilih->nama_kabupaten ?? 'Kota Banjarmasin' }} | Periode: <strong>{{ $textPeriode }}</strong> | Total Pasien: <strong>{{ $detailPasienPuskesmas->count() }} Orang</strong>
                 </div>
             </div>
 
@@ -296,15 +329,15 @@
                 <thead>
                     <tr>
                         <th style="width: 3.5%;">No</th>
-                        <th style="width: 8.5%;">Tanggal</th>
+                        <th style="width: 8.5%;">Tanggal Pemeriksaan</th>
                         <th style="width: 14%;">Nama Pasien</th>
-                        <th style="width: 11%;">No RM</th>
+                        <th style="width: 11%;">No Rekam Medis</th>
                         <th style="width: 5%;">Umur</th>
-                        <th style="width: 6%;">JK</th>
-                        <th style="width: 7%;">TD (mmHg)</th>
-                        <th style="width: 6.5%;">Gula</th>
+                        <th style="width: 6%;">Jenis Kelamin</th>
+                        <th style="width: 7%;">Tekanan Darah (mmHg)</th>
+                        <th style="width: 6.5%;">Gula Darah</th>
                         <th style="width: 6.5%;">Kolesterol</th>
-                        <th style="width: 5%;">IMT</th>
+                        <th style="width: 5%;">IMT (Index Masa Tubuh)</th>
                         <th style="width: 13%;">Faktor Risiko</th>
                         <th style="width: 14%;">Diagnosa &amp; Penyakit PTM</th>
                     </tr>
@@ -327,7 +360,7 @@
                             <td style="text-align:center;">{{ \Carbon\Carbon::parse($d->tanggal_pemeriksaan)->format('d/m/Y') }}</td>
                             <td class="left"><strong>{{ $d->peserta->nama_lengkap ?? '-' }}</strong></td>
                             <td style="text-align:center;">{{ $noRmFormatted }}</td>
-                            <td style="text-align:center;">{{ $umur }} Thn</td>
+                            <td style="text-align:center;">{{ $umur }} Tahun</td>
                             <td style="text-align:center;">{{ $d->peserta->jenis_kelamin ?? '-' }}</td>
                             <td style="text-align:center; {{ $isHipertensi ? 'color:#b91c1c; font-weight:bold;' : '' }}">
                                 {{ $d->sistole && $d->diastole ? $d->sistole . '/' . $d->diastole : ($d->tekanan_darah ?? '-') }}
@@ -406,9 +439,10 @@
                         @if(isset($qrToken))
                             @php
                                 // Ambil parameter dari request, default ke bulan/tahun saat ini
+                                $namaBulanIndoQr = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
                                 $bulanAngka = (int) request('bulan', now()->month);
                                 $tahun = request('tahun', now()->year);
-                                $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
+                                $periode = ($namaBulanIndoQr[$bulanAngka] ?? 'Juli') . ' ' . $tahun;
                                 $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
 
                                 $namaPejabat = $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah';

@@ -71,14 +71,6 @@ class HomeController extends Controller
 
         $peserta = Peserta::where('nik', trim($request->nik))
             ->whereDate('tanggal_lahir', $request->tanggal_lahir)
-            ->with([
-                'puskesmas',
-                'deteksiDiniPTM.petugas',
-                'faktorResikoPTM',
-                'tindakLanjutPTM.petugas' => function($q) {
-                    $q->latest();
-                }
-            ])
             ->first();
 
         if (!$peserta) {
@@ -87,8 +79,9 @@ class HomeController extends Controller
                 ->with('status_pencarian', 'not_found');
         }
 
-        return redirect()->to(route('frontend.home') . '#cek-ptm')
-            ->with('hasilPeserta', $peserta);
+        // Simpan sesi pasien
+        session(['pasien_id' => $peserta->id]);
+        return redirect()->route('frontend.pasien.dashboard');
     }
 
     /**
@@ -117,5 +110,42 @@ class HomeController extends Controller
 
         $nama = \Illuminate\Support\Str::slug($peserta->nama_lengkap);
         return $pdf->stream('Laporan-Hasil-Skrining-PTM-' . $nama . '.pdf');
+    }
+
+    /**
+     * Dashboard Pasien
+     */
+    public function dashboardPasien()
+    {
+        $pasien_id = session('pasien_id');
+        if (!$pasien_id) {
+            return redirect()->to(route('frontend.home') . '#cek-ptm')->with('status_pencarian', 'session_expired');
+        }
+
+        $peserta = Peserta::with([
+            'puskesmas',
+            'deteksiDinis' => function($q) {
+                $q->orderBy('tanggal_pemeriksaan', 'desc');
+            },
+            'deteksiDinis.petugas',
+            'deteksiDinis.tindakLanjut',
+            'faktorResikoPTM'
+        ])->find($pasien_id);
+
+        if (!$peserta) {
+            session()->forget('pasien_id');
+            return redirect()->to(route('frontend.home') . '#cek-ptm')->with('status_pencarian', 'not_found');
+        }
+
+        return view('frontend.dashboard_pasien', compact('peserta'));
+    }
+
+    /**
+     * Logout Pasien
+     */
+    public function logoutPasien()
+    {
+        session()->forget('pasien_id');
+        return redirect()->to(route('frontend.home') . '#cek-ptm');
     }
 }

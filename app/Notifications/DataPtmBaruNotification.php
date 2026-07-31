@@ -45,7 +45,7 @@ public function toMail($notifiable)
                     ->line('Terdapat Entri Data Baru (meliputi Data Peserta, Deteksi Dini, dan Faktor Risiko) telah selesai diinput oleh Petugas Puskesmas.')
                     ->line('Nama Peserta: ' . $namaPeserta)
                     ->line('Status: Menunggu Verifikasi')
-                    ->action('Mulai Verifikasi', url('/pengguna/verifikasi/peserta')) 
+                    ->action('Mulai Verifikasi', url('/pegawai/verifikasi/peserta')) 
                     ->line('Silakan untuk meninjau kelengkapan data tersebut.');
     }
 }

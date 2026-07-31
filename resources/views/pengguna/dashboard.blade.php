@@ -210,7 +210,7 @@ foreach ($semuaPuskesmas as $pkm) {
                         <i class="bi {{ $ikonUcapan }} fs-4"></i>
                         <h1 class="h4 fw-bold mb-0 tracking-wide">{{ $ucapan }}, {{ Auth::user()->username ?? 'Pegawai Dinkes' }}!</h1>
                     </div>
-                    <p class="text-blue-100 text-sm mb-0 mt-2">Berikut adalah ringkasan data Penyakit Tidak Menular (PTM) dan antrean verifikasi hari ini.</p>
+                    <p class="text-blue-100 text-sm mb-0 mt-2">Berikut adalah ringkasan data Penyakit Tidak Menular (PTM) dan statistik kesehatan wilayah hari ini.</p>
                 </div>
 
                 <div class="relative z-10 hidden md:block text-right">
@@ -235,19 +235,19 @@ foreach ($semuaPuskesmas as $pkm) {
                     </div>
                 </div>
 
-                {{-- Antrean Puskesmas --}}
+                {{-- Kasus Risiko Tinggi --}}
                 <div class="col-12 col-md-6">
                     <div class="card border-0 shadow-sm rounded-2xl hover:shadow-md justify-content-center transition duration-300 transform hover:-translate-y-1 h-100 relative overflow-hidden">
-                        @if($realPending > 0)
+                        @if($skRisiko > 0)
                             <div class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full m-3 animate-pulse shadow-sm border border-white"></div>
                         @endif
                         <div class="card-body p-4 d-flex align-items-center gap-3">
-                            <div class="flex-shrink-0 w-14 h-14 rounded-xl bg-amber-50 text-amber-500 d-flex align-items-center justify-content-center text-3xl shadow-inner">
-                                <i class="bi bi-clock-history"></i>
+                            <div class="flex-shrink-0 w-14 h-14 rounded-xl bg-red-50 text-red-600 d-flex align-items-center justify-content-center text-3xl shadow-inner">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
                             </div>
                             <div>
-                                <p class="text-gray-500 text-xs mb-1 font-semibold uppercase tracking-wider">Antrean Puskesmas (Pending)</p>
-                                <h3 class="text-gray-800 font-extrabold mb-0 text-2xl">{{ number_format($realPending) }}</h3>
+                                <p class="text-gray-500 text-xs mb-1 font-semibold uppercase tracking-wider">Total Kasus Risiko Tinggi PTM</p>
+                                <h3 class="text-red-600 font-extrabold mb-0 text-2xl">{{ number_format($skRisiko) }} Kasus</h3>
                             </div>
                         </div>
                     </div>
@@ -635,8 +635,8 @@ foreach ($semuaPuskesmas as $pkm) {
                     attribution: '© OpenStreetMap'
                 });
 
-                // Default Layer Active
-                googleRoadmap.addTo(map);
+                // Default Layer Active (Peta Satelit)
+                googleSatellite.addTo(map);
 
                 // Control Switcher Layer
                 var baseMaps = {

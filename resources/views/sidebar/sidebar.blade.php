@@ -18,7 +18,7 @@
         <div class="flex flex-col items-center justify-center pt-6 pb-6 border-b border-gray-700">
             <img src="{{ asset('images/dinkes.png') }}" alt="Logo" class="mb-3 max-h-20">
             <h6 class="text-white text-md font-extrabold text-center leading-tight">
-                Aplikasi Pelaporan<br>Penyakit Tidak Menular
+                Aplikasi Manajemen Data & Monitoring<br>Penyakit Tidak Menular
             </h6>
         </div>
 
@@ -113,18 +113,50 @@
                     </li>
 
 
-                    <li>
-                        <a href="{{ route('admin.laporan.index') }}"
-                            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 {{ request()->routeIs('admin.laporan.*') ? 'bg-green-600 text-white' : '' }}">
-                            <i class="bi bi-file-earmark-bar-graph text-lg"></i> <span>Laporan</span>
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="{{ route('pengguna.laporan_monitoring.index') }}"
-                            class="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 {{ request()->routeIs('pengguna.laporan_monitoring.*') ? 'bg-green-600 text-white' : '' }}">
-                            <i class="bi bi-file-earmark-medical text-lg"></i> <span>Laporan Hasil Monitoring</span>
-                        </a>
+                    <li x-data="{ lapOpen: {{ request()->routeIs('kepala.laporan.*', 'kepala.laporan_monitoring.*', 'admin.laporan.*') ? 'true' : 'false' }} }">
+                        <button @click="lapOpen = !lapOpen"
+                            class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 {{ request()->routeIs('kepala.laporan.*', 'kepala.laporan_monitoring.*', 'admin.laporan.*') ? 'bg-green-600 text-white' : '' }}">
+                            <span class="flex items-center gap-3"><i class="bi bi-collection text-lg"></i> Laporan</span>
+                            <i :class="lapOpen ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
+                        </button>
+                        <ul x-show="lapOpen" x-transition class="ml-6 mt-1 flex flex-col gap-1 overflow-hidden text-sm">
+                            <li>
+                                <a href="{{ route('kepala.laporan.eksekutif') }}"
+                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.eksekutif') ? 'bg-green-500 text-white' : '' }}">
+                                    <i class="bi bi-tags me-2"></i> Laporan per Kategori
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('kepala.laporan.pegawai') }}"
+                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.pegawai') ? 'bg-green-500 text-white' : '' }}">
+                                    <i class="bi bi-person-badge me-2"></i> Laporan Data Pegawai P2PTM
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('kepala.laporan.evaluasi') }}"
+                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.evaluasi') ? 'bg-green-500 text-white' : '' }}">
+                                    <i class="bi bi-patch-check me-2"></i> Laporan Evaluasi Sistem
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('kepala.laporan_monitoring.index') }}"
+                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan_monitoring.*') ? 'bg-green-500 text-white' : '' }}">
+                                    <i class="bi bi-shield-check me-2"></i> Tinjau Laporan Hasil Monitoring
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('kepala.laporan.perlengkapan_tugas') }}"
+                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.perlengkapan_tugas') ? 'bg-green-500 text-white' : '' }}">
+                                    <i class="bi bi-box-seam me-2"></i> Laporan Logistik &amp; Alokasi Alkes
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('kepala.laporan.surat_tugas') }}"
+                                    class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.surat_tugas') ? 'bg-green-500 text-white' : '' }}">
+                                    <i class="bi bi-file-earmark-text me-2"></i> Surat Perintah Tugas
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
                     {{-- MENU BARU: EVALUASI SISTEM (SUS) --}}
@@ -259,9 +291,9 @@
                 {{-- ROLE: KEPALA P2PTM (Telah disesuaikan menjadi Sub-Menu) --}}
                 {{-- ========================================================== --}}
             @if(Auth::user()->role_name === 'kepala_p2ptm')
-                <li x-data="{ lapOpen: {{ request()->routeIs('kepala.laporan.*') ? 'true' : 'false' }} }">
+                <li x-data="{ lapOpen: {{ request()->routeIs('kepala.laporan.*', 'kepala.laporan_monitoring.*') ? 'true' : 'false' }} }">
                     <button @click="lapOpen = !lapOpen"
-                        class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 {{ request()->routeIs('kepala.laporan.*') ? 'bg-green-600 text-white' : '' }}">
+                        class="w-full flex items-center justify-between px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200 {{ request()->routeIs('kepala.laporan.*', 'kepala.laporan_monitoring.*') ? 'bg-green-600 text-white' : '' }}">
                         <span class="flex items-center gap-3"><i class="bi bi-collection text-lg"></i> Laporan</span>
                         <i :class="lapOpen ? 'bi bi-caret-up-fill' : 'bi bi-caret-down-fill'"></i>
                     </button>
@@ -273,12 +305,17 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('kepala.laporan.pegawai') }}"
+                                class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.pegawai') ? 'bg-green-500 text-white' : '' }}">
+                                <i class="bi bi-person-badge me-2"></i> Laporan Data Pegawai P2PTM
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('kepala.laporan.evaluasi') }}"
                                 class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.evaluasi') ? 'bg-green-500 text-white' : '' }}">
                                 <i class="bi bi-patch-check me-2"></i> Laporan Evaluasi Sistem
                             </a>
                         </li>
-                        <li>
                         <li>
                             <a href="{{ route('kepala.laporan_monitoring.index') }}"
                                 class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan_monitoring.*') ? 'bg-green-500 text-white' : '' }}">
@@ -289,6 +326,12 @@
                             <a href="{{ route('kepala.laporan.perlengkapan_tugas') }}"
                                 class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.perlengkapan_tugas') ? 'bg-green-500 text-white' : '' }}">
                                 <i class="bi bi-box-seam me-2"></i> Laporan Logistik &amp; Alokasi Alkes
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('kepala.laporan.surat_tugas') }}"
+                                class="block px-4 py-2 rounded-md hover:bg-green-500 {{ request()->routeIs('kepala.laporan.surat_tugas') ? 'bg-green-500 text-white' : '' }}">
+                                <i class="bi bi-file-earmark-text me-2"></i> Surat Perintah Tugas
                             </a>
                         </li>
                     </ul>

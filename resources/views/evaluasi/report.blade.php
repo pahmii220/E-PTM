@@ -52,10 +52,13 @@
                     <thead class="table-light">
                         <tr>
                             <th width="60" class="text-center">No</th>
-                            <th>Nama Pegawai</th>
-                            <th class="text-center" width="150">Skor</th>
+                            <th>Nama Pegawai / Petugas</th>
+                            <th class="text-center" width="120">Skor</th>
                             <th>Kritik & Saran</th>
                             <th width="180">Waktu Pengisian</th>
+                            @if(in_array(auth()->user()->role_name, ['admin', 'pegawai']))
+                            <th width="100" class="text-center">Aksi</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
@@ -83,11 +86,21 @@
                                     {{ $row->saran ?? '-' }}
                                 </td>
                                 <td class="text-muted small">{{ $row->created_at->format('d M Y - H:i') }} Wita</td>
+                                @if(in_array(auth()->user()->role_name, ['admin', 'pegawai']))
+                                <td class="text-center">
+                                    <form action="{{ route('pengguna.evaluasi.destroy', $row->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data tanggapan evaluasi dari {{ addslashes($namaFinal) }}?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-sm" title="Hapus Data Evaluasi">
+                                            <i class="bi bi-trash-fill me-1"></i> Hapus
+                                        </button>
+                                    </form>
+                                </td>
+                                @endif
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">Belum ada data evaluasi yang dimasukkan oleh
-                                    pegawai.</td>
+                                <td colspan="{{ in_array(auth()->user()->role_name, ['admin', 'pegawai']) ? 6 : 5 }}" class="text-center py-5 text-muted">Belum ada data evaluasi yang dimasukkan oleh pegawai.</td>
                             </tr>
                         @endforelse
                     </tbody>

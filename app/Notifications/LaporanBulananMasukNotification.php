@@ -32,13 +32,14 @@ class LaporanBulananMasukNotification extends Notification
 
     public function toMail($notifiable): MailMessage
     {
+        $namaPuskesmas = 'Puskesmas ' . preg_replace('/^puskesmas\s+/i', '', trim($this->puskesmasNama));
         $url = route('pengguna.verifikasi_laporan.index');
 
         return (new MailMessage)
-            ->subject('[PTM Dinkes] Laporan Bulanan Baru Masuk - Mohon Verifikasi')
-            ->greeting('Halo, ' . ($notifiable->username ?? 'Bapak/Ibu Pegawai Dinkes'))
+            ->subject('[PTM Dinkes] Laporan Bulanan Baru Masuk dari ' . $namaPuskesmas)
+            ->greeting('Halo, ' . ($notifiable->Nama_Lengkap ?? $notifiable->username ?? 'Bapak/Ibu Pegawai Dinkes'))
             ->line('Dengan hormat,')
-            ->line('Melalui sistem E-PTM ini, kami beritahukan bahwa Puskesmas ' . $this->puskesmasNama . ' telah mengirimkan Laporan Bulanan PTM.')
+            ->line('Melalui sistem E-PTM ini, kami beritahukan bahwa ' . $namaPuskesmas . ' telah resmi mengirimkan Laporan Bulanan PTM.')
             ->line('Periode Laporan: ' . \Carbon\Carbon::parse($this->startDate)->translatedFormat('F Y'))
             ->action('Tinjau Laporan Masuk', $url)
             ->line('Demikian pemberitahuan ini kami sampaikan. Terima kasih atas perhatian dan kerja samanya.');
@@ -46,9 +47,11 @@ class LaporanBulananMasukNotification extends Notification
 
     public function toDatabase($notifiable): array
     {
+        $namaPuskesmas = 'Puskesmas ' . preg_replace('/^puskesmas\s+/i', '', trim($this->puskesmasNama));
+
         return [
             'title' => 'Laporan Bulanan Masuk',
-            'message' => $this->puskesmasNama . ' telah mengirimkan laporan pasien PTM baru. Silakan pantau perkembangan datanya.',
+            'message' => $namaPuskesmas . ' telah mengirimkan laporan bulanan PTM baru. Silakan pantau perkembangan datanya.',
             'url' => $this->puskesmasId ? route('pengguna.verifikasi_laporan.show', $this->puskesmasId) : route('pengguna.verifikasi_laporan.index'),
             'type' => 'info'
         ];

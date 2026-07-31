@@ -26,40 +26,47 @@
         }
 
         /* KOP SURAT */
-        .kop {
-            text-align: center;
-            position: relative;
+        .kop-table {
+            width: 100%;
+            border-collapse: collapse;
             margin-bottom: 5px;
         }
-        .kop .logo {
-            position: absolute;
-            left: 5px;
-            top: 0;
-            width: 75px;
-        }
-        .kop .center {
-            display: inline-block;
-            width: 100%;
+        .kop-table td.logo-cell {
+            width: 80px;
             text-align: center;
+            vertical-align: middle;
         }
-        .kop .pemkot {
+        .kop-table td.logo-cell img {
+            width: 75px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        .kop-table td.text-cell {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .kop-table td.spacer-cell {
+            width: 80px;
+        }
+        .pemkot {
             font-size: 14px;
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        .kop .dinas {
+        .dinas {
             font-size: 18px;
             font-weight: bold;
             text-transform: uppercase;
             margin-top: 2px;
         }
-        .kop .bidang {
+        .bidang {
             font-size: 13px;
             font-weight: bold;
             text-transform: uppercase;
         }
-        .kop .alamat {
+        .alamat {
             font-size: 10px;
             font-style: italic;
             margin-top: 3px;
@@ -145,7 +152,18 @@
         }
 
         @media print {
-            .no-print { display: none; }
+            @page {
+                size: portrait;
+                margin: 0mm;
+            }
+            body {
+                margin: 15mm 12mm;
+                padding: 0;
+                background: #fff;
+            }
+            .no-print {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -159,15 +177,20 @@
 
     <div class="container">
         {{-- KOP SURAT --}}
-        <div class="kop">
-            <img class="logo" src="{{ asset('images/dinkes.png') }}" alt="Logo">
-            <div class="center">
-                <div class="pemkot">Pemerintah Kota Banjarmasin</div>
-                <div class="dinas">Dinas Kesehatan</div>
-                <div class="bidang">Bidang Pencegahan & Pengendalian Penyakit (P2P)</div>
-                <div class="alamat">Jl. Tirta Dharma No. 1 Km. 3.5 Banjarmasin, Kalimantan Selatan</div>
-            </div>
-        </div>
+        <table class="kop-table">
+            <tr>
+                <td class="logo-cell">
+                    <img src="{{ asset('images/dinkes.png') }}" alt="Logo">
+                </td>
+                <td class="text-cell">
+                    <div class="pemkot">Pemerintah provinsi Kalimantan Selatan</div>
+                    <div class="dinas">Dinas Kesehatan</div>
+                    <div class="alamat"> Jalan Dharma Praja, Banjarbaru, Kalimantan Selatan Kode Pos 70732<br>
+                    (Kawasan Perkantoran Pemerintah Provinsi Kalimantan Selatan)</div>
+                </td>
+                <td class="spacer-cell"></td>
+            </tr>
+        </table>
         <hr class="line-double">
 
         {{-- JUDUL DOKUMEN --}}
@@ -179,7 +202,7 @@
             <tr>
                 <td class="label">Puskesmas Sasaran</td>
                 <td class="colon">:</td>
-                <td><strong>Puskesmas {{ $laporan->puskesmas->nama_puskesmas ?? '-' }}</strong></td>
+                <td><strong>{{ Str::startsWith($laporan->puskesmas->nama_puskesmas ?? '', 'Puskesmas') ? $laporan->puskesmas->nama_puskesmas : 'Puskesmas ' . ($laporan->puskesmas->nama_puskesmas ?? '-') }}</strong></td>
             </tr>
             <tr>
                 <td class="label">Tanggal Kunjungan</td>
@@ -237,7 +260,7 @@
             <table class="ttd-table">
                 <tr>
                     <td>
-                        <div>Pelapor / Pegawai Dinkes,</div>
+                        <div>Pegawai Dinkes,</div>
                         <div style="height: 65px;"></div>
                         <p class="ttd-nama">{{ $namaPelapor }}</p>
                         <div>NIP. {{ $laporan->pegawai->nip ?? '___________________' }}</div>

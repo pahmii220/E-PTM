@@ -138,7 +138,8 @@ public function create()
                 })
             ],
             'tanggal_pemeriksaan' => 'required|date',
-            'tekanan_darah'       => 'nullable|string',
+            'sistolik'            => 'required|numeric',
+            'diastolik'           => 'required|numeric',
             'gula_darah'          => 'nullable|numeric',
             'kolesterol'          => 'nullable|numeric',
             'berat_badan'         => 'required|numeric',
@@ -148,7 +149,21 @@ public function create()
             'riwayat_keluarga'    => 'required|in:Ya,Tidak',
             'kurang_aktivitas_fisik' => 'required|in:Ya,Tidak',
         ], [
-            'peserta_id.unique' => 'Pasien ini sudah memiliki data pemeriksaan pada tanggal tersebut. Silakan edit data sebelumnya atau gunakan tanggal lain.'
+            'peserta_id.required'          => 'Pasien wajib dipilih.',
+            'peserta_id.unique'            => 'Pasien ini sudah memiliki data pemeriksaan pada tanggal tersebut. Silakan edit data sebelumnya atau gunakan tanggal lain.',
+            'sistolik.required'            => 'Tekanan darah Sistolik wajib diisi.',
+            'sistolik.numeric'             => 'Tekanan darah Sistolik harus berupa angka (contoh: 120).',
+            'diastolik.required'           => 'Tekanan darah Diastolik wajib diisi.',
+            'diastolik.numeric'            => 'Tekanan darah Diastolik harus berupa angka (contoh: 80).',
+            'berat_badan.required'         => 'Berat badan (kg) wajib diisi.',
+            'berat_badan.numeric'          => 'Berat badan harus berupa angka.',
+            'tinggi_badan.required'        => 'Tinggi badan (cm) wajib diisi.',
+            'tinggi_badan.numeric'         => 'Tinggi badan harus berupa angka.',
+            'gula_darah.numeric'           => 'Kadar gula darah harus berupa angka.',
+            'kolesterol.numeric'           => 'Kadar kolesterol harus berupa angka.',
+            'merokok.required'             => 'Status merokok wajib dipilih.',
+            'riwayat_keluarga.required'    => 'Riwayat keluarga PTM wajib dipilih.',
+            'kurang_aktivitas_fisik.required' => 'Aktivitas fisik wajib dipilih.',
         ]);
 
         // hitung IMT
@@ -166,11 +181,30 @@ public function create()
             $dbp = is_numeric($b) ? (int) trim($b) : null;
         }
 
-        $hipertensi = ($sbp !== null && $sbp >= 140) || ($dbp !== null && $dbp >= 90);
+        // Diagnosa Penyakit (comma-separated string)
+        $diagnosaArray = $request->input('diagnosa_penyakit', []);
+        $diagnosaArray = array_unique($diagnosaArray);
+        $diagnosa = implode(', ', $diagnosaArray) ?: 'Normal';
 
-        if ($hipertensi || ($imt !== null && $imt >= 30)) {
+        // Hitung hasil skrining medis
+        $hipertensi = ($sbp !== null && $sbp >= 140) || ($dbp !== null && $dbp >= 90);
+        $gulaTinggi = ($request->gula_darah && $request->gula_darah >= 200);
+        $kolTinggi  = ($request->kolesterol && $request->kolesterol >= 220);
+
+        $penyakitKronisBerat = ['Hipertensi', 'Diabetes Melitus', 'Gagal Jantung', 'Jantung Koroner', 'Gangguan Jantung', 'Stroke', 'PPOK', 'Kanker', 'Thalassemia'];
+        $hasPenyakitBerat = false;
+        foreach ($diagnosaArray as $d) {
+            foreach ($penyakitKronisBerat as $pb) {
+                if (stripos($d, $pb) !== false) {
+                    $hasPenyakitBerat = true;
+                    break 2;
+                }
+            }
+        }
+
+        if ($hipertensi || $gulaTinggi || $kolTinggi || $hasPenyakitBerat || ($imt !== null && $imt >= 30)) {
             $hasil = 'Risiko Tinggi';
-        } elseif ($imt !== null && $imt >= 25) {
+        } elseif (($sbp !== null && $sbp >= 126) || ($request->gula_darah && $request->gula_darah >= 120) || ($request->kolesterol && $request->kolesterol >= 186) || ($imt !== null && $imt >= 25) || (!empty($diagnosaArray) && !in_array('Normal', $diagnosaArray))) {
             $hasil = 'Dicurigai PTM';
         } else {
             $hasil = 'Normal';
@@ -180,11 +214,6 @@ public function create()
         $puskesmasId = Auth::user()->role_name === 'admin'
             ? Peserta::findOrFail($request->peserta_id)->puskesmas_id
             : Auth::user()->petugas->puskesmas_id;
-
-        // Diagnosa Penyakit (comma-separated string)
-        $diagnosaArray = $request->input('diagnosa_penyakit', []);
-        $diagnosaArray = array_unique($diagnosaArray);
-        $diagnosa = implode(', ', $diagnosaArray) ?: 'Normal';
 
         $deteksiBaru = DeteksiDiniPTM::create([
             'peserta_id'          => $request->peserta_id,
@@ -223,9 +252,15 @@ public function create()
             ]
         );
 
+        if ($hasil === 'Normal' && (empty($diagnosaArray) || in_array('Normal', $diagnosaArray))) {
+            return redirect()
+                ->route('petugas.deteksi_dini.index')
+                ->with('success', 'Data Deteksi Dini & Faktor Risiko berhasil disimpan.');
+        }
+
         return redirect()
             ->route('petugas.tindak_lanjut.create', $deteksiBaru->id)
-            ->with('success', 'Deteksi Dini & Faktor Risiko berhasil disimpan. Terakhir, silakan lengkapi Tindak Lanjut.');
+            ->with('success', 'Data Deteksi Dini berhasil disimpan. Pasien terindikasi berisiko PTM, silakan lengkapi form Tindak Lanjut.');
     }
 
     /**
@@ -239,6 +274,12 @@ public function create()
             $puskesmasId = Auth::user()->petugas->puskesmas_id;
             $deteksi = DeteksiDiniPTM::where('puskesmas_id', $puskesmasId)
                 ->findOrFail($id);
+        }
+
+        if (Auth::user()->role_name !== 'admin' && in_array($deteksi->status_verifikasi, ['approved', 'pending', 'terverifikasi'])) {
+            return redirect()
+                ->route('petugas.deteksi_dini.index')
+                ->with('error', 'Data pemeriksaan yang sudah diajukan/disahkan dalam laporan tidak dapat diubah.');
         }
 
         // Ambil data faktor risiko terkait
@@ -257,6 +298,12 @@ public function create()
         $data = (Auth::user()->role_name === 'admin') 
             ? DeteksiDiniPTM::findOrFail($id) 
             : DeteksiDiniPTM::where('puskesmas_id', Auth::user()->petugas->puskesmas_id)->findOrFail($id);
+
+        if (Auth::user()->role_name !== 'admin' && in_array($data->status_verifikasi, ['approved', 'pending', 'terverifikasi'])) {
+            return redirect()
+                ->route('petugas.deteksi_dini.index')
+                ->with('error', 'Data pemeriksaan yang sudah diajukan/disahkan dalam laporan tidak dapat diubah.');
+        }
 
         $request->validate([
             'tanggal_pemeriksaan' => 'required|date',
@@ -289,16 +336,34 @@ public function create()
             $dbp = is_numeric($b) ? (int) trim($b) : null;
         }
 
-        $hipertensi = ($sbp !== null && $sbp >= 140) || ($dbp !== null && $dbp >= 90);
+        $diagnosaArray = $request->input('diagnosa_penyakit', []);
+        $diagnosaArray = array_unique($diagnosaArray);
+        $diagnosaStr = implode(', ', $diagnosaArray) ?: 'Normal';
 
-        if ($hipertensi || ($imt !== null && $imt >= 30)) {
+        // Hitung hasil skrining medis
+        $hipertensi = ($sbp !== null && $sbp >= 140) || ($dbp !== null && $dbp >= 90);
+        $gulaTinggi = ($request->gula_darah && $request->gula_darah >= 200);
+        $kolTinggi  = ($request->kolesterol && $request->kolesterol >= 220);
+
+        $penyakitKronisBerat = ['Hipertensi', 'Diabetes Melitus', 'Gagal Jantung', 'Jantung Koroner', 'Gangguan Jantung', 'Stroke', 'PPOK', 'Kanker', 'Thalassemia'];
+        $hasPenyakitBerat = false;
+        foreach ($diagnosaArray as $d) {
+            foreach ($penyakitKronisBerat as $pb) {
+                if (stripos($d, $pb) !== false) {
+                    $hasPenyakitBerat = true;
+                    break 2;
+                }
+            }
+        }
+
+        if ($hipertensi || $gulaTinggi || $kolTinggi || $hasPenyakitBerat || ($imt !== null && $imt >= 30)) {
             $hasil = 'Risiko Tinggi';
-        } elseif ($imt !== null && $imt >= 25) {
+        } elseif (($sbp !== null && $sbp >= 126) || ($request->gula_darah && $request->gula_darah >= 120) || ($request->kolesterol && $request->kolesterol >= 186) || ($imt !== null && $imt >= 25) || (!empty($diagnosaArray) && !in_array('Normal', $diagnosaArray))) {
             $hasil = 'Dicurigai PTM';
         } else {
             $hasil = 'Normal';
         }
-        
+
         // 1. Siapkan data update
         $updateData = [
             'tanggal_pemeriksaan' => $request->tanggal_pemeriksaan,
@@ -309,14 +374,9 @@ public function create()
             'tinggi_badan'        => $tinggi_cm,
             'imt'                 => $imt,
             'hasil_skrining'      => $hasil,
+            'diagnosa_penyakit'   => $diagnosaStr,
             'puskesmas_id'        => $request->puskesmas_id ?? $data->puskesmas_id,
         ];
-
-        if ($request->has('diagnosa_penyakit')) {
-            $diagnosaArray = $request->input('diagnosa_penyakit', []);
-            $diagnosaArray = array_unique($diagnosaArray);
-            $updateData['diagnosa_penyakit'] = implode(', ', $diagnosaArray) ?: 'Normal';
-        }
 
         // Jika Dinkes melakukan verifikasi (menolak/menyetujui)
         if ($request->has('status_verifikasi')) {
@@ -411,14 +471,21 @@ private function notifyPetugas($data, $notification)
     public function destroy($id)
     {
         if (Auth::user()->role_name === 'admin') {
-            DeteksiDiniPTM::findOrFail($id)->delete();
+            $deteksi = DeteksiDiniPTM::findOrFail($id);
         } else {
             $puskesmasId = Auth::user()->petugas->puskesmas_id;
 
-            DeteksiDiniPTM::where('puskesmas_id', $puskesmasId)
-                ->findOrFail($id)
-                ->delete();
+            $deteksi = DeteksiDiniPTM::where('puskesmas_id', $puskesmasId)
+                ->findOrFail($id);
         }
+
+        if (Auth::user()->role_name !== 'admin' && in_array($deteksi->status_verifikasi, ['approved', 'pending', 'terverifikasi'])) {
+            return redirect()
+                ->route('petugas.deteksi_dini.index')
+                ->with('error', 'Data pemeriksaan yang sudah diajukan/disahkan dalam laporan tidak dapat dihapus.');
+        }
+
+        $deteksi->delete();
 
         return redirect()
             ->route('petugas.deteksi_dini.index')

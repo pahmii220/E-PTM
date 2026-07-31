@@ -9,7 +9,7 @@
         /* ====== SETTING CETAK ====== */
         @page {
             size: portrait;
-            margin: 15mm 12mm;
+            margin: 0;
         }
 
         body {
@@ -30,47 +30,56 @@
         }
 
         /* ====== KOP ====== */
-        .kop {
-            text-align: center;
+        .kop-table {
+            width: 100%;
+            border-collapse: collapse;
             margin-bottom: 6px;
-            position: relative;
         }
-
-        .kop .left {
-            float: left;
+        .kop-table td.logo-cell {
+            width: 80px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .kop-table td.logo-cell img {
+            width: 70px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        .kop-table td.text-cell {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .kop-table td.spacer-cell {
             width: 80px;
         }
 
-        .kop .center {
-            display: inline-block;
-            width: calc(100% - 160px);
-            text-align: center;
-        }
-
-        .clear {
-            clear: both;
-        }
-
-        .kop .prov {
+        .prov {
             font-size: 14px;
             font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .kop .dinas {
+        .dinas {
             font-size: 18px;
             font-weight: 900;
+            text-transform: uppercase;
             margin-top: 2px;
+            letter-spacing: 0.5px;
         }
 
-        .kop .addr {
-            font-size: 12px;
-            margin-top: 6px;
+        .addr {
+            font-size: 11px;
+            margin-top: 4px;
+            font-style: italic;
+            line-height: 1.3;
         }
 
         hr.top {
             border: none;
             border-top: 2px solid #000;
-            margin: 8px 0 12px 0;
+            margin: 6px 0 12px 0;
         }
 
         /* ====== TITLE ====== */
@@ -127,6 +136,12 @@
         }
 
         @media print {
+            @page {
+                margin: 0;
+            }
+            body {
+                margin: 12mm 15mm;
+            }
             .no-print {
                 display: none;
             }
@@ -172,18 +187,22 @@
         </div>
 
         {{-- KOP SURAT --}}
-        <div class="kop">
-            <div class="left">
-                <img src="{{ asset('images/dinkes.png') }}" alt="logo" style="width:65px; height:auto;">
-            </div>
-            <br>
-            <div class="center">
-                <div class="prov">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
-                <div class="dinas">DINAS KESEHATAN</div>
-                <div class="addr">Jalan Belitung Darat No.118 — Telp: (0511) 3355661 — Banjarmasin 70116</div>
-            </div>
-            <div class="clear"></div>
-        </div>
+        <table class="kop-table">
+            <tr>
+                <td class="logo-cell">
+                    <img src="{{ asset('images/dinkes.png') }}" alt="logo">
+                </td>
+                <td class="text-cell">
+                    <div class="prov">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+                    <div class="dinas">DINAS KESEHATAN</div>
+                    <div class="addr">
+                        Jalan Dharma Praja, Banjarbaru, Kalimantan Selatan Kode Pos 70732<br>
+                        (Kawasan Perkantoran Pemerintah Provinsi Kalimantan Selatan)
+                    </div>
+                </td>
+                <td class="spacer-cell"></td>
+            </tr>
+        </table>
 
         <hr class="top">
 
@@ -192,9 +211,27 @@
             LAPORAN REKAPITULASI SKRINING & JENIS PENYAKIT (PTM)
         </div>
 
+        @php
+            $namaBulanIndo = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            if (request('filter_waktu') == 'tanggal' && request('tgl_awal') && request('tgl_akhir')) {
+                $tAwal = \Carbon\Carbon::parse(request('tgl_awal'));
+                $tAkhir = \Carbon\Carbon::parse(request('tgl_akhir'));
+                $textPeriode = $tAwal->format('d') . ' ' . $namaBulanIndo[(int)$tAwal->format('m')] . ' ' . $tAwal->format('Y') . ' s/d ' . $tAkhir->format('d') . ' ' . $namaBulanIndo[(int)$tAkhir->format('m')] . ' ' . $tAkhir->format('Y');
+            } elseif (request('bulan')) {
+                $bIdx = (int) request('bulan');
+                $textPeriode = ($namaBulanIndo[$bIdx] ?? '') . ' ' . request('tahun', date('Y'));
+            } else {
+                $now = \Carbon\Carbon::now();
+                $textPeriode = $namaBulanIndo[(int)$now->format('m')] . ' ' . $now->format('Y');
+            }
+        @endphp
+
         {{-- NARASI EKSEKUTIF --}}
-        <div style="background-color: #f8f9fa; border-left: 4px solid #198754; padding: 12px 15px; margin-bottom: 15px; font-size: 13px; line-height: 1.5; text-align: justify;">
+        <div style="background-color: #f8f9fa; border-left: 4px solid #198754; padding: 12px 15px; margin-bottom: 15px; font-size: 12px; line-height: 1.5; text-align: justify;">
             {!! $narasiEksekutif ?? 'Menampilkan laporan agregat hasil skrining dan pemetaan penyakit.' !!}
+            <div style="margin-top: 5px; font-weight: bold; color: #166534;">
+                Periode Laporan: {{ $textPeriode }}
+            </div>
         </div>
 
         {{-- TABEL HASIL SKRINING --}}
@@ -295,23 +332,28 @@
         <div class="ttd">
             <div class="block">
                 <div>DIKELUARKAN DI BANJARMASIN</div>
-                <div>TANGGAL, {{ date('d-m-Y') }}</div>
-                <div style="font-weight: 700; margin-top:10px;">KEPALA BIDANG P2PTM</div>
+                <div>TANGGAL, {{ \Carbon\Carbon::now()->setTimezone('Asia/Makassar')->format('d-m-Y') }}</div>
+                <div style="font-weight: 700; margin-top:10px; text-transform: uppercase;">{{ $kepalaAktif->jabatan ?? 'KEPALA BIDANG P2PTM' }}</div>
 
                 <div class="qr-container">
                     @if(isset($qrToken))
-                        {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(80)->generate($qrToken) !!}
+                        @php
+                            $namaPejabat = $kepalaAktif->nama_kepala ?? 'Dr. H. Anhar Ihwan, SKM, MS';
+                            $nipPejabat = $kepalaAktif->nip ?? '197008081990031003';
+                            $tanggalSah = \Carbon\Carbon::now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
+                        @endphp
+                        {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(85)->generate(url('/verifikasi-laporan?judul=Laporan%20Skrining%20%26%20Jenis%20Penyakit&periode=' . urlencode($textPeriode ?? '') . '&tanggal_sah=' . urlencode($tanggalSah) . '&nama_kepala=' . urlencode($namaPejabat) . '&nip=' . urlencode($nipPejabat))) !!}
                     @else
-                        <div style="height:80px; width:80px; border:1px solid #ccc; display:inline-block;"></div>
+                        <div style="height:85px; width:85px; border:1px solid #ccc; display:inline-block;"></div>
                     @endif
                 </div>
 
                 @if(isset($kepalaAktif))
-                    <div class="name">{{ $kepalaAktif->user->nama ?? 'Nama Kepala P2PTM' }}</div>
-                    <div style="margin-top:2px;">NIP. {{ $kepalaAktif->nip ?? '-' }}</div>
+                    <div class="name">{{ $kepalaAktif->nama_kepala ?? 'Dr. H. Anhar Ihwan, SKM, MS' }}</div>
+                    <div style="margin-top:2px;">NIP. {{ $kepalaAktif->nip ?? '197008081990031003' }}</div>
                 @else
-                    <div class="name">Nama Kepala P2PTM</div>
-                    <div style="margin-top:2px;">NIP. -</div>
+                    <div class="name">Dr. H. Anhar Ihwan, SKM, MS</div>
+                    <div style="margin-top:2px;">NIP. 197008081990031003</div>
                 @endif
             </div>
         </div>

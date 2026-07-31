@@ -134,22 +134,41 @@
 </head>
 <body>
 
-    <!-- KOP SURAT PUSKESMAS -->
-    <table class="kop-surat">
+    @php
+        $logoPath = public_path('images/dinkes.png');
+        $logoData = file_exists($logoPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath)) : asset('images/dinkes.png');
+    @endphp
+    <!-- KOP SURAT PUSKESMAS (3-KOLOM SIMETRIS) -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px;">
         <tr>
-            <td class="logo">
-                <img src="{{ asset('images/dinkes.png') }}" alt="Logo">
+            <td style="width: 80px; text-align: center; vertical-align: middle;">
+                <img src="{{ $logoData }}" alt="Logo Dinkes" style="width: 70px; height: auto; display: block; margin: 0 auto;">
             </td>
-            <td class="teks">
-                <h1>{{ strtoupper($tindakLanjut->peserta->puskesmas->nama_puskesmas ?? 'UPTD PUSKESMAS') }}</h1>
-                <p>{{ $tindakLanjut->peserta->puskesmas->alamat ?? 'Alamat belum diatur' }}</p>
+            <td style="text-align: center; vertical-align: middle; padding: 0 10px;">
+                <div style="font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">
+                    PEMERINTAH PROVINSI KALIMANTAN SELATAN
+                </div>
+                <div style="font-size: 16px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin: 2px 0;">
+                    DINAS KESEHATAN
+                </div>  
+                @php
+                    $namaPuskesmasRaw = $tindakLanjut->peserta->puskesmas->nama_puskesmas ?? 'TERMINAL';
+                    $namaPuskesmasClean = \Illuminate\Support\Str::startsWith(strtoupper($namaPuskesmasRaw), 'PUSKESMAS') 
+                        ? strtoupper($namaPuskesmasRaw) 
+                        : 'PUSKESMAS ' . strtoupper($namaPuskesmasRaw);
+                @endphp
+                <div style="font-size: 20px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin: 2px 0;">
+                    {{ $namaPuskesmasClean }}
+                </div>
+                <div style="font-size: 11px; font-style: italic; margin-top: 3px;">
+                    {{ $tindakLanjut->peserta->puskesmas->alamat ?? 'Alamat belum diatur' }}
+                </div>
             </td>
-            <td class="logo">
-                <!-- Kosong untuk menyeimbangkan -->
-            </td>
+            <td style="width: 80px;"></td>
         </tr>
     </table>
-    <div style="border-top: 1px solid black; margin-top: 2px; margin-bottom: 20px;"></div>
+    <div style="border-top: 3px solid black; margin-top: 4px;"></div>
+    <div style="border-top: 1px solid black; margin-top: 2px; margin-bottom: 25px;"></div>
 
     <!-- JUDUL SURAT -->
     <div class="judul-surat">
@@ -245,8 +264,12 @@ $namaKotaBersih = ucwords(strtolower($namaKabupaten));
             <br>
                     
 
-            <p class="ttd-nama">{{ Auth::user()->petugas->nama_pegawai ?? Auth::user()->name }}</p>
-            <p>NIP. {{ Auth::user()->petugas->nip ?? '___________________' }}</p>
+            @php
+                $petugasNama = $tindakLanjut->petugas->nama_pegawai ?? ($tindakLanjut->deteksiDini->petugas->nama_pegawai ?? (Auth::check() ? (Auth::user()->petugas->nama_pegawai ?? Auth::user()->name) : 'Petugas Pemeriksa'));
+                $petugasNIP = $tindakLanjut->petugas->nip ?? ($tindakLanjut->deteksiDini->petugas->nip ?? (Auth::check() ? (Auth::user()->petugas->nip ?? '___________________') : '___________________'));
+            @endphp
+            <p class="ttd-nama">{{ $petugasNama }}</p>
+            <p>NIP. {{ $petugasNIP }}</p>
         </div>
     </div>
 

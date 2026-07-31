@@ -82,6 +82,23 @@ class PesertaController extends Controller
             ]);
         }
 
+        $messages = [
+            'nik.required'            => 'NIK (Nomor Induk Kependudukan) wajib diisi.',
+            'nik.size'                => 'NIK harus terdiri dari tepat 16 digit angka.',
+            'nik.unique'              => 'NIK ini sudah terdaftar di sistem. Silakan periksa kembali atau gunakan NIK lain.',
+            'no_rekam_medis.required' => 'Nomor Rekam Medis wajib diisi.',
+            'no_rekam_medis.unique'   => 'Nomor Rekam Medis ini sudah digunakan oleh pasien lain.',
+            'nama_lengkap.required'   => 'Nama lengkap pasien wajib diisi.',
+            'tempat_lahir.required'   => 'Tempat lahir wajib diisi.',
+            'tanggal_lahir.required'  => 'Tanggal lahir wajib diisi.',
+            'jenis_kelamin.required'  => 'Jenis kelamin wajib dipilih.',
+            'pekerjaan.required'      => 'Pekerjaan pasien wajib diisi.',
+            'alamat.required'         => 'Alamat lengkap wajib diisi.',
+            'kecamatan.required'      => 'Kecamatan wajib diisi.',
+            'kontak.required'         => 'Nomor kontak / HP wajib diisi.',
+            'puskesmas_id.required'   => 'Puskesmas wajib dipilih.',
+        ];
+
         $request->validate([
             'nik'            => 'required|string|size:16|unique:peserta', // Harus 16 digit & unik
             'nama_lengkap'   => 'required|string|max:100',
@@ -94,7 +111,7 @@ class PesertaController extends Controller
             'kecamatan'      => 'required|string|max:100',
             'kontak'         => 'required|string|max:20',
             'puskesmas_id'   => $user->role_name === 'admin' ? 'required|exists:puskesmas,id' : '',
-        ]);
+        ], $messages);
 
         $pesertaBaru = Peserta::create([
             'puskesmas_id'      => $user->role_name === 'admin' ? $request->puskesmas_id : $user->petugas->puskesmas_id,
@@ -115,7 +132,7 @@ class PesertaController extends Controller
 
         return redirect()
             ->route('petugas.deteksi_dini.create', ['peserta_id' => $pesertaBaru->id])
-            ->with('success', 'Data Peserta tersimpan. Silakan lanjut isi form Deteksi Dini berikut.');
+            ->with('success', 'Data Pasien tersimpan. Silakan lanjut isi form Deteksi Dini berikut.');
     }
 
     /**
@@ -204,6 +221,21 @@ class PesertaController extends Controller
             ]);
         }
 
+        $messages = [
+            'nik.required'            => 'NIK (Nomor Induk Kependudukan) wajib diisi.',
+            'nik.size'                => 'NIK harus terdiri dari tepat 16 digit angka.',
+            'nik.unique'              => 'NIK ini sudah terdaftar di sistem. Silakan periksa kembali atau gunakan NIK lain.',
+            'no_rekam_medis.required' => 'Nomor Rekam Medis wajib diisi.',
+            'no_rekam_medis.unique'   => 'Nomor Rekam Medis ini sudah digunakan oleh pasien lain.',
+            'nama_lengkap.required'   => 'Nama lengkap pasien wajib diisi.',
+            'tempat_lahir.required'   => 'Tempat lahir wajib diisi.',
+            'jenis_kelamin.required'  => 'Jenis kelamin wajib dipilih.',
+            'pekerjaan.required'      => 'Pekerjaan pasien wajib diisi.',
+            'alamat.required'         => 'Alamat lengkap wajib diisi.',
+            'kecamatan.required'      => 'Kecamatan wajib diisi.',
+            'kontak.required'         => 'Nomor kontak / HP wajib diisi.',
+        ];
+
         $request->validate([
             'nik'            => 'required|string|size:16|unique:peserta,nik,' . $id,
             'nama_lengkap'   => 'required|string|max:100',
@@ -215,7 +247,7 @@ class PesertaController extends Controller
             'alamat'         => 'required|string',
             'kecamatan'      => 'required|string|max:100',
             'kontak'         => 'required|string|max:20',
-        ]);
+        ], $messages);
 
         $updateData = $request->only([
             'nik',
@@ -246,7 +278,7 @@ class PesertaController extends Controller
 
         return redirect()
             ->route('petugas.peserta.index')
-            ->with('success', 'Data peserta berhasil diperbarui.');
+            ->with('success', 'Data pasien berhasil diperbarui.');
     }
 
     /**
@@ -264,10 +296,21 @@ class PesertaController extends Controller
             ? Peserta::findOrFail($id)
             : Peserta::where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
 
+        if ($peserta->deteksiDinis()->whereIn('status_verifikasi', ['approved', 'terverifikasi'])->exists()) {
+            return redirect()
+                ->route('petugas.peserta.index')
+                ->with('error', 'Data Pasien tidak dapat dihapus karena laporan pemeriksaan sudah terkirim ke Dinas Kesehatan.');
+        }
+
+        // Hapus riwayat deteksi dini & faktor risiko draft jika ada sebelum menghapus pasien
+        \App\Models\DeteksiDiniPTM::where('peserta_id', $peserta->id)->delete();
+        \App\Models\FaktorResikoPTM::where('peserta_id', $peserta->id)->delete();
+        \App\Models\TindakLanjutPTM::where('peserta_id', $peserta->id)->delete();
+
         $peserta->delete();
 
         return redirect()
             ->route('petugas.peserta.index')
-            ->with('success', 'Data peserta berhasil dihapus.');
+            ->with('success', 'Data pasien berhasil dihapus.');
     }
 }

@@ -9,7 +9,7 @@
         /* ====== SETTING CETAK ====== */
         @page {
             size: portrait;
-            margin: 15mm 12mm;
+            margin: 0;
         }
 
         body {
@@ -30,47 +30,56 @@
         }
 
         /* ====== KOP ====== */
-        .kop {
-            text-align: center;
+        .kop-table {
+            width: 100%;
+            border-collapse: collapse;
             margin-bottom: 6px;
-            position: relative;
         }
-
-        .kop .left {
-            float: left;
+        .kop-table td.logo-cell {
+            width: 80px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .kop-table td.logo-cell img {
+            width: 70px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        .kop-table td.text-cell {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .kop-table td.spacer-cell {
             width: 80px;
         }
 
-        .kop .center {
-            display: inline-block;
-            width: calc(100% - 160px);
-            text-align: center;
-        }
-
-        .clear {
-            clear: both;
-        }
-
-        .kop .prov {
+        .prov {
             font-size: 14px;
             font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .kop .dinas {
+        .dinas {
             font-size: 18px;
             font-weight: 900;
+            text-transform: uppercase;
             margin-top: 2px;
+            letter-spacing: 0.5px;
         }
 
-        .kop .addr {
-            font-size: 12px;
-            margin-top: 6px;
+        .addr {
+            font-size: 11px;
+            margin-top: 4px;
+            font-style: italic;
+            line-height: 1.3;
         }
 
         hr.top {
             border: none;
             border-top: 2px solid #000;
-            margin: 8px 0 12px 0;
+            margin: 6px 0 12px 0;
         }
 
         /* ====== CHART SECTION ====== */
@@ -152,6 +161,12 @@
         }
 
         @media print {
+            @page {
+                margin: 0;
+            }
+            body {
+                margin: 12mm 15mm;
+            }
             .no-print {
                 display: none;
             }
@@ -199,27 +214,28 @@
         </div>
 
         {{-- KOP SURAT --}}
-        <div class="kop">
-            <div class="left">
-                <img src="{{ asset('images/dinkes.png') }}" style="width:65px; height:auto;">
-            </div>
-            <br>
-            <div class="center">
-                <div class="prov">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
-                <div class="dinas">DINAS KESEHATAN</div>
-                <div class="addr">
-                    Jalan Dharma Praja, Banjarbaru, Kalimantan Selatan Kode Pos 70732<br>
-                    (Kawasan Perkantoran Pemerintah Provinsi Kalimantan Selatan)
-                </div>
-            </div>
-            <div class="clear"></div>
-        </div>
+        <table class="kop-table">
+            <tr>
+                <td class="logo-cell">
+                    <img src="{{ asset('images/dinkes.png') }}" alt="logo">
+                </td>
+                <td class="text-cell">
+                    <div class="prov">PEMERINTAH PROVINSI KALIMANTAN SELATAN</div>
+                    <div class="dinas">DINAS KESEHATAN</div>
+                    <div class="addr">
+                        Jalan Dharma Praja, Banjarbaru, Kalimantan Selatan Kode Pos 70732<br>
+                        (Kawasan Perkantoran Pemerintah Provinsi Kalimantan Selatan)
+                    </div>
+                </td>
+                <td class="spacer-cell"></td>
+            </tr>
+        </table>
 
         <hr class="top">
 
         {{-- JUDUL --}}
         <div style="width:100%; text-align:center; margin-bottom:12px;">
-            <h3 style="margin:0; font-size:14px; letter-spacing:0.5px; font-weight:700;">
+            <h3 style="margin:0; font-size:14px; letter-spacing:0.5px; font-weight:700; color:#000; text-transform:uppercase;">
                 LAPORAN REKAPITULASI PENYAKIT TIDAK MENULAR (PTM)<br>
                 BERDASARKAN KELOMPOK USIA
             </h3>
@@ -241,10 +257,22 @@
                 @endphp
                 <strong>Puskesmas:</strong> {{ $pusk ? $pusk->nama_puskesmas : request('puskesmas_id') }} &nbsp;|&nbsp;
             @endif
+            @php
+                $namaBulanIndoUsia = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            @endphp
             @if(request('filter_waktu') == 'bulan' && request('bulan')) 
-                <strong>Periode:</strong> {{ \Carbon\Carbon::create()->month((int)request('bulan'))->translatedFormat('F') }} {{ date('Y') }}
+                @php
+                    $bNum = (int) request('bulan');
+                    $namaB = $namaBulanIndoUsia[$bNum] ?? 'Juli';
+                @endphp
+                <strong>Periode:</strong> {{ $namaB }} {{ request('tahun', date('Y')) }}
             @elseif(request('filter_waktu') == 'tanggal' && request('tgl_awal') && request('tgl_akhir')) 
-                <strong>Periode:</strong> {{ \Carbon\Carbon::parse(request('tgl_awal'))->format('d-m-Y') }} s/d {{ \Carbon\Carbon::parse(request('tgl_akhir'))->format('d-m-Y') }}
+                @php
+                    $t1 = \Carbon\Carbon::parse(request('tgl_awal'));
+                    $t2 = \Carbon\Carbon::parse(request('tgl_akhir'));
+                    $pStr = $t1->format('d') . ' ' . ($namaBulanIndoUsia[(int)$t1->format('m')] ?? '') . ' ' . $t1->format('Y') . ' s/d ' . $t2->format('d') . ' ' . ($namaBulanIndoUsia[(int)$t2->format('m')] ?? '') . ' ' . $t2->format('Y');
+                @endphp
+                <strong>Periode:</strong> {{ $pStr }}
             @endif
         </div>
         @endif
@@ -385,15 +413,12 @@
         <div class="ttd">
             <div class="block">
                 <br>
-                <div>DIKELUARKAN DI BANJARBARU</div>
+                <div>DIKELUARKAN DI BANJARMASIN</div>
                 <div>TANGGAL: {{ now()->format('d-m-Y') }}</div>
 
                 @if(auth()->check() && auth()->user()->role_name === 'pegawai')
-                    {{-- ======================================================= --}}
-                    {{-- 1. TAMPILAN KHUSUS PEGAWAI (HARDCODE & TANPA QR CODE) --}}
-                    {{-- ======================================================= --}}
                     <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
-                        KEPALA BIDANG P2PTM
+                        {{ $kepalaAktif->jabatan ?? 'KEPALA BIDANG P2PTM' }}
                     </div>
 
                     <div class="qr-container" style="margin: 8px 0;">
@@ -401,16 +426,13 @@
                     </div>
 
                     <div class="name" style="margin-top: 0;">
-                        Deny Haryuniansyah
+                        {{ $kepalaAktif->nama_kepala ?? 'Dr. H. Anhar Ihwan, SKM, MS' }}
                     </div>
                     <div style="margin-top:4px;">
-                        NIP. 1973062022006041016
+                        NIP. {{ $kepalaAktif->nip ?? '197008081990031003' }}
                     </div>
 
                 @else
-                    {{-- ======================================================= --}}
-                    {{-- 2. TAMPILAN DINAMIS ADMIN/KEPALA (DARI DB & ADA QR CODE)--}}
-                    {{-- ======================================================= --}}
                     <div style="margin-top:10px; font-weight: bold; text-transform: uppercase;">
                         {{ $kepalaAktif->jabatan ?? 'KEPALA BIDANG P2PTM' }}
                     </div>
@@ -418,14 +440,19 @@
                     <div class="qr-container" style="margin: 8px 0;">
                         @if(isset($qrToken))
                             @php
-                                $periode = request('bulan') && request('tahun')
-                                    ? \Carbon\Carbon::create()->month((int) request('bulan'))->format('F') . ' ' . request('tahun')
-                                    : 'Data Keseluruhan PTM';
+                                $namaBulanIndoUsiaQr = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                                if (request('bulan')) {
+                                    $bNum = (int) request('bulan');
+                                    $periode = ($namaBulanIndoUsiaQr[$bNum] ?? 'Juli') . ' ' . request('tahun', date('Y'));
+                                } else {
+                                    $now = \Carbon\Carbon::now();
+                                    $periode = ($namaBulanIndoUsiaQr[(int)$now->format('m')] ?? 'Juli') . ' ' . $now->format('Y');
+                                }
 
                                 $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
 
-                                $namaPejabat = $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah';
-                                $nipPejabat = $kepalaAktif->nip ?? '1973062022006041016';
+                                $namaPejabat = $kepalaAktif->nama_kepala ?? 'Dr. H. Anhar Ihwan, SKM, MS';
+                                $nipPejabat = $kepalaAktif->nip ?? '197008081990031003';
                             @endphp
 
                             {!! QrCode::size(85)->generate(url('/verifikasi-laporan?judul=Laporan%20Kelompok%20Usia%20PTM&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah) . '&nama_kepala=' . urlencode($namaPejabat) . '&nip=' . urlencode($nipPejabat))) !!}
@@ -435,10 +462,10 @@
                     </div>
 
                     <div class="name" style="margin-top: 0;">
-                        {{ $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah' }}
+                        {{ $kepalaAktif->nama_kepala ?? 'Dr. H. Anhar Ihwan, SKM, MS' }}
                     </div>
                     <div style="margin-top:4px;">
-                        NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}
+                        NIP. {{ $kepalaAktif->nip ?? '197008081990031003' }}
                     </div>
                 @endif
 
