@@ -108,7 +108,7 @@ class PenggunaDashboardController extends Controller
                 if (class_exists(Petugas::class)) {
                     // asumsi relasi petugas->deteksiDiniPTM() ada; jika tidak, fallback aman
                     if (method_exists(Petugas::class, 'deteksiDiniPTM') || method_exists(Petugas::class, 'deteksi_dini_ptm')) {
-                        $topPetugas = Petugas::withCount('deteksiDiniPTM')
+                        $topPetugas = Petugas::withCount(['deteksiDiniPTM as deteksi_dini_ptm_count'])
                             ->orderByDesc('deteksi_dini_ptm_count')
                             ->limit(5)
                             ->get();
@@ -238,6 +238,13 @@ $pendingTotal = $verifCounts['pending'];
             // Query untuk peta sebaran puskesmas
             $puskesmasList = \App\Models\Puskesmas::whereNotNull('latitude')->whereNotNull('longitude')->withCount(['peserta', 'deteksiDini'])->get();
 
+            // Analisis Peringatan Dini Lonjakan Kasus PTM & Peta Kepadatan PTM
+            $earlyWarningData = \App\Services\EarlyWarningService::getKecamatanAlerts();
+            $mapAnalytics = \App\Services\MapVisualizationService::getMapData(
+                $request->input('trend_bulan', null),
+                $request->input('trend_tahun', null)
+            );
+
             // Return view (semua variabel dipasok)
             return view('pengguna.dashboard', compact(
                 'totalPeserta','totalDeteksi','totalFaktor',
@@ -245,7 +252,7 @@ $pendingTotal = $verifCounts['pending'];
                 'recentDeteksi','topPetugas','allDeteksi',
                 'verifCounts','chartLabels','chartData','chartDeteksi','chartFaktor','avgPerDay','weeklyTotal','lastUpdatedAt',
                 'statusFilter', 'rekapPuskesmas', 'rekapKepatuhan', 'filterKepatuhanBulan', 'filterKepatuhanTahun', 'waktuKepatuhan',
-                'puskesmasList'
+                'puskesmasList', 'earlyWarningData', 'mapAnalytics'
             ));
         } catch (\Exception $e) {
             Log::error('Pengguna dashboard error: ' . $e->getMessage(), [

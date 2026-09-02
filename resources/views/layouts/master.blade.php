@@ -592,18 +592,12 @@ if (Auth::check()) {
                         else $displayRole = ucfirst($displayRole);
                     @endphp
 
-                    @if(Auth::user()->role_name === 'admin')
-                        <span class="font-semibold text-gray-800 text-sm block">
-                            Administrator
-                        </span>
-                    @else
-                        <span class="font-semibold text-gray-800 text-sm block">
-                            {{ $namaAsli ?? $displayRole }}
-                        </span>
-                        <span class="text-xs text-gray-500 font-normal block">
-                            {{ $displayRole }}
-                        </span>
-                    @endif
+                    <span class="font-semibold text-gray-800 text-sm block">
+                        {{ $namaAsli ?? $displayRole }}
+                    </span>
+                    <span class="text-xs text-gray-500 font-normal block">
+                        {{ $displayRole }}
+                    </span>
                 </div>
                 <i class="bi bi-caret-down-fill text-gray-500 ms-1"></i>
             </button>

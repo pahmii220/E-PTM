@@ -46,7 +46,7 @@
                     <button type="submit" class="btn btn-primary rounded-pill px-3 fw-semibold w-100">
                         <i class="bi bi-funnel-fill me-1"></i> Filter
                     </button>
-                    <button type="submit" formaction="{{ route('kepala.laporan_monitoring.cetak_semua') }}" formtarget="_blank" class="btn btn-teal rounded-pill px-3 fw-bold w-100 shadow-sm">
+                    <button type="button" data-bs-toggle="modal" data-bs-target="#modalSahkanMonitoringSemua" class="btn btn-teal rounded-pill px-3 fw-bold w-100 shadow-sm">
                         <i class="bi bi-printer me-1"></i> Cetak
                     </button>
                     @if(request('start_date') || request('end_date') || request('bulan'))
@@ -56,6 +56,53 @@
                     @endif
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL PENGESAHAN MONITORING -->
+    <div class="modal fade" id="modalSahkanMonitoringSemua" tabindex="-1" aria-labelledby="modalSahkanMonLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <form action="{{ route('kepala.laporan_monitoring.cetak_semua') }}" method="GET" target="_blank">
+                    @foreach(request()->all() as $key => $val)
+                        @if($key !== 'catatan_pengesahan' && !is_array($val))
+                            <input type="hidden" name="{{ $key }}" value="{{ $val }}">
+                        @endif
+                    @endforeach
+
+                    <div class="modal-header border-0 pb-0 pt-4 px-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                                <i class="bi bi-patch-check-fill fs-5"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold text-dark mb-0" id="modalSahkanMonLabel">Pengesahan Hasil Monitoring PTM</h5>
+                                <small class="text-muted">Digital Signature HMAC-SHA256 & QR Code Resmi</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body px-4 py-3">
+                        <div class="mb-2">
+                            <label for="catatan_mon" class="form-label fw-bold text-dark small mb-1">
+                                <i class="bi bi-chat-left-text-fill text-success me-1"></i> Catatan / Arahan Kepala Bidang P2PTM:
+                            </label>
+                            <textarea class="form-control rounded-3" id="catatan_mon" name="catatan_pengesahan" rows="3" placeholder="Masukkan catatan resmi pengesahan..." style="font-size: 0.85rem;" required>Rekapitulasi laporan hasil monitoring pegawai telah diverifikasi dan disahkan.</textarea>
+                            <div class="form-text text-muted" style="font-size: 0.75rem;">
+                                <i class="bi bi-info-circle me-1"></i> Catatan ini akan otomatis terkunci dalam tanda tangan digital dan tampil saat QR Code di-scan.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-light rounded-pill px-3 fw-semibold btn-sm" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold btn-sm shadow-sm" onclick="setTimeout(function(){ bootstrap.Modal.getInstance(document.getElementById('modalSahkanMonitoringSemua')).hide(); }, 300);">
+                            <i class="bi bi-printer-fill me-1"></i> Sahkan &amp; Cetak
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 

@@ -367,6 +367,7 @@ class DashboardController extends Controller
             /* =====================
                ANALITIK DISTRIBUSI FAKTOR RISIKO
             ====================== */
+            $tableFaktor = 'faktor_resiko_ptm';
             if (Schema::hasTable($tableFaktor)) {
                 $queryF = DB::table($tableFaktor);
 

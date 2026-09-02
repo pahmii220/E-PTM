@@ -142,7 +142,7 @@ class PesertaController extends Controller
     {
         $user = Auth::user();
 
-        $peserta = $user->role_name === 'admin'
+        $peserta = in_array($user->role_name, ['admin', 'pegawai', 'kepala_p2ptm'])
             ? Peserta::findOrFail($id)
             : Peserta::where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
 
@@ -160,6 +160,46 @@ class PesertaController extends Controller
         }
 
         return view('petugas.peserta.show', compact('peserta', 'riwayatKunjungan'));
+    }
+
+    /**
+     * Cetak Lembar Kartu Riwayat Pemeriksaan Pasien (Kunjungan Berkala PTM)
+     */
+    public function cetakRiwayat($id)
+    {
+        $user = Auth::user();
+
+        $peserta = in_array($user->role_name, ['admin', 'pegawai', 'kepala_p2ptm'])
+            ? Peserta::with('puskesmas')->findOrFail($id)
+            : Peserta::with('puskesmas')->where('puskesmas_id', $user->petugas->puskesmas_id)->findOrFail($id);
+
+        // Ambil semua riwayat deteksi dini & tindak lanjut terikat secara kronologis
+        $riwayatKunjungan = \App\Models\DeteksiDiniPTM::with(['tindakLanjut', 'petugas'])
+            ->where('peserta_id', $id)
+            ->orderBy('tanggal_pemeriksaan', 'asc')
+            ->get();
+
+        // Cari faktor risiko untuk tiap kunjungan
+        foreach ($riwayatKunjungan as $rk) {
+            $rk->faktor_risiko = \App\Models\FaktorResikoPTM::where('peserta_id', $id)
+                ->where('tanggal_pemeriksaan', $rk->tanggal_pemeriksaan)
+                ->first();
+        }
+
+        // Cari Petugas Pemeriksa PTM
+        $petugasPemeriksa = null;
+        if ($user->role_name === 'petugas' && $user->petugas) {
+            $petugasPemeriksa = $user->petugas;
+        } else {
+            $lastKunjungan = $riwayatKunjungan->last();
+            if ($lastKunjungan && $lastKunjungan->petugas) {
+                $petugasPemeriksa = $lastKunjungan->petugas;
+            } else {
+                $petugasPemeriksa = \App\Models\Petugas::where('puskesmas_id', $peserta->puskesmas_id)->first();
+            }
+        }
+
+        return view('petugas.peserta.print_riwayat', compact('peserta', 'riwayatKunjungan', 'petugasPemeriksa'));
     }
 
     /**

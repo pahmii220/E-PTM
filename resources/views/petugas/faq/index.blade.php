@@ -192,11 +192,6 @@
                         <h5 class="fw-bold mb-2">Pusat Layanan IT</h5>
                         <p class="text-white-50 small mb-4" style="line-height: 1.6;">Masih kebingungan? Hubungi tim administrator teknis kami untuk mendapatkan panduan langsung via Email.</p>
                         
-                        @if(session('success'))
-                            <div class="alert alert-success bg-white text-success border-0 py-2 small fw-bold mb-3">
-                                <i class="bi bi-check-circle-fill me-1"></i> {{ session('success') }}
-                            </div>
-                        @endif
 
                         <button type="button" class="btn btn-light text-primary rounded-pill fw-bold w-100 py-2 shadow-sm transition-all hover-scale" data-bs-toggle="modal" data-bs-target="#contactModal">
                             <i class="bi bi-envelope-fill me-2 text-primary"></i> Kirim Pesan ke Administrator

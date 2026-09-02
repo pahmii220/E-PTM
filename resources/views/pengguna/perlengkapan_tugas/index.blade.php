@@ -10,6 +10,20 @@
             </h2>
             <p class="text-muted mb-0">Daftar Laporan Hasil Monitoring yang telah disetujui (ACC) oleh Kepala P2PTM. Siapkan daftar alat medis &amp; logistik yang diusulkan ke Puskesmas.</p>
         </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            {{-- Filter Periode Bulan --}}
+            <form method="GET" action="{{ route('pengguna.perlengkapan.index') }}" class="d-flex align-items-center gap-1 bg-white p-1.5 rounded-xl border border-gray-200 shadow-sm">
+                <span class="text-xs fw-semibold text-gray-500 ms-2 me-1"><i class="bi bi-funnel-fill text-warning me-1"></i>Periode:</span>
+                <select name="bulan" class="form-select form-select-sm border-0 bg-transparent fw-bold text-xs text-blue-900" style="min-width: 130px; cursor: pointer;" onchange="this.form.submit()">
+                    <option value="semua" {{ $bulanInput == 'semua' ? 'selected' : '' }}>Semua Bulan</option>
+                    @foreach($listBulanIndo as $valBulan => $labelBulan)
+                        <option value="{{ $valBulan }}" {{ $bulanInput == $valBulan ? 'selected' : '' }}>
+                            {{ $labelBulan }} {{ $tahunInput }}
+                        </option>
+                    @endforeach
+                </select>
+            </form>
+        </div>
     </div>
 
     {{-- CARD TABEL PERLENGKAPAN --}}

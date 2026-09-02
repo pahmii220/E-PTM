@@ -99,9 +99,13 @@ class DashboardController extends Controller
         $dataWilayah   = $wilayahStats->pluck('total')->toArray();
 
         // ===============================
-        // 5. PETA SEBARAN PUSKESMAS
+        // 5. PETA SEBARAN, KEPADATAN & CLUSTERING PUSKESMAS
         // ===============================
         $mapPuskesmasData = \App\Models\Puskesmas::whereNotNull('latitude')->whereNotNull('longitude')->withCount(['peserta', 'deteksiDini'])->get();
+        $mapAnalytics = \App\Services\MapVisualizationService::getMapData(
+            request('trend_bulan', null),
+            request('trend_tahun', null)
+        );
 
         return view('admin.dashboard', compact(
             'totalPengguna',
@@ -114,7 +118,8 @@ class DashboardController extends Controller
             'dataGender',
             'labelsWilayah',
             'dataWilayah',
-            'mapPuskesmasData'
+            'mapPuskesmasData',
+            'mapAnalytics'
         ));
     }
 }

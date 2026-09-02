@@ -142,39 +142,42 @@
                             </td>
 
                             <!-- Rincian Alat / Logistik -->
-                            <td>
+                            <td style="max-width: 240px;">
                                 @php $totalItems = count($row->items); @endphp
                                 @if($totalItems > 0)
                                     @php
                                         $firstItem = $row->items->first();
                                         $remainingItems = $row->items->slice(1);
                                     @endphp
-                                    <div class="d-flex flex-wrap align-items-center gap-1.5" style="max-width: 240px;">
-                                        <span class="badge bg-white text-dark border border-gray-300 shadow-2xs px-2.5 py-1.5 fw-medium d-inline-flex align-items-center mb-1" style="font-size: 0.8rem;">
-                                            <i class="bi bi-box-seam text-warning me-1.5"></i>
-                                            {{ $firstItem->nama_barang }}
-                                            <span class="badge bg-success-subtle text-success ms-1.5 border border-success-subtle fw-bold" style="font-size: 0.725rem;">
-                                                {{ $firstItem->jumlah }} {{ $firstItem->satuan ?? 'Unit' }}
-                                            </span>
-                                        </span>
+                                    <div class="d-flex flex-column gap-1.5" style="max-width: 230px;">
+                                        <div class="p-2 rounded-3 bg-white border border-gray-300 shadow-2xs text-dark" style="font-size: 0.8rem; line-height: 1.35;">
+                                            <div class="d-flex justify-content-between align-items-start gap-1 flex-wrap">
+                                                <span class="fw-semibold text-dark text-wrap me-1">
+                                                    <i class="bi bi-box-seam text-warning me-1"></i>{{ $firstItem->nama_barang }}
+                                                </span>
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold flex-shrink-0" style="font-size: 0.725rem;">
+                                                    {{ $firstItem->jumlah }} {{ $firstItem->satuan ?? 'Unit' }}
+                                                </span>
+                                            </div>
+                                        </div>
 
                                         @if($totalItems > 1)
-                                            <div class="dropdown d-inline-block mb-1">
+                                            <div class="dropdown">
                                                 <button class="btn btn-xs btn-outline-primary rounded-pill px-2.5 py-1 fw-semibold dropdown-toggle shadow-2xs" 
                                                         type="button" 
                                                         data-bs-toggle="dropdown" 
                                                         aria-expanded="false" 
                                                         style="font-size: 0.75rem;">
-                                                    +{{ $totalItems - 1 }} lainnya
+                                                    +{{ $totalItems - 1 }} item lainnya
                                                 </button>
-                                                <ul class="dropdown-menu shadow-lg border-0 rounded-3 p-2" style="font-size: 0.8rem; min-width: 230px;">
+                                                <ul class="dropdown-menu shadow-lg border-0 rounded-3 p-2" style="font-size: 0.8rem; min-width: 240px;">
                                                     <li class="dropdown-header fw-bold text-dark border-bottom pb-1.5 mb-1" style="font-size: 0.75rem;">
                                                         <i class="bi bi-boxes text-warning me-1"></i> Rincian Alat Lainnya ({{ $totalItems - 1 }})
                                                     </li>
                                                     @foreach($remainingItems as $remItem)
                                                         <li class="px-2 py-1.5 d-flex justify-content-between align-items-center border-bottom border-light">
-                                                            <span class="text-dark fw-medium">{{ $remItem->nama_barang }}</span>
-                                                            <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold ms-2">
+                                                            <span class="text-dark fw-medium text-wrap me-2" style="max-width: 150px;">{{ $remItem->nama_barang }}</span>
+                                                            <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold flex-shrink-0">
                                                                 {{ $remItem->jumlah }} {{ $remItem->satuan ?? 'Unit' }}
                                                             </span>
                                                         </li>

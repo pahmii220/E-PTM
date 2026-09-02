@@ -455,7 +455,15 @@
                                 $nipPejabat = $kepalaAktif->nip ?? '197008081990031003';
                             @endphp
 
-                            {!! QrCode::size(85)->generate(url('/verifikasi-laporan?judul=Laporan%20Kelompok%20Usia%20PTM&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah) . '&nama_kepala=' . urlencode($namaPejabat) . '&nip=' . urlencode($nipPejabat))) !!}
+                            {!! QrCode::size(85)->generate(\App\Helpers\DocumentSigner::url([
+                                'judul' => 'Laporan Kelompok Usia PTM',
+                                'periode' => $periode,
+                                'tanggal_sah' => $tanggalSah,
+                                'nama_kepala' => $namaPejabat,
+                                'nip' => $nipPejabat,
+                                'jabatan' => $kepalaAktif->jabatan ?? 'Kepala Bidang P2PTM',
+                                'catatan' => request('catatan_pengesahan') ?? 'Analisis distribusi tren kelompok usia penderita PTM telah diverifikasi sah.'
+                            ])) !!}
                         @else
                             <div style="height: 85px;"></div>
                         @endif

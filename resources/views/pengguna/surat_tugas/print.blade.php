@@ -351,11 +351,19 @@
                         <strong>Kepala Bidang P2PTM</strong><br>
                         
                         <div class="qr-container">
-                            {!! QrCode::size(85)->generate(url('/verifikasi-laporan?judul=Surat%20Perintah%20Tugas&periode=' . urlencode($surat->nomor_surat) . '&tanggal_sah=' . urlencode(\Carbon\Carbon::parse($surat->tanggal_disetujui)->format('d-m-Y H:i')) . '&nama_kepala=' . urlencode($kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah') . '&nip=' . urlencode($kepalaAktif->nip ?? '1973062022006041016'))) !!}
+                            {!! QrCode::size(85)->generate(\App\Helpers\DocumentSigner::url([
+                                'judul' => 'Surat Perintah Tugas (SPT)',
+                                'periode' => $surat->nomor_surat ?? '-',
+                                'tanggal_sah' => \Carbon\Carbon::parse($surat->tanggal_disetujui ?? now())->format('d-m-Y H:i'),
+                                'nama_kepala' => $kepalaAktif->nama_kepala ?? 'Dr. H. Anhar Ihwan, SKM, MS',
+                                'nip' => $kepalaAktif->nip ?? '197008081990031003',
+                                'jabatan' => $kepalaAktif->jabatan ?? 'Kepala Bidang P2PTM',
+                                'catatan' => $surat->keterangan ?? ($surat->maksud_perjalanan ?? (request('catatan_pengesahan') ?? 'Surat Perintah Tugas resmi telah ditandatangani secara elektronik.'))
+                            ])) !!}
                         </div>
                         
-                        <u><strong>{{ $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah' }}</strong></u><br>
-                        NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}
+                        <u><strong>{{ $kepalaAktif->nama_kepala ?? 'Dr. H. Anhar Ihwan, SKM, MS' }}</strong></u><br>
+                        NIP. {{ $kepalaAktif->nip ?? '197008081990031003' }}
                     </td>
                 </tr>
             </table>

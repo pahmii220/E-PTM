@@ -16,20 +16,6 @@
 
             </div>
 
-            {{-- Pesan Notifikasi --}}
-            @if(session('success'))
-                <div
-                    class="alert alert-success shadow-sm rounded-4 border-0 d-flex align-items-center mb-4 p-3 bg-white border-start border-success border-4">
-                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3"
-                        style="width: 32px; height: 32px;">
-                        <i class="bi bi-check-lg"></i>
-                    </div>
-                    <div>
-                        <h6 class="fw-bold text-success mb-0">Berhasil!</h6>
-                        <span class="text-muted small">{{ session('success') }}</span>
-                    </div>
-                </div>
-            @endif
 
             @if ($errors->any())
                 <div

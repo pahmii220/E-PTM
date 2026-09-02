@@ -33,6 +33,34 @@
     $namaBulan = ['January' => 'Januari', 'February' => 'Februari', 'March' => 'Maret', 'April' => 'April', 'May' => 'Mei', 'June' => 'Juni', 'July' => 'Juli', 'August' => 'Agustus', 'September' => 'September', 'October' => 'Oktober', 'November' => 'November', 'December' => 'Desember'];
     $tanggalIndo = $namaHari[$waktuSekarang->format('l')] . ', ' . $waktuSekarang->format('d') . ' ' . $namaBulan[$waktuSekarang->format('F')] . ' ' . $waktuSekarang->format('Y');
 
+    // --- FILTER BULAN TREND ---
+    $filterTrendBulan = request('trend_bulan', $waktuSekarang->format('m'));
+    $listBulanIndo = [
+        '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
+        '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
+        '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+    ];
+
+    $pesertaQuery = Peserta::query();
+    $deteksiBaseQuery = \App\Models\DeteksiDiniPTM::query();
+
+    if ($filterTrendBulan !== 'semua') {
+        $pesertaQuery->whereMonth('dibuat_pada', $filterTrendBulan);
+        $deteksiBaseQuery->whereMonth('tanggal_pemeriksaan', $filterTrendBulan);
+    }
+
+    $totalPesertaVal = $pesertaQuery->count();
+    $totalDeteksiVal = $deteksiBaseQuery->count();
+
+    // Data Skrining
+    $skNormal = (clone $deteksiBaseQuery)->where('hasil_skrining', 'LIKE', '%Normal%')->count();
+    $skDicurigai = (clone $deteksiBaseQuery)->where('hasil_skrining', 'LIKE', '%Dicurigai%')->count();
+    $skRisiko = (clone $deteksiBaseQuery)->where(function($q) {
+        $q->where('hasil_skrining', 'LIKE', '%Risiko%')
+          ->orWhere('hasil_skrining', 'LIKE', '%Resiko%');
+    })->count();
+    $totalSkrining = $skNormal + $skDicurigai + $skRisiko;
+
     // --- DATA TAMBAHAN UNTUK PEGAWAI & PUSKESMAS ---
     $totalPetugas = User::where('role_name', 'petugas')->count();
     $totalPegawai = \App\Models\PegawaiDinkes::count();
@@ -40,25 +68,24 @@
     // Data untuk Chart Puskesmas
     $puskesmasList = Puskesmas::all();
     $puskesmasLabels = $puskesmasList->pluck('nama_puskesmas')->toArray();
-    $puskesmasData = $puskesmasList->map(function ($p) {
-        return Peserta::where('puskesmas_id', $p->id)->count();
+    $puskesmasData = $puskesmasList->map(function ($p) use ($filterTrendBulan) {
+        $q = Peserta::where('puskesmas_id', $p->id);
+        if ($filterTrendBulan !== 'semua') {
+            $q->whereMonth('dibuat_pada', $filterTrendBulan);
+        }
+        return $q->count();
     })->toArray();
 
-    // Data untuk Ranking & Sebaran Zona Kasus PTM
-    $puskesmasRanking = $puskesmasList->map(function ($p) {
-        $jumlahPeserta = Peserta::where('puskesmas_id', $p->id)->count();
-        $zona = 'hijau';
-        if ($jumlahPeserta > 50) {
-            $zona = 'merah';
-        } elseif ($jumlahPeserta >= 10) {
-            $zona = 'oranye';
+    // Data Peta Sebaran Puskesmas
+    $mapPuskesmasQuery = Puskesmas::whereNotNull('latitude')->whereNotNull('longitude');
+    $mapPuskesmasData = $mapPuskesmasQuery->withCount([
+        'peserta' => function($q) use ($filterTrendBulan) {
+            if ($filterTrendBulan !== 'semua') $q->whereMonth('dibuat_pada', $filterTrendBulan);
+        },
+        'deteksiDini' => function($q) use ($filterTrendBulan) {
+            if ($filterTrendBulan !== 'semua') $q->whereMonth('tanggal_pemeriksaan', $filterTrendBulan);
         }
-        return [
-            'nama' => $p->nama_puskesmas,
-            'jumlah' => $jumlahPeserta,
-            'zona' => $zona
-        ];
-    })->sortByDesc('jumlah');
+    ])->get();
     @endphp
 
     <div class="container-fluid py-4" style="background-color: #f8fafc; min-height: 100vh;">
@@ -83,13 +110,16 @@
             </div>
         </div>
 
+        {{-- ================= PERINGATAN DINI LONJAKAN KASUS WILAYAH ================= --}}
+        @include('partials.early_warning_card')
+
         {{-- BARIS 1: STATISTIK UTAMA --}}
         <div class="row g-4 mb-4">
             @php 
                 $cards = [
-                    ['title' => 'Total Pasien', 'value' => $data['totalPeserta'], 'icon' => 'bi-people', 'color' => 'primary'],
-                    ['title' => 'Deteksi Dini', 'value' => $data['totalDeteksi'], 'icon' => 'bi-activity', 'color' => 'success'],
-                    ['title' => 'Risiko Tinggi', 'value' => $data['totalRisiko'], 'icon' => 'bi-exclamation-triangle', 'color' => 'danger'],
+                    ['title' => 'Total Pasien', 'value' => $totalPesertaVal, 'icon' => 'bi-people', 'color' => 'primary'],
+                    ['title' => 'Deteksi Dini', 'value' => $totalDeteksiVal, 'icon' => 'bi-activity', 'color' => 'success'],
+                    ['title' => 'Risiko Tinggi', 'value' => $skRisiko, 'icon' => 'bi-exclamation-triangle', 'color' => 'danger'],
                     ['title' => 'Petugas Puskesmas', 'value' => $totalPetugas, 'icon' => 'bi-person-badge-fill', 'color' => 'info'],
                     ['title' => 'Pegawai Dinkes', 'value' => $totalPegawai, 'icon' => 'bi-person-vcard-fill', 'color' => 'warning']
                 ];
@@ -117,11 +147,22 @@
             {{-- Grafik diganti dari Volume Data menjadi Puskesmas --}}
             <div class="col-lg-7">
                 <div class="card border-0 shadow-sm rounded-4 p-4 h-100 transition-hover">
-                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 border-b pb-3 border-gray-100">
                         <div class="d-flex align-items-center">
                             <div class="bg-blue-50 text-blue-600 p-2 rounded-3 me-3"><i class="bi bi-hospital fs-4"></i></div>
                             <h4 class="fw-bold mb-0 text-dark">Sebaran Pasien per Puskesmas</h4>
                         </div>
+                        <form method="GET" action="{{ route('kepala.dashboard') }}" class="d-flex align-items-center gap-1 bg-light p-1.5 rounded-xl border border-gray-200">
+                            <span class="text-xs fw-semibold text-gray-500 ms-1 me-1 d-none d-sm-inline"><i class="bi bi-funnel-fill text-blue-600 me-1"></i>Filter Bulan:</span>
+                            <select name="trend_bulan" class="form-select form-select-sm border-0 bg-transparent fw-bold text-xs text-blue-900" style="min-width: 135px; cursor: pointer;" onchange="this.form.submit()">
+                                <option value="semua" {{ $filterTrendBulan == 'semua' ? 'selected' : '' }}>Semua Bulan</option>
+                                @foreach($listBulanIndo as $valBulan => $labelBulan)
+                                    <option value="{{ $valBulan }}" {{ $filterTrendBulan == $valBulan ? 'selected' : '' }}>
+                                        {{ $labelBulan }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </form>
                     </div>
                     <div class="mx-auto" style="height: 250px; width: 100%;">
                         <canvas id="puskesmasChart"></canvas>
@@ -131,9 +172,16 @@
 
             <div class="col-lg-5">
                 <div class="card border-0 shadow-sm rounded-4 p-4 h-100 transition-hover">
-                    <div class="d-flex align-items-center mb-4">
-                        <div class="bg-purple-50 text-purple-600 p-2 rounded-3 me-3"><i class="bi bi-pie-chart-fill fs-4"></i></div>
-                        <h4 class="fw-bold mb-0 text-dark">Proporsi Skrining</h4>
+                    <div class="d-flex align-items-center justify-content-between mb-4 border-b pb-3 border-gray-100">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-purple-50 text-purple-600 p-2 rounded-3 me-3"><i class="bi bi-pie-chart-fill fs-4"></i></div>
+                            <h4 class="fw-bold mb-0 text-dark">Proporsi Skrining</h4>
+                        </div>
+                        @if($filterTrendBulan !== 'semua' && isset($listBulanIndo[$filterTrendBulan]))
+                            <span class="badge bg-purple-50 text-purple-700 fw-bold px-2.5 py-1 rounded-pill text-xs border border-purple-200">
+                                ({{ $listBulanIndo[$filterTrendBulan] }})
+                            </span>
+                        @endif
                     </div>
                     <div class="d-flex align-items-center justify-content-center" style="height: 250px;">
                         @if($totalSkrining == 0)
@@ -144,30 +192,10 @@
                     </div>
                 </div>
             </div>
-        {{-- BARIS 3: PETA SEBARAN LOKASI PUSKESMAS --}}
+        {{-- BARIS 3: PETA SEBARAN, KEPADATAN & CLUSTERING PUSKESMAS --}}
         <div class="row g-4 mb-4">
             <div class="col-12">
-                <div class="card border-0 shadow-sm rounded-4 overflow-hidden transition-hover">
-                    <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-blue-50 text-blue-600 p-2 rounded-3 me-3"><i class="bi bi-geo-alt-fill fs-4"></i></div>
-                            <h4 class="fw-bold mb-0 text-dark">Peta Sebaran Lokasi Wilayah Puskesmas</h4>
-                        </div>
-                        <div class="d-flex gap-2 align-items-center">
-                            <select id="pilihPuskesmas" class="form-select form-select-sm shadow-sm" style="min-width: 250px; border-radius: 8px;">
-                                <option value="">Pilih Puskesmas...</option>
-                                @if(isset($mapPuskesmasData))
-                                    @foreach($mapPuskesmasData as $pkm)
-                                        <option value="{{ $pkm->id }}">{{ $pkm->nama_puskesmas }}</option>
-                                    @endforeach
-                                @endif
-                            </select>
-                        </div>
-                    </div>
-                    <div class="card-body p-0 position-relative">
-                        <div id="puskesmasMap" style="height: 450px; width: 100%; z-index: 1;"></div>
-                    </div>
-                </div>
+                @include('partials.peta_sebaran')
             </div>
         </div>
 
@@ -186,130 +214,9 @@
 @endsection
 
 @push('scripts')
-    <!-- Leaflet CSS & JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // INISIALISASI PETA SEBARAN PUSKESMAS KEPALA P2PTM
-            var mapElement = document.getElementById('puskesmasMap');
-            if (mapElement) {
-                var map = L.map('puskesmasMap', {
-                    minZoom: 12
-                }).setView([-3.316694, 114.590111], 12);
-
-                // Base Tile Layers (Peta Standar & Satelit)
-                var googleRoadmap = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-                    maxZoom: 20,
-                    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-                    attribution: '© Google Maps'
-                });
-
-                var googleSatellite = L.tileLayer('https://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
-                    maxZoom: 20,
-                    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-                    attribution: '© Google Maps Satellite'
-                });
-
-                var esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                    maxZoom: 19,
-                    attribution: 'Tiles © Esri'
-                });
-
-                var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '© OpenStreetMap'
-                });
-
-                // Default Active Layer (Langsung Peta Satelit)
-                googleSatellite.addTo(map);
-
-                // Control Switcher Layer
-                var baseMaps = {
-                    "🗺️ Peta Standar": googleRoadmap,
-                    "🛰️ Satelit (Google)": googleSatellite,
-                    "🌍 Satelit (Esri)": esriSatellite,
-                    "📍 OpenStreetMap": osmLayer
-                };
-
-                L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
-
-                // --- BATAS WILAYAH KECAMATAN ---
-                fetch("{{ asset('geojson_banjarmasin.json') }}")
-                    .then(response => response.json())
-                    .then(data => {
-                        L.geoJSON(data, {
-                            style: function (feature) {
-                                let color = '#3388ff';
-                                let fillColor = '#3388ff';
-                                const nama = feature.properties.name || '';
-                                if (nama.includes('Utara')) { fillColor = '#facc15'; color = '#ca8a04'; }
-                                else if (nama.includes('Barat')) { fillColor = '#38bdf8'; color = '#0284c7'; }
-                                else if (nama.includes('Tengah')) { fillColor = '#c084fc'; color = '#9333ea'; }
-                                else if (nama.includes('Timur')) { fillColor = '#f87171'; color = '#dc2626'; }
-                                else if (nama.includes('Selatan')) { fillColor = '#fbcfe8'; color = '#db2777'; }
-
-                                return { color: color, fillColor: fillColor, fillOpacity: 0.35, weight: 2, dashArray: '3' };
-                            },
-                            onEachFeature: function (feature, layer) {
-                                if (feature.properties && feature.properties.name) {
-                                    layer.bindTooltip("<strong>" + feature.properties.name + "</strong>", { permanent: false, direction: "center" });
-                                }
-                            }
-                        }).addTo(map);
-                    })
-                    .catch(err => console.error("GeoJSON error:", err));
-
-                var mapMarkers = {};
-                var bounds = [];
-                var puskesmasList = {!! json_encode($mapPuskesmasData ?? []) !!};
-
-                if (puskesmasList && puskesmasList.length > 0) {
-                    puskesmasList.forEach(function(pkm) {
-                        if (pkm.latitude && pkm.longitude) {
-                            var lat = parseFloat(pkm.latitude);
-                            var lng = parseFloat(pkm.longitude);
-
-                            if (!isNaN(lat) && !isNaN(lng)) {
-                                var alamatLengkap = pkm.alamat || 'Alamat tidak tersedia';
-                                var statusBadge = pkm.deteksi_dini_count > 0 
-                                    ? '<span class="badge bg-success-subtle text-success border border-success-subtle">Melaporkan (' + pkm.deteksi_dini_count + ' Data)</span>'
-                                    : '<span class="badge bg-warning-subtle text-warning border border-warning-subtle">Belum Ada Laporan</span>';
-
-                                var popupContent = '<div class="p-2" style="min-width: 220px;">' +
-                                    '<h6 class="fw-bold mb-1 text-primary"><i class="bi bi-hospital me-1"></i>' + pkm.nama_puskesmas + '</h6>' +
-                                    '<p class="small text-muted mb-2"><i class="bi bi-geo-alt me-1"></i>' + alamatLengkap + '</p>' +
-                                    '<div class="d-flex justify-content-between align-items-center border-top pt-2 mt-2">' +
-                                        '<span class="small text-secondary">Status PTM:</span>' + statusBadge +
-                                    '</div></div>';
-
-                                var marker = L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
-                                mapMarkers[pkm.id] = marker;
-                                bounds.push([lat, lng]);
-                            }
-                        }
-                    });
-
-                    if (bounds.length > 0) {
-                        map.fitBounds(bounds, { padding: [40, 40] });
-                    }
-                }
-
-                var selectPuskesmas = document.getElementById('pilihPuskesmas');
-                if (selectPuskesmas) {
-                    selectPuskesmas.addEventListener('change', function () {
-                        var pkmId = this.value;
-                        if (pkmId && mapMarkers[pkmId]) {
-                            var targetMarker = mapMarkers[pkmId];
-                            map.setView(targetMarker.getLatLng(), 16, { animate: true });
-                            targetMarker.openPopup();
-                        } else if (bounds.length > 0) {
-                            map.fitBounds(bounds, { padding: [40, 40] });
-                        }
-                    });
-                }
-            }
 
             Chart.defaults.font.family = "'Segoe UI', sans-serif";
             

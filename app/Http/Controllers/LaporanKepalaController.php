@@ -312,8 +312,16 @@ class LaporanKepalaController extends Controller
                 $waktuPemeriksaan($q);
                 $q->where(function($sub) {
                     $sub->where('hasil_skrining', 'LIKE', '%Risiko%')
+                        ->orWhere('hasil_skrining', 'LIKE', '%Dicurigai%')
                         ->orWhere('hasil_skrining', 'LIKE', '%Tinggi%')
                         ->orWhere('hasil_skrining', 'LIKE', '%Hipertensi%')
+                        ->orWhere(function($d) {
+                            $d->whereNotNull('diagnosa_penyakit')
+                              ->where('diagnosa_penyakit', '!=', '')
+                              ->where('diagnosa_penyakit', '!=', 'Normal')
+                              ->where('diagnosa_penyakit', '!=', 'Normal / Sehat')
+                              ->where('diagnosa_penyakit', '!=', 'Sehat');
+                        })
                         ->orWhere('gula_darah', '>', 200);
                 });
             },
@@ -369,16 +377,18 @@ class LaporanKepalaController extends Controller
         
         $rawPenyakit = (clone $skriningQuery)->whereNotNull('diagnosa_penyakit')
                                              ->where('diagnosa_penyakit', '!=', '')
-                                             ->where('diagnosa_penyakit', '!=', 'Sehat')
-                                             ->where('diagnosa_penyakit', '!=', 'Normal')
+                                             ->whereNotIn('diagnosa_penyakit', ['Sehat', 'Normal', 'Normal / Sehat', 'Normal/Sehat', 'Sehat / Normal', 'Tidak Ada', '-'])
+                                             ->where('hasil_skrining', '!=', 'Normal')
                                              ->pluck('diagnosa_penyakit');
 
         $penyakitCount = [];
+        $excludeItems = ['sehat', 'normal', 'normal / sehat', 'normal/sehat', 'sehat / normal', 'tidak ada', '-', ''];
         foreach ($rawPenyakit as $diagStr) {
             $items = array_map('trim', explode(',', $diagStr));
             foreach ($items as $item) {
-                if (!empty($item) && $item !== 'Sehat' && $item !== 'Normal') {
-                    $penyakitCount[$item] = ($penyakitCount[$item] ?? 0) + 1;
+                $itemClean = trim($item);
+                if (!empty($itemClean) && !in_array(strtolower($itemClean), $excludeItems)) {
+                    $penyakitCount[$itemClean] = ($penyakitCount[$itemClean] ?? 0) + 1;
                 }
             }
         }
@@ -486,7 +496,16 @@ class LaporanKepalaController extends Controller
                 $q->where(function($sub) {
                     $sub->where('hasil_skrining', 'LIKE', '%Risiko%')
                         ->orWhere('hasil_skrining', 'LIKE', '%Dicurigai%')
-                        ->orWhere('hasil_skrining', 'LIKE', '%Tinggi%');
+                        ->orWhere('hasil_skrining', 'LIKE', '%Tinggi%')
+                        ->orWhere('hasil_skrining', 'LIKE', '%Hipertensi%')
+                        ->orWhere(function($d) {
+                            $d->whereNotNull('diagnosa_penyakit')
+                              ->where('diagnosa_penyakit', '!=', '')
+                              ->where('diagnosa_penyakit', '!=', 'Normal')
+                              ->where('diagnosa_penyakit', '!=', 'Normal / Sehat')
+                              ->where('diagnosa_penyakit', '!=', 'Sehat');
+                        })
+                        ->orWhere('gula_darah', '>', 200);
                 });
             },
             'tindakLanjut as total_tindak_lanjut' => $waktuTindakLanjut,
@@ -961,16 +980,18 @@ class LaporanKepalaController extends Controller
         
         $rawPenyakit = (clone $skriningQuery)->whereNotNull('diagnosa_penyakit')
                                              ->where('diagnosa_penyakit', '!=', '')
-                                             ->where('diagnosa_penyakit', '!=', 'Sehat')
-                                             ->where('diagnosa_penyakit', '!=', 'Normal')
+                                             ->whereNotIn('diagnosa_penyakit', ['Sehat', 'Normal', 'Normal / Sehat', 'Normal/Sehat', 'Sehat / Normal', 'Tidak Ada', '-'])
+                                             ->where('hasil_skrining', '!=', 'Normal')
                                              ->pluck('diagnosa_penyakit');
 
         $penyakitCount = [];
+        $excludeItems = ['sehat', 'normal', 'normal / sehat', 'normal/sehat', 'sehat / normal', 'tidak ada', '-', ''];
         foreach ($rawPenyakit as $diagStr) {
             $items = array_map('trim', explode(',', $diagStr));
             foreach ($items as $item) {
-                if (!empty($item) && $item !== 'Sehat' && $item !== 'Normal') {
-                    $penyakitCount[$item] = ($penyakitCount[$item] ?? 0) + 1;
+                $itemClean = trim($item);
+                if (!empty($itemClean) && !in_array(strtolower($itemClean), $excludeItems)) {
+                    $penyakitCount[$itemClean] = ($penyakitCount[$itemClean] ?? 0) + 1;
                 }
             }
         }
@@ -999,11 +1020,24 @@ class LaporanKepalaController extends Controller
         }
 
         $totalOrang = $dataSkrining->sum('jumlah');
+        $jumlahNormal = $dataSkrining->where('hasil_skrining', 'Normal')->sum('jumlah');
+        $jumlahTerindikasi = $totalOrang - $jumlahNormal;
         $totalPenyakitBerisiko = $dataPenyakit->sum('jumlah');
         $penyakitTerbanyak = $dataPenyakit->first();
         $namaPenyakitTerbanyak = $penyakitTerbanyak ? $penyakitTerbanyak->diagnosa_penyakit : '-';
+        $kasusTerbanyakJumlah = $penyakitTerbanyak ? $penyakitTerbanyak->jumlah : 0;
 
-        $narasiEksekutif = "Berdasarkan data skrining di <strong>{$namaWilayah}</strong> pada periode ini, tercatat <strong>{$totalOrang} orang</strong> telah mengikuti pemeriksaan. Dari jumlah tersebut, ditemukan <strong>{$totalPenyakitBerisiko} kasus terindikasi Berisiko PTM</strong>, dengan kasus tertinggi adalah <strong>{$namaPenyakitTerbanyak}</strong>.";
+        if ($totalOrang > 0) {
+            if ($jumlahTerindikasi > 0 && $penyakitTerbanyak) {
+                $pctTerindikasi = round(($jumlahTerindikasi / $totalOrang) * 100, 1);
+                $pctNormal = round(($jumlahNormal / $totalOrang) * 100, 1);
+                $narasiEksekutif = "Berdasarkan data skrining di <strong>{$namaWilayah}</strong> pada periode ini, tercatat <strong>{$totalOrang} orang</strong> telah mengikuti pemeriksaan. Dari jumlah tersebut, sebanyak <strong>{$jumlahTerindikasi} orang ({$pctTerindikasi}%) terindikasi Berisiko PTM</strong> dengan temuan kasus terbanyak adalah <strong>{$namaPenyakitTerbanyak} ({$kasusTerbanyakJumlah} kasus)</strong>, sedangkan <strong>{$jumlahNormal} orang ({$pctNormal}%) dinyatakan Sehat / Normal</strong>.";
+            } else {
+                $narasiEksekutif = "Berdasarkan data skrining di <strong>{$namaWilayah}</strong> pada periode ini, tercatat <strong>{$totalOrang} orang</strong> telah mengikuti pemeriksaan, dan seluruh peserta dinyatakan dalam kondisi <strong>Normal / Sehat</strong> tanpa terindikasi penyakit tidak menular.";
+            }
+        } else {
+            $narasiEksekutif = "Belum ada data skrining PTM yang tercatat di <strong>{$namaWilayah}</strong> pada periode ini.";
+        }
 
         $kepalaAktif = \App\Models\KepalaP2ptm::where('status', 'aktif')->first();
         $qrToken = "REKAP-SKRINING-PENYAKIT-" . date('m-Y') . "-" . strtoupper(uniqid());

@@ -10,22 +10,53 @@ use Illuminate\Support\Facades\Auth;
 
 class LaporanMonitoringController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         
-        if ($user->role_name === 'admin') {
-            $laporan = LaporanHasilMonitoring::with(['puskesmas', 'pegawai'])->latest()->get();
-        } else {
-            $pegawai = $user->pegawaiDinkes;
-            $laporan = LaporanHasilMonitoring::with('puskesmas')
-                ->where('pegawai_id', optional($pegawai)->id)
-                ->latest()
-                ->get();
+        $bulanInput = $request->input('bulan', \Carbon\Carbon::now()->format('m'));
+        $tahunInput = \Carbon\Carbon::now()->format('Y');
+
+        if (strpos($bulanInput, '-') !== false) {
+            $parts = explode('-', $bulanInput);
+            $tahunInput = $parts[0];
+            $bulanInput = $parts[1];
         }
+        if ($bulanInput !== 'semua') {
+            $bulanInput = str_pad($bulanInput, 2, '0', STR_PAD_LEFT);
+        }
+
+        $listBulanIndo = [
+            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
+            '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
+            '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+        ];
+
+        // 1. Query Laporan Hasil Monitoring (Difilter per Bulan & Tahun)
+        $laporanQuery = LaporanHasilMonitoring::with(['puskesmas', 'pegawai']);
+
+        if ($user->role_name !== 'admin') {
+            $pegawai = $user->pegawaiDinkes;
+            $laporanQuery->where('pegawai_id', optional($pegawai)->id);
+        }
+
+        if ($bulanInput !== 'semua') {
+            $laporanQuery->where(function($q) use ($bulanInput, $tahunInput) {
+                $q->where(function($sub) use ($bulanInput, $tahunInput) {
+                    $sub->whereMonth('tanggal_kunjungan', $bulanInput)
+                        ->whereYear('tanggal_kunjungan', $tahunInput);
+                })->orWhere(function($sub) use ($bulanInput, $tahunInput) {
+                    $sub->whereNull('tanggal_kunjungan')
+                        ->whereMonth('created_at', $bulanInput)
+                        ->whereYear('created_at', $tahunInput);
+                });
+            });
+        }
+
+        $laporan = $laporanQuery->latest()->get();
             
-        // Ambil puskesmas beserta relasi untuk menghitung penyakit dominan
-        $puskesmasData = Puskesmas::with(['peserta.deteksiDinis'])->orderBy('kecamatan', 'asc')->orderBy('nama_puskesmas', 'asc')->get();
+        // Ambil puskesmas beserta data yang difilter per bulan terpilih
+        $puskesmasData = Puskesmas::orderBy('kecamatan', 'asc')->orderBy('nama_puskesmas', 'asc')->get();
 
         $penyakitList = [
             'Hipertensi', 'Diabetes Melitus', 'Obesitas',
@@ -33,21 +64,32 @@ class LaporanMonitoringController extends Controller
         ];
 
         foreach ($puskesmasData as $pkm) {
-            $pkm->peserta_count = $pkm->peserta->count();
-            
+            $deteksiQuery = \App\Models\DeteksiDiniPTM::where('puskesmas_id', $pkm->id);
+
+            if ($bulanInput !== 'semua') {
+                $deteksiQuery->whereMonth('tanggal_pemeriksaan', $bulanInput)
+                             ->whereYear('tanggal_pemeriksaan', $tahunInput);
+            }
+
+            $deteksiBulanIni = $deteksiQuery->get();
+
+            $pkm->peserta_count = $deteksiBulanIni->pluck('peserta_id')->unique()->count();
+
             $ptmCounts = array_fill_keys($penyakitList, 0);
-            foreach ($pkm->peserta as $pst) {
-                $patientDiseases = [];
-                foreach ($pst->deteksiDinis as $d) {
-                    $diagnosa = $d->diagnosa_penyakit ?? ($d->hasil_skrining ?? '');
-                    if (empty($diagnosa)) continue;
-                    foreach ($penyakitList as $p) {
-                        if (stripos($diagnosa, $p) !== false) {
-                            $patientDiseases[$p] = true;
-                        }
+            $patientDiseasesPerPenyakit = [];
+
+            foreach ($deteksiBulanIni as $d) {
+                $diagnosa = $d->diagnosa_penyakit ?? ($d->hasil_skrining ?? '');
+                if (empty($diagnosa)) continue;
+                foreach ($penyakitList as $p) {
+                    if (stripos($diagnosa, $p) !== false) {
+                        $patientDiseasesPerPenyakit[$d->peserta_id][$p] = true;
                     }
                 }
-                foreach ($patientDiseases as $p => $val) {
+            }
+
+            foreach ($patientDiseasesPerPenyakit as $pstId => $diseases) {
+                foreach ($diseases as $p => $val) {
                     $ptmCounts[$p]++;
                 }
             }
@@ -56,21 +98,19 @@ class LaporanMonitoringController extends Controller
             $dominantPtm = key($ptmCounts);
             $dominantPtmCount = current($ptmCounts);
 
-            $pkm->dominan_penyakit = $dominantPtmCount > 0 ? "$dominantPtm ($dominantPtmCount kasus)" : "Belum ada kasus tercatat";
+            $namaBulanTeks = $bulanInput !== 'semua' ? ($listBulanIndo[$bulanInput] ?? '') : 'Semua Bulan';
+            $pkm->dominan_penyakit = $dominantPtmCount > 0 ? "$dominantPtm ($dominantPtmCount kasus)" : "Belum ada kasus ($namaBulanTeks)";
         }
 
         $puskesmas = $puskesmasData;
 
         // --- LOGIKA REKOMENDASI CERDAS ---
-        $bulanIni = \Carbon\Carbon::now()->month;
-        $tahunIni = \Carbon\Carbon::now()->year;
-
         // Ambil list puskesmas_id yang sudah pernah/sedang dibuatkan Laporan Hasil Monitoring
         $puskesmasSudahLapor = LaporanHasilMonitoring::pluck('puskesmas_id')->unique()->toArray();
 
         $rekomendasiPuskesmas = \App\Models\DeteksiDiniPTM::with('puskesmas')
-            ->whereMonth('tanggal_pemeriksaan', $bulanIni)
-            ->whereYear('tanggal_pemeriksaan', $tahunIni)
+            ->whereMonth('tanggal_pemeriksaan', $bulanInput)
+            ->whereYear('tanggal_pemeriksaan', $tahunInput)
             ->where('hasil_skrining', 'Risiko Tinggi')
             ->whereNotIn('puskesmas_id', $puskesmasSudahLapor)
             ->selectRaw('puskesmas_id, count(id) as total_kasus')
@@ -79,7 +119,7 @@ class LaporanMonitoringController extends Controller
             ->take(2)
             ->get();
 
-        return view('pengguna.laporan_monitoring.index', compact('laporan', 'puskesmas', 'rekomendasiPuskesmas'));
+        return view('pengguna.laporan_monitoring.index', compact('laporan', 'puskesmas', 'rekomendasiPuskesmas', 'bulanInput', 'tahunInput', 'listBulanIndo'));
     }
 
     public function store(Request $request)

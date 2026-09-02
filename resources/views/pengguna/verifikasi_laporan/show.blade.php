@@ -28,18 +28,25 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm rounded-3">
-            <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    @if(($totalDraft ?? 0) > 0 && ($totalApproved ?? 0) == 0 && ($totalPending ?? 0) == 0)
+    <div class="p-3 mb-4 rounded-3 border border-warning bg-warning bg-opacity-10 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill text-warning fs-4"></i>
+            <div>
+                <strong class="text-dark">Data Masih Berstatus Draf (Belum Diajukan/Kirim)</strong>
+                <p class="mb-0 text-muted small">Petugas {{ $puskesmas->nama_puskesmas }} telah menginput {{ $totalDraft }} data skrining, tetapi belum menekan tombol "Ajukan Laporan". Anda dapat mengirim pengingat ke petugas.</p>
+            </div>
         </div>
+        <form action="{{ route('pengguna.verifikasi_laporan.pengingat', $puskesmas->id) }}" method="POST" class="d-inline"
+              onsubmit="return confirm('Kirim notifikasi pengingat ke {{ $puskesmas->nama_puskesmas }} agar segera mengajukan laporan?');">
+            @csrf
+            <button type="submit" class="btn btn-sm btn-warning rounded-pill px-3 fw-semibold text-dark shadow-sm">
+                <i class="bi bi-bell-fill me-1"></i> Kirim Pengingat Ke Puskesmas
+            </button>
+        </form>
+    </div>
     @endif
-    @if(session('warning'))
-        <div class="alert alert-warning alert-dismissible fade show border-0 shadow-sm rounded-3">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ session('warning') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
+
 
 
 

@@ -279,24 +279,26 @@
                     @php
                         $periode = \Carbon\Carbon::now()->translatedFormat('F Y');
                         $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
-                        $namaPejabat = $kepalaAktif->nama_kepala ?? 'dr. H. DIAUDDIN, M.Kes';
-                        $nipPejabat = $kepalaAktif->nip ?? '1973062022006041016';
+                        $namaPejabat = $kepalaAktif->nama_kepala ?? 'Dr. H. Anhar Ihwan, SKM, MS';
+                        $nipPejabat = $kepalaAktif->nip ?? '197008081990031003';
                     @endphp
 
-                    {!! QrCode::size(80)->generate(route('verifikasi.laporan', [
+                    {!! QrCode::size(80)->generate(\App\Helpers\DocumentSigner::url([
                         'judul' => 'Rekapitulasi Laporan Hasil Monitoring PTM',
                         'periode' => $periode,
                         'tanggal_sah' => $tanggalSah,
                         'nama_kepala' => $namaPejabat,
-                        'nip' => $nipPejabat
+                        'nip' => $nipPejabat,
+                        'jabatan' => $kepalaAktif->jabatan ?? 'Kepala Bidang P2PTM',
+                        'catatan' => request('catatan_pengesahan') ?? 'Rekapitulasi laporan hasil monitoring terverifikasi telah disahkan.'
                     ])) !!}
                 </div>
 
                 <div class="name">
-                    {{ $kepalaAktif->nama_kepala ?? 'dr. H. DIAUDDIN, M.Kes' }}
+                    {{ $kepalaAktif->nama_kepala ?? 'Dr. H. Anhar Ihwan, SKM, MS' }}
                 </div>
-                <div>
-                    NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}
+                <div style="margin-top: 3px;">
+                    NIP. {{ $kepalaAktif->nip ?? '197008081990031003' }}
                 </div>
             </div>
         </div>

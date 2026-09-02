@@ -750,7 +750,7 @@
                     <div class="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-400/30 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
                         <i class="fa-solid fa-hospital-user text-2xl text-emerald-400 group-hover:text-white"></i>
                     </div>
-                    <h3 class="text-4xl font-extrabold tracking-tight mb-2" data-count="30" data-suffix="+">30+</h3>
+                    <h3 class="text-4xl font-extrabold tracking-tight mb-2" data-count="{{ $totalPuskesmas ?? 30 }}" data-suffix="+">{{ number_format($totalPuskesmas ?? 30) }}+</h3>
                     <p class="text-emerald-100 text-sm font-semibold uppercase tracking-wider">Puskesmas Terintegrasi</p>
                     <div class="w-12 h-1 bg-yellow-400 rounded-full mx-auto mt-4 opacity-70 group-hover:w-20 transition-all duration-300"></div>
                 </div>
@@ -760,7 +760,7 @@
                     <div class="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-400/30 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
                         <i class="fa-solid fa-file-medical text-2xl text-emerald-400 group-hover:text-white"></i>
                     </div>
-                    <h3 class="text-4xl font-extrabold tracking-tight mb-2" data-count="15000" data-suffix="+">15.000+</h3>
+                    <h3 class="text-4xl font-extrabold tracking-tight mb-2" data-count="{{ $totalSkrining ?? 15000 }}" data-suffix="+">{{ number_format($totalSkrining ?? 15000) }}+</h3>
                     <p class="text-emerald-100 text-sm font-semibold uppercase tracking-wider">Skrining Deteksi Dini</p>
                     <div class="w-12 h-1 bg-yellow-400 rounded-full mx-auto mt-4 opacity-70 group-hover:w-20 transition-all duration-300"></div>
                 </div>
@@ -783,10 +783,6 @@
                     <h3 class="text-4xl font-extrabold tracking-tight mb-2" data-count="6" data-suffix="">6</h3>
                     <p class="text-emerald-100 text-sm font-semibold uppercase tracking-wider">Program Prioritas PTM</p>
                     <div class="w-12 h-1 bg-yellow-400 rounded-full mx-auto mt-4 opacity-70 group-hover:w-20 transition-all duration-300"></div>
-                </div>
-                    <div
-                        class="w-12 h-1 bg-yellow-400 rounded-full mx-auto mt-4 opacity-70 group-hover:w-20 transition-all duration-300">
-                    </div>
                 </div>
             </div>
         </div>

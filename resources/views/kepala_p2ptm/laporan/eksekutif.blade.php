@@ -44,13 +44,9 @@
 
             {{-- TAB 1: PUSKESMAS --}}
             <div x-show="activeTab === 'puskesmas'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" style="display: none;">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h4 class="fw-bold mb-0 text-dark">Laporan Data Puskesmas</h4>
-                        <small class="text-muted">Tinjau agregat data skrining, faktor risiko, dan tindak lanjut per faskes serta detail register pasien.</small>
-                    </div>
-                    <a href="{{ route('kepala.laporan.eksekutif.cetak_puskesmas', request()->all()) }}" target="_blank"
-                        class="btn btn-outline-dark btn-sm rounded-pill shadow-sm px-4"><i class="bi bi-printer me-1"></i> Cetak & sahkan Laporan</a>
+                <div class="mb-3">
+                    <h4 class="fw-bold mb-0 text-dark">Laporan Data Puskesmas</h4>
+                    <small class="text-muted">Tinjau agregat data skrining, faktor risiko, dan tindak lanjut per faskes serta detail register pasien.</small>
                 </div>
                 <br>
 
@@ -64,9 +60,78 @@
                                 </h5>
                                 <small class="text-muted">Wilayah: {{ $puskesmasTerpilih->kecamatan ?? '-' }}, {{ $puskesmasTerpilih->nama_kabupaten ?? '-' }} | Total Pasien: <strong>{{ $detailPasienPuskesmas->count() }} Orang</strong></small>
                             </div>
-                            <a href="{{ route('kepala.laporan.eksekutif', array_merge(request()->except('puskesmas_id'), ['tab' => 'puskesmas'])) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm">
-                                <i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar Puskesmas
-                            </a>
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" data-bs-toggle="modal" data-bs-target="#modalSahkanLaporanPuskesmas"
+                                    class="btn btn-outline-dark btn-sm rounded-pill shadow-sm px-3 fw-bold">
+                                    <i class="bi bi-printer me-1"></i> Cetak & sahkan Laporan
+                                </button>
+                                <a href="{{ route('kepala.laporan.eksekutif', array_merge(request()->except('puskesmas_id'), ['tab' => 'puskesmas'])) }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm">
+                                    <i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar Puskesmas
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- MODAL PENGESAHAN DOKUMEN & INPUT CATATAN TTE -->
+                        <div class="modal fade" id="modalSahkanLaporanPuskesmas" tabindex="-1" aria-labelledby="modalSahkanLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content rounded-4 border-0 shadow-lg">
+                                    <form action="{{ route('kepala.laporan.eksekutif.cetak_puskesmas') }}" method="GET" target="_blank">
+                                        {{-- Semua Query Parameter Saat Ini --}}
+                                        @foreach(request()->all() as $key => $val)
+                                            @if($key !== 'catatan_pengesahan' && !is_array($val))
+                                                <input type="hidden" name="{{ $key }}" value="{{ $val }}">
+                                            @endif
+                                        @endforeach
+
+                                        <div class="modal-header border-0 pb-0 pt-4 px-4">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                                                    <i class="bi bi-patch-check-fill fs-5"></i>
+                                                </div>
+                                                <div>
+                                                    <h5 class="modal-title fw-bold text-dark mb-0" id="modalSahkanLabel">Pengesahan Dokumen Elektronik (TTE)</h5>
+                                                    <small class="text-muted">Digital Signature HMAC-SHA256 & QR Code Resmi</small>
+                                                </div>
+                                            </div>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+
+                                        <div class="modal-body px-4 py-3">
+                                            <div class="bg-light p-3 rounded-3 mb-3 border">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="text-muted small">Puskesmas:</span>
+                                                    <span class="fw-bold text-dark small">{{ $puskesmasTerpilih->nama_puskesmas ?? 'Puskesmas Terpilih' }}</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="text-muted small">Wilayah:</span>
+                                                    <span class="fw-semibold text-dark small">{{ $puskesmasTerpilih->kecamatan ?? '-' }}, {{ $puskesmasTerpilih->nama_kabupaten ?? '-' }}</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="text-muted small">Total Data Pasien:</span>
+                                                    <span class="badge bg-success px-2 py-1">{{ $detailPasienPuskesmas->count() }} Orang</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-2">
+                                                <label for="catatan_pengesahan" class="form-label fw-bold text-dark small mb-1">
+                                                    <i class="bi bi-chat-left-text-fill text-success me-1"></i> Catatan / Arahan Kepala Bidang P2PTM:
+                                                </label>
+                                                <textarea class="form-control rounded-3" id="catatan_pengesahan" name="catatan_pengesahan" rows="3" placeholder="Masukkan catatan resmi pengesahan..." style="font-size: 0.85rem;" required>Data register dan skrining pasien telah ditelaah dan dinyatakan valid untuk laporan eksekutif P2PTM.</textarea>
+                                                <div class="form-text text-muted" style="font-size: 0.75rem;">
+                                                    <i class="bi bi-info-circle me-1"></i> Catatan ini akan otomatis terkunci dalam tanda tangan digital dan tampil saat QR Code di-scan.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex justify-content-end gap-2">
+                                            <button type="button" class="btn btn-light rounded-pill px-3 fw-semibold btn-sm" data-bs-dismiss="modal">Batal</button>
+                                            <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold btn-sm shadow-sm" onclick="setTimeout(function(){ bootstrap.Modal.getInstance(document.getElementById('modalSahkanLaporanPuskesmas')).hide(); }, 300);">
+                                                <i class="bi bi-printer-fill me-1"></i> Sahkan &amp; Cetak
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                         <div class="table-responsive">
                             <table class="table table-bordered table-hover align-middle mb-0" style="font-size: 0.85rem;">
@@ -335,11 +400,59 @@
                     <div>
                         <h4 class="fw-bold mb-0">Laporan Per Wilayah</h4><small class="text-muted">Rekapitulasi data skrining, faktor risiko, dan tindak lanjut berdasarkan kecamatan.</small>
                     </div>
-                    <a href="{{ route('kepala.laporan.eksekutif.cetak_wilayah', request()->all()) }}" target="_blank"
-                        class="btn btn-outline-dark btn-sm rounded-pill shadow-sm px-4"><i class="bi bi-printer"></i> Cetak
-                        Laporan Terfilter</a>
+                    <button type="button" data-bs-toggle="modal" data-bs-target="#modalSahkanLaporanWilayah"
+                        class="btn btn-outline-dark btn-sm rounded-pill shadow-sm px-4 fw-bold">
+                        <i class="bi bi-printer me-1"></i> Cetak & sahkan Laporan
+                    </button>
                 </div>
                 <br>
+
+                <!-- MODAL PENGESAHAN WILAYAH -->
+                <div class="modal fade" id="modalSahkanLaporanWilayah" tabindex="-1" aria-labelledby="modalSahkanWilayahLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content rounded-4 border-0 shadow-lg">
+                            <form action="{{ route('kepala.laporan.eksekutif.cetak_wilayah') }}" method="GET" target="_blank">
+                                @foreach(request()->all() as $key => $val)
+                                    @if($key !== 'catatan_pengesahan' && !is_array($val))
+                                        <input type="hidden" name="{{ $key }}" value="{{ $val }}">
+                                    @endif
+                                @endforeach
+
+                                <div class="modal-header border-0 pb-0 pt-4 px-4">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                                            <i class="bi bi-patch-check-fill fs-5"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="modal-title fw-bold text-dark mb-0" id="modalSahkanWilayahLabel">Pengesahan Laporan Per Wilayah</h5>
+                                            <small class="text-muted">Digital Signature HMAC-SHA256 & QR Code Resmi</small>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+
+                                <div class="modal-body px-4 py-3">
+                                    <div class="mb-2">
+                                        <label for="catatan_wilayah" class="form-label fw-bold text-dark small mb-1">
+                                            <i class="bi bi-chat-left-text-fill text-success me-1"></i> Catatan / Arahan Kepala Bidang P2PTM:
+                                        </label>
+                                        <textarea class="form-control rounded-3" id="catatan_wilayah" name="catatan_pengesahan" rows="3" placeholder="Masukkan catatan resmi pengesahan..." style="font-size: 0.85rem;" required>Rekapitulasi data capaian PTM tingkat wilayah/kecamatan telah diverifikasi dan disahkan.</textarea>
+                                        <div class="form-text text-muted" style="font-size: 0.75rem;">
+                                            <i class="bi bi-info-circle me-1"></i> Catatan ini akan otomatis terkunci dalam tanda tangan digital dan tampil saat QR Code di-scan.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex justify-content-end gap-2">
+                                    <button type="button" class="btn btn-light rounded-pill px-3 fw-semibold btn-sm" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold btn-sm shadow-sm" onclick="setTimeout(function(){ bootstrap.Modal.getInstance(document.getElementById('modalSahkanLaporanWilayah')).hide(); }, 300);">
+                                        <i class="bi bi-printer-fill me-1"></i> Sahkan &amp; Cetak
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <table class="table table-hover align-middle mb-0">
@@ -384,11 +497,59 @@
                         <h4 class="fw-bold mb-0">Laporan PTM Berdasarkan Kelompok Usia</h4><small
                             class="text-muted">Analisis tren kerentanan berdasarkan kategori usia.</small>
                     </div>
-                    <a href="{{ route('kepala.laporan.eksekutif.cetak_usia', request()->all()) }}" target="_blank"
-                        class="btn btn-outline-dark btn-sm rounded-pill shadow-sm px-4"><i class="bi bi-printer"></i> Cetak
-                        Laporan Terfilter</a>
+                    <button type="button" data-bs-toggle="modal" data-bs-target="#modalSahkanLaporanUsia"
+                        class="btn btn-outline-dark btn-sm rounded-pill shadow-sm px-4 fw-bold">
+                        <i class="bi bi-printer me-1"></i> Cetak & sahkan Laporan
+                    </button>
                 </div>
                 <br>
+
+                <!-- MODAL PENGESAHAN USIA -->
+                <div class="modal fade" id="modalSahkanLaporanUsia" tabindex="-1" aria-labelledby="modalSahkanUsiaLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content rounded-4 border-0 shadow-lg">
+                            <form action="{{ route('kepala.laporan.eksekutif.cetak_usia') }}" method="GET" target="_blank">
+                                @foreach(request()->all() as $key => $val)
+                                    @if($key !== 'catatan_pengesahan' && !is_array($val))
+                                        <input type="hidden" name="{{ $key }}" value="{{ $val }}">
+                                    @endif
+                                @endforeach
+
+                                <div class="modal-header border-0 pb-0 pt-4 px-4">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                                            <i class="bi bi-patch-check-fill fs-5"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="modal-title fw-bold text-dark mb-0" id="modalSahkanUsiaLabel">Pengesahan Laporan Kelompok Usia</h5>
+                                            <small class="text-muted">Digital Signature HMAC-SHA256 & QR Code Resmi</small>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+
+                                <div class="modal-body px-4 py-3">
+                                    <div class="mb-2">
+                                        <label for="catatan_usia" class="form-label fw-bold text-dark small mb-1">
+                                            <i class="bi bi-chat-left-text-fill text-success me-1"></i> Catatan / Arahan Kepala Bidang P2PTM:
+                                        </label>
+                                        <textarea class="form-control rounded-3" id="catatan_usia" name="catatan_pengesahan" rows="3" placeholder="Masukkan catatan resmi pengesahan..." style="font-size: 0.85rem;" required>Analisis distribusi tren kelompok usia penderita PTM telah diverifikasi dan disahkan.</textarea>
+                                        <div class="form-text text-muted" style="font-size: 0.75rem;">
+                                            <i class="bi bi-info-circle me-1"></i> Catatan ini akan otomatis terkunci dalam tanda tangan digital dan tampil saat QR Code di-scan.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex justify-content-end gap-2">
+                                    <button type="button" class="btn btn-light rounded-pill px-3 fw-semibold btn-sm" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold btn-sm shadow-sm" onclick="setTimeout(function(){ bootstrap.Modal.getInstance(document.getElementById('modalSahkanLaporanUsia')).hide(); }, 300);">
+                                        <i class="bi bi-printer-fill me-1"></i> Sahkan &amp; Cetak
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <table class="table table-hover align-middle mb-0 text-center">
@@ -406,7 +567,7 @@
                                 <tr>
                                     <td class="ps-4">{{ $loop->iteration }}</td>
                                     <td class="text-start fw-semibold"><i
-                                            class="bi bi-person-badge text-info me-2"></i>{{ $label }}</td>
+                                             class="bi bi-person-badge text-info me-2"></i>{{ $label }}</td>
                                     <td>{{ $key }}</td>
                                     <td><span class="badge bg-primary-subtle text-primary px-3 py-2">{{ $dataUsia[$key] ?? 0 }}
                                             Orang</span></td>
@@ -429,9 +590,57 @@
                         <h4 class="fw-bold mb-0">Hasil Skrining PTM</h4><small class="text-muted">Proporsi populasi sehat
                             dan berisiko tinggi.</small>
                     </div>
-                    <a href="{{ route('kepala.laporan.eksekutif.cetak_skrining_penyakit', request()->all()) }}" target="_blank"
-                        class="btn btn-outline-dark btn-sm rounded-pill shadow-sm px-4"><i class="bi bi-printer"></i> Cetak
-                        Laporan Terfilter</a>
+                    <button type="button" data-bs-toggle="modal" data-bs-target="#modalSahkanLaporanSkrining"
+                        class="btn btn-outline-dark btn-sm rounded-pill shadow-sm px-4 fw-bold">
+                        <i class="bi bi-printer me-1"></i> Cetak & sahkan Laporan
+                    </button>
+                </div>
+
+                <!-- MODAL PENGESAHAN SKRINING -->
+                <div class="modal fade" id="modalSahkanLaporanSkrining" tabindex="-1" aria-labelledby="modalSahkanSkriningLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content rounded-4 border-0 shadow-lg">
+                            <form action="{{ route('kepala.laporan.eksekutif.cetak_skrining_penyakit') }}" method="GET" target="_blank">
+                                @foreach(request()->all() as $key => $val)
+                                    @if($key !== 'catatan_pengesahan' && !is_array($val))
+                                        <input type="hidden" name="{{ $key }}" value="{{ $val }}">
+                                    @endif
+                                @endforeach
+
+                                <div class="modal-header border-0 pb-0 pt-4 px-4">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-success bg-opacity-10 text-success rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                                            <i class="bi bi-patch-check-fill fs-5"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="modal-title fw-bold text-dark mb-0" id="modalSahkanSkriningLabel">Pengesahan Laporan Skrining & Penyakit</h5>
+                                            <small class="text-muted">Digital Signature HMAC-SHA256 & QR Code Resmi</small>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+
+                                <div class="modal-body px-4 py-3">
+                                    <div class="mb-2">
+                                        <label for="catatan_skrining" class="form-label fw-bold text-dark small mb-1">
+                                            <i class="bi bi-chat-left-text-fill text-success me-1"></i> Catatan / Arahan Kepala Bidang P2PTM:
+                                        </label>
+                                        <textarea class="form-control rounded-3" id="catatan_skrining" name="catatan_pengesahan" rows="3" placeholder="Masukkan catatan resmi pengesahan..." style="font-size: 0.85rem;" required>Rekapitulasi temuan skrining dan sebaran jenis penyakit PTM telah diverifikasi dan disahkan.</textarea>
+                                        <div class="form-text text-muted" style="font-size: 0.75rem;">
+                                            <i class="bi bi-info-circle me-1"></i> Catatan ini akan otomatis terkunci dalam tanda tangan digital dan tampil saat QR Code di-scan.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer border-0 pt-0 pb-4 px-4 d-flex justify-content-end gap-2">
+                                    <button type="button" class="btn btn-light rounded-pill px-3 fw-semibold btn-sm" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-success rounded-pill px-4 fw-bold btn-sm shadow-sm" onclick="setTimeout(function(){ bootstrap.Modal.getInstance(document.getElementById('modalSahkanLaporanSkrining')).hide(); }, 300);">
+                                        <i class="bi bi-printer-fill me-1"></i> Sahkan &amp; Cetak
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <table class="table table-hover align-middle mb-0 text-center">
@@ -508,7 +717,7 @@
                                         <td class="text-start fw-bold text-dark">
                                             {{ $row->diagnosa_penyakit }}
                                         </td>
-                                        <td>{{ number_format($row->jumlah, 0, ',', '.') }} orang</td>
+                                        <td>{{ number_format($row->jumlah, 0, ',', '.') }} kasus</td>
                                         <td>
                                             <div class="d-flex align-items-center justify-content-center gap-2">
                                                 <span class="fw-bold">{{ $totalPenyakit > 0 ? round(($row->jumlah / $totalPenyakit) * 100, 1) : 0 }}%</span>
@@ -525,6 +734,13 @@
                                         <td colspan="4" class="text-center py-5 text-muted">Belum ada data diagnosa penyakit.</td>
                                     </tr>
                                 @endforelse
+                                @if(count($dataPenyakit) > 0)
+                                    <tr class="table-light fw-bold">
+                                        <td colspan="2">TOTAL TEMUAN KASUS</td>
+                                        <td>{{ number_format($totalPenyakit, 0, ',', '.') }} kasus</td>
+                                        <td>100%</td>
+                                    </tr>
+                                @endif
                             </tbody>
                         </table>
                     </div>
@@ -541,11 +757,12 @@
                         style="background: #f8fafc; border: 1px dashed #cbd5e1;">
                         <i class="bi bi-info-circle-fill text-primary fs-5"></i>
                         <span class="text-secondary" style="font-size: 0.875rem;">
-                            Dari <strong class="text-dark">{{ number_format($totalSemuaSkrining, 0, ',', '.') }} pasien</strong> yang diskrining,
+                            Dari <strong class="text-dark">{{ number_format($totalSemuaSkrining, 0, ',', '.') }} peserta</strong> yang diskrining,
                             <strong class="text-danger">{{ number_format($jumlahTerindikasi, 0, ',', '.') }} orang ({{ $pctTerindikasi }}%)</strong>
-                            terindikasi memiliki diagnosa penyakit,
+                            terindikasi berisiko/memiliki diagnosa PTM,
                             sedangkan <strong class="text-success">{{ number_format($jumlahNormal, 0, ',', '.') }} orang ({{ $pctNormal }}%)</strong>
-                            dinyatakan <strong>Normal</strong>.
+                            dinyatakan <strong>Normal / Sehat</strong>.
+                            Persentase pemetaan dihitung dari total temuan kasus berisiko (<strong>{{ number_format($totalPenyakit, 0, ',', '.') }} kasus</strong>).
                         </span>
                     </div>
                     @endif

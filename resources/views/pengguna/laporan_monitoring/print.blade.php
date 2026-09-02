@@ -269,10 +269,17 @@
                         <div>Banjarmasin, {{ \Carbon\Carbon::parse($laporan->tanggal_disetujui ?? now())->translatedFormat('d F Y') }}</div>
                         <div>Disetujui & Disahkan Oleh,</div>
                         <div style="margin-top: 5px; margin-bottom: 5px;">
-                            {!! QrCode::size(80)->generate(url('/verifikasi-laporan?judul=' . urlencode($laporan->judul_laporan) . '&periode=' . urlencode($laporan->puskesmas->nama_puskesmas ?? '') . '&tanggal_sah=' . urlencode(\Carbon\Carbon::parse($laporan->tanggal_disetujui ?? now())->format('d-m-Y H:i')) . '&nama_kepala=' . urlencode($kepalaAktif->nama_kepala ?? 'Denny Haryuniasnyah SKM') . '&nip=' . urlencode($kepalaAktif->nip ?? '1973062022006041016'))) !!}
+                            {!! QrCode::size(80)->generate(\App\Helpers\DocumentSigner::url([
+                                'judul' => $laporan->judul_laporan ?? 'Laporan Hasil Monitoring',
+                                'periode' => $laporan->puskesmas->nama_puskesmas ?? '-',
+                                'tanggal_sah' => \Carbon\Carbon::parse($laporan->tanggal_disetujui ?? now())->format('d-m-Y H:i'),
+                                'nama_kepala' => $kepalaAktif->nama_kepala ?? 'Dr. H. Anhar Ihwan, SKM, MS',
+                                'nip' => $kepalaAktif->nip ?? '197008081990031003',
+                                'jabatan' => $kepalaAktif->jabatan ?? 'Kepala Bidang P2PTM'
+                            ])) !!}
                         </div>
-                        <p class="ttd-nama">{{ $kepalaAktif->nama_kepala ?? 'Denny Haryuniasnyah SKM' }}</p>
-                        <div>NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}</div>
+                        <p class="ttd-nama">{{ $kepalaAktif->nama_kepala ?? 'Dr. H. Anhar Ihwan, SKM, MS' }}</p>
+                        <div>NIP. {{ $kepalaAktif->nip ?? '197008081990031003' }}</div>
                     </td>
                 </tr>
             </table>

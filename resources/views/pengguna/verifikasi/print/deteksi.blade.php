@@ -300,11 +300,19 @@
         $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
 
         // Ambil nama dan NIP untuk dikirim ke QR Code
-        $namaPejabat = $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah';
-        $nipPejabat = $kepalaAktif->nip ?? '1973062022006041016';
+        $namaPejabat = $kepalaAktif->nama_kepala ?? 'Dr. H. Anhar Ihwan, SKM, MS';
+        $nipPejabat = $kepalaAktif->nip ?? '197008081990031003';
                                         @endphp
 
-                                        {!! QrCode::size(85)->generate(url('/verifikasi-laporan?judul=Laporan%20Deteksi%20Dini%20PTM&periode=' . urlencode($periode) . '&tanggal_sah=' . urlencode($tanggalSah) . '&nama_kepala=' . urlencode($namaPejabat) . '&nip=' . urlencode($nipPejabat))) !!}
+                                        {!! QrCode::size(85)->generate(\App\Helpers\DocumentSigner::url([
+                                            'judul' => 'Laporan Deteksi Dini PTM',
+                                            'periode' => $periode,
+                                            'tanggal_sah' => $tanggalSah,
+                                            'nama_kepala' => $namaPejabat,
+                                            'nip' => $nipPejabat,
+                                            'jabatan' => $kepalaAktif->jabatan ?? 'Kepala Bidang P2PTM',
+                                            'catatan' => request('catatan_pengesahan') ?? 'Rekapitulasi data hasil deteksi dini PTM telah diteliti dan diverifikasi sah.'
+                                        ])) !!}
                                     @else
                                         <div style="height: 85px;"></div>
                                     @endif
@@ -312,10 +320,10 @@
                                 {{-- AKHIR BAGIAN YANG DIUBAH --}}
 
                                 <div class="name" style="margin-top: 0;">
-                                    {{ $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah' }}
+                                    {{ $kepalaAktif->nama_kepala ?? 'Dr. H. Anhar Ihwan, SKM, MS' }}
                                 </div>
                                 <div style="margin-top:4px;">
-                                    NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}
+                                    NIP. {{ $kepalaAktif->nip ?? '197008081990031003' }}
                                 </div>
                 @endif
 

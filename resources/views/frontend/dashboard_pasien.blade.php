@@ -145,10 +145,15 @@
             <!-- Kanan: Riwayat Pemeriksaan -->
             <div class="lg:col-span-2 space-y-6">
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="bg-gray-50 px-6 py-5 border-b border-gray-200 flex justify-between items-center">
+                    <div class="bg-gray-50 px-6 py-5 border-b border-gray-200 flex justify-between items-center flex-wrap gap-3">
                         <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
                             <i class="fa-solid fa-notes-medical text-emerald-600"></i> Riwayat Skrining Kesehatan
                         </h3>
+                        @if(!$peserta->deteksiDinis->isEmpty())
+                            <a href="{{ route('frontend.cetak_riwayat', $peserta->id) }}" target="_blank" class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm transition-all duration-150 hover:shadow" title="Cetak Seluruh Riwayat Pemeriksaan Pasien">
+                                <i class="fa-solid fa-print"></i> Cetak Semua Riwayat
+                            </a>
+                        @endif
                     </div>
                     
                     <div class="p-6">
@@ -192,7 +197,7 @@
                                                 <span class="px-3 py-1 text-xs font-bold uppercase rounded-full border {{ $statusColor }}">
                                                     {{ $status }}
                                                 </span>
-                                                <a href="{{ route('frontend.cetak_skrining', $peserta->id) }}" target="_blank" class="bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors" title="Cetak PDF">
+                                                <a href="{{ route('frontend.cetak_skrining', ['id' => $peserta->id, 'deteksi_id' => $deteksi->id]) }}" target="_blank" class="bg-gray-800 hover:bg-black text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors" title="Cetak PDF Tanggal {{ \Carbon\Carbon::parse($deteksi->tanggal_pemeriksaan)->locale('id')->translatedFormat('d F Y') }}">
                                                     <i class="fa-solid fa-print"></i> Cetak
                                                 </a>
                                             </div>

@@ -16,9 +16,14 @@
                 </h3>
             </div>
             
-            <a href="{{ route('petugas.deteksi_dini.create', ['peserta_id' => $peserta->id]) }}" class="btn btn-teal btn-lg rounded-pill px-4 shadow-sm fw-bold text-white hover-up" style="background-color: #0f766e; border: none;">
-                <i class="bi bi-heart-pulse-fill me-2"></i> Mulai Pemeriksaan Baru
-            </a>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ route('petugas.peserta.cetak_riwayat', $peserta->id) }}" target="_blank" class="btn btn-danger btn-lg rounded-pill px-4 shadow-sm fw-bold hover-up">
+                    <i class="bi bi-printer-fill me-2"></i> Cetak Kartu Riwayat Pasien
+                </a>
+                <a href="{{ route('petugas.deteksi_dini.create', ['peserta_id' => $peserta->id]) }}" class="btn btn-teal btn-lg rounded-pill px-4 shadow-sm fw-bold text-white hover-up" style="background-color: #0f766e; border: none;">
+                    <i class="bi bi-heart-pulse-fill me-2"></i> Mulai Pemeriksaan Baru
+                </a>
+            </div>
         </div>
 
         <div class="row g-4">
@@ -133,10 +138,13 @@
 
                                         {{-- Header Kunjungan --}}
                                         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3" style="overflow: visible !important;">
-                                            <div style="overflow: visible !important;">
+                                            <div class="d-flex align-items-center flex-wrap gap-2" style="overflow: visible !important;">
                                                 <div class="fw-bold text-dark" style="font-size: 1.2rem !important; line-height: 1.4 !important; overflow: visible !important;">
                                                     {{ \Carbon\Carbon::parse($kunjungan->tanggal_pemeriksaan)->format('d F Y') }}
                                                 </div>
+                                                <a href="{{ route('petugas.deteksi_dini.cetak', $kunjungan->id) }}" target="_blank" class="btn btn-outline-danger btn-sm rounded-pill px-2.5 py-0.5 fw-semibold d-inline-flex align-items-center gap-1 shadow-xs" style="font-size: 0.75rem;" title="Cetak Surat Hasil Skrining {{ \Carbon\Carbon::parse($kunjungan->tanggal_pemeriksaan)->format('d F Y') }}">
+                                                    <i class="bi bi-printer"></i> Cetak
+                                                </a>
                                             </div>
                                             
                                             {{-- Badges Diagnosa --}}

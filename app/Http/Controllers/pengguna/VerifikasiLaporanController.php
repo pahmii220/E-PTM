@@ -73,6 +73,13 @@ class VerifikasiLaporanController extends Controller
         if ($request->has('kecamatan')) {
             $kecFilter = $request->input('kecamatan');
             session(['verifikasi_filter_kecamatan' => $kecFilter]);
+            if (!empty($kecFilter) && empty($kotaFilter)) {
+                $pkmKec = $allPuskesmas->firstWhere('kecamatan', $kecFilter);
+                if ($pkmKec && $pkmKec->nama_kabupaten) {
+                    $kotaFilter = $pkmKec->nama_kabupaten;
+                    session(['verifikasi_filter_kota' => $kotaFilter]);
+                }
+            }
         } else {
             $kecFilter = session('verifikasi_filter_kecamatan', null);
         }
@@ -241,11 +248,15 @@ class VerifikasiLaporanController extends Controller
             }
         }
 
+        // Analisis Peringatan Dini Lonjakan Kasus PTM
+        $earlyWarningData = \App\Services\EarlyWarningService::getKecamatanAlerts((int)$bulanInput, (int)$tahunInput);
+
         return view('pengguna.verifikasi_laporan.index', compact(
             'kotaList', 'kecamatanList', 'puskesmasList', 'statsGlobal',
             'kotaFilter', 'kecFilter', 'statusFilter',
             'bulanInput', 'tahunInput', 'startDate', 'endDate',
-            'matriksLaporan', 'penyakitList', 'kelompokUsia'
+            'matriksLaporan', 'penyakitList', 'kelompokUsia',
+            'earlyWarningData'
         ));
     }
 
@@ -625,7 +636,7 @@ class VerifikasiLaporanController extends Controller
     {
         $puskesmas = Puskesmas::findOrFail($puskesmas_id);
         
-        $pesan = $request->input('pesan_pengingat', 'Halo Bapak/Ibu Petugas! Laporan bulanan PTM Anda sudah ditunggu nih oleh Dinas Kesehatan. Yuk segera diselesaikan agar data wilayah kita tetap akurat! 🚀');
+        $pesan = $request->input('pesan_pengingat', 'Kepada Yth. Petugas Puskesmas, laporan bulanan PTM wilayah Anda saat ini masih berstatus draf. Mohon untuk segera menekan tombol "Ajukan Laporan" agar data dapat diverifikasi oleh Dinas Kesehatan. Terima kasih.');
         
         $puskesmas->notif_pengingat = $pesan;
         

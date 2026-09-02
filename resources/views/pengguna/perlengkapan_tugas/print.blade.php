@@ -335,21 +335,23 @@
                                 $periode = \Carbon\Carbon::parse($perlengkapan->created_at)->translatedFormat('F Y');
                                 $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
 
-                                $namaPejabat = $kepalaAktif->nama_kepala ?? 'dr. H. DIAUDDIN, M.Kes';
-                                $nipPejabat = $kepalaAktif->nip ?? '1973062022006041016';
+                                $namaPejabat = $kepalaAktif->nama_kepala ?? 'Dr. H. Anhar Ihwan, SKM, MS';
+                                $nipPejabat = $kepalaAktif->nip ?? '197008081990031003';
                             @endphp
 
-                            {!! QrCode::size(85)->generate(route('verifikasi.laporan', [
+                            {!! QrCode::size(85)->generate(\App\Helpers\DocumentSigner::url([
                                 'judul' => 'Laporan Perlengkapan Tugas Luar PTM',
                                 'periode' => $periode,
                                 'tanggal_sah' => $tanggalSah,
                                 'nama_kepala' => $namaPejabat,
-                                'nip' => $nipPejabat
+                                'nip' => $nipPejabat,
+                                'jabatan' => $kepalaAktif->jabatan ?? 'Kepala Bidang P2PTM',
+                                'catatan' => $perlengkapan->catatan ?? (request('catatan_pengesahan') ?? 'Daftar perlengkapan tugas operasional luar gedung telah diverifikasi dan disetujui.')
                             ])) !!}
                         </div>
 
-                        <u><strong>{{ $kepalaAktif->nama_kepala ?? 'dr. H. DIAUDDIN, M.Kes' }}</strong></u><br>
-                        NIP. {{ $kepalaAktif->nip ?? '1973062022006041016' }}
+                        <u><strong>{{ $kepalaAktif->nama_kepala ?? 'Dr. H. Anhar Ihwan, SKM, MS' }}</strong></u><br>
+                        NIP. {{ $kepalaAktif->nip ?? '197008081990031003' }}
                     </td>
                 </tr>
             </table>

@@ -54,7 +54,15 @@ public function dashboard()
                         ->withCount(['peserta', 'deteksiDini'])
                         ->get();
 
-    return view('kepala_p2ptm.dashboard', compact('data', 'skNormal', 'skDicurigai', 'skRisiko', 'totalSkrining', 'mapPuskesmasData'));
+    // 5. Analisis Peringatan Dini Lonjakan Kasus PTM Tingkat Kecamatan & Peta Kepadatan PTM
+    $earlyWarningData = \App\Services\EarlyWarningService::getKecamatanAlerts();
+    \App\Services\EarlyWarningService::checkAndSendAutomatedNotifications();
+    $mapAnalytics = \App\Services\MapVisualizationService::getMapData(
+        request('trend_bulan', null),
+        request('trend_tahun', null)
+    );
+
+    return view('kepala_p2ptm.dashboard', compact('data', 'skNormal', 'skDicurigai', 'skRisiko', 'totalSkrining', 'mapPuskesmasData', 'earlyWarningData', 'mapAnalytics'));
 }
 
 public function printStatistik()
@@ -145,13 +153,41 @@ public function cetak($id)
     return view('cetak-dokumen', compact('dokumen'));
 }
 
-public function verifikasiLaporan(\Illuminate\Http\Request $request)
+    public function verifikasiShortUrl(string $token)
     {
-        // Mengambil data dari URL (jika tidak ada, gunakan nilai default)
-        $judul = $request->get('judul', 'Laporan P2PTM');
-        $periode = $request->get('periode', date('F Y'));
+        $payload = \App\Helpers\DocumentSigner::verify($token);
 
-        return view('verifikasi_publik', compact('judul', 'periode'));
+        if (!$payload) {
+            $isValid = false;
+            return view('verifikasi_publik', compact('isValid'));
+        }
+
+        $isValid    = true;
+        $judul      = $payload['judul'] ?? 'Laporan Resmi P2PTM';
+        $periode    = $payload['periode'] ?? '-';
+        $tanggalSah = $payload['tanggal_sah'] ?? '-';
+        $namaKepala = $payload['nama_kepala'] ?? 'Dr. H. Anhar Ihwan, SKM, MS';
+        $nip        = $payload['nip'] ?? '197008081990031003';
+        $jabatan    = $payload['jabatan'] ?? 'Kepala Bidang Pencegahan dan Pengendalian Penyakit Tidak Menular (P2PTM)';
+        $catatan    = $payload['catatan'] ?? null;
+
+        return view('verifikasi_publik', compact('isValid', 'judul', 'periode', 'tanggalSah', 'namaKepala', 'nip', 'jabatan', 'catatan'));
+    }
+
+    public function verifikasiLaporan(\Illuminate\Http\Request $request)
+    {
+        // Validasi tanda tangan digital (HMAC-SHA256)
+        $isValid = $request->hasValidSignature();
+
+        // Mengambil data dari URL
+        $judul = $request->get('judul', 'Laporan Resmi P2PTM');
+        $periode = $request->get('periode', '-');
+        $tanggalSah = $request->get('tanggal_sah', '-');
+        $namaKepala = $request->get('nama_kepala', 'Dr. H. Anhar Ihwan, SKM, MS');
+        $nip = $request->get('nip', '197008081990031003');
+        $jabatan = $request->get('jabatan', 'Kepala Bidang Pencegahan dan Pengendalian Penyakit Tidak Menular (P2PTM)');
+
+        return view('verifikasi_publik', compact('isValid', 'judul', 'periode', 'tanggalSah', 'namaKepala', 'nip', 'jabatan'));
     }
 
     public function tinjauLaporanMonitoring(Request $request)

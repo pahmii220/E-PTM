@@ -38,7 +38,8 @@
         @endif
     </div>
 
-
+    {{-- ===== WIDGET PERINGATAN DINI EPIDEMIOLOGI ===== --}}
+    @include('partials.early_warning_card')
 
     {{-- ===== PANEL FILTER LENGKAP ===== --}}
     <div class="card border-0 shadow-sm mb-4 rounded-4">
@@ -244,9 +245,16 @@
                                             <div class="d-flex align-items-center gap-2 flex-wrap">
                                                 <div style="width:8px; height:8px; background:var(--bs-{{ $cfg['color'] }}); border-radius:50%; flex-shrink:0;"></div>
                                                 <span class="fw-bold text-dark fs-6">{{ $pkm->nama_puskesmas }}</span>
-                                                @if(($pkm->jml_risiko_tinggi ?? 0) >= 3)
+                                                @php
+                                                    $alertKec = collect($earlyWarningData['alerts'] ?? [])->firstWhere('kecamatan', $pkm->kecamatan);
+                                                @endphp
+                                                @if($alertKec)
+                                                    <span class="badge bg-rose-100 text-rose-700 border border-rose-200 rounded-pill px-2.5 py-0.5" style="font-size: 0.68rem; font-weight:700;" title="Peringatan Dini: Lonjakan tren kasus di Kec. {{ $pkm->kecamatan }} (+{{ $alertKec['persentase'] }}%)">
+                                                        <i class="bi bi-shield-fill-exclamation text-danger me-1"></i>Wilayah Lonjakan (+{{ $alertKec['persentase'] }}%)
+                                                    </span>
+                                                @elseif(($pkm->jml_risiko_tinggi ?? 0) >= 3)
                                                     <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-2.5 py-1" style="font-size: 0.68rem; font-weight:600;" title="Memiliki {{ $pkm->jml_risiko_tinggi }} Kasus Risiko Tinggi">
-                                                        <i class="bi bi-fire text-danger me-1"></i>Lonjakan PTM
+                                                        <i class="bi bi-fire text-danger me-1"></i>Kasus Risiko Tinggi
                                                     </span>
                                                 @endif
                                                 @if(($pkm->jml_laporan_monitoring ?? 0) > 0)
@@ -290,7 +298,7 @@
                                             </span>
                                         </td>
                                         <td class="text-center pe-4">
-                                            @if(in_array($pkm->status_laporan, ['pending', 'approved', 'draft']))
+                                            @if(in_array($pkm->status_laporan, ['pending', 'approved']))
                                             <div class="d-flex justify-content-center gap-1">
                                                 <a href="{{ route('pengguna.verifikasi_laporan.show', [
                                                     'puskesmas' => $pkm->id,
@@ -304,6 +312,30 @@
                                                 <a href="{{ route('pengguna.laporan_monitoring.index', ['puskesmas_id' => $pkm->id]) }}"
                                                    class="btn btn-sm btn-teal rounded-pill px-3 fw-semibold shadow-sm"
                                                    title="Buat Laporan Hasil Monitoring untuk {{ Str::startsWith($pkm->nama_puskesmas ?? '', 'Puskesmas') ? $pkm->nama_puskesmas : 'Puskesmas ' . $pkm->nama_puskesmas }}">
+                                                    <i class="bi bi-file-earmark-text me-1"></i> Laporan Monitoring
+                                                </a>
+                                            </div>
+                                            @elseif($pkm->status_laporan === 'draft')
+                                            <div class="d-flex justify-content-center gap-1 flex-wrap">
+                                                <a href="{{ route('pengguna.verifikasi_laporan.show', [
+                                                    'puskesmas' => $pkm->id,
+                                                    'bulan'     => $bulanInput,
+                                                    'kota'      => $kotaFilter,
+                                                    'kecamatan' => $kecFilter,
+                                                ]) }}"
+                                                   class="btn btn-sm btn-outline-primary rounded-pill px-2.5" title="Pratinjau Data Draf">
+                                                    <i class="bi bi-eye me-1"></i> Tinjau
+                                                </a>
+                                                <form action="{{ route('pengguna.verifikasi_laporan.pengingat', $pkm->id) }}" method="POST" class="d-inline"
+                                                      onsubmit="return confirm('Kirim notifikasi pengingat ke {{ Str::startsWith($pkm->nama_puskesmas ?? '', 'Puskesmas') ? $pkm->nama_puskesmas : 'Puskesmas ' . $pkm->nama_puskesmas }} agar segera mengajukan laporan?');">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-warning rounded-pill px-2.5 fw-semibold text-dark shadow-sm" title="Ingatkan Petugas untuk Mengirim Laporan">
+                                                        <i class="bi bi-bell-fill me-1"></i> Kirim Pengingat
+                                                    </button>
+                                                </form>
+                                                <a href="{{ route('pengguna.laporan_monitoring.index', ['puskesmas_id' => $pkm->id]) }}"
+                                                   class="btn btn-sm btn-teal rounded-pill px-2.5 fw-semibold shadow-sm"
+                                                   title="Buat Laporan Hasil Monitoring">
                                                     <i class="bi bi-file-earmark-text me-1"></i> Laporan Monitoring
                                                 </a>
                                             </div>

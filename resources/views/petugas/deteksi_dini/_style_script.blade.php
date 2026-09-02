@@ -146,9 +146,11 @@
     overflow: hidden;
 }
 .ptm-imt-val {
-    flex: 1;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 0;
     border: none;
-    padding: 11px 14px;
+    padding: 11px 12px;
     font-size: 0.95rem;
     font-weight: 600;
     color: #1e293b;
@@ -156,14 +158,17 @@
     outline: none;
 }
 .ptm-imt-label {
-    padding: 11px 16px;
-    font-size: 0.85rem;
+    padding: 11px 14px;
+    font-size: 0.82rem;
     font-weight: 600;
     color: #64748b;
     background: #f1f5f9;
     border-left: 1.5px solid #e2e8f0;
     white-space: nowrap;
-    display: flex; align-items: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
 /* ---- Info Box (Pasien) ---- */

@@ -235,28 +235,29 @@
     $periode = \Carbon\Carbon::create()->month($bulanAngka)->format('F') . ' ' . $tahun;
     $tanggalSah = now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
 
-    $namaPejabat = $kepalaAktif->nama_kepala ?? 'Deny Haryuniansyah';
-    $nipPejabat = $kepalaAktif->nip ?? '1973062022006041016';
+    $namaPejabat = $kepalaAktif->nama_kepala ?? 'Dr. H. Anhar Ihwan, SKM, MS';
+    $nipPejabat = $kepalaAktif->nip ?? '197008081990031003';
                                         @endphp
 
-                                        {{-- KODE YANG SUDAH DIPERSINGKAT --}}
-                                        {!! QrCode::size(85)->generate(route('verifikasi.laporan', [
-        'judul' => 'Laporan Tindak Lanjut PTM',
-        'periode' => $periode,
-        'tanggal_sah' => $tanggalSah,
-        'nama_kepala' => $namaPejabat,
-        'nip' => $nipPejabat
-    ])) !!}
+                                        {!! QrCode::size(85)->generate(\App\Helpers\DocumentSigner::url([
+                                            'judul' => 'Laporan Tindak Lanjut PTM',
+                                            'periode' => $periode,
+                                            'tanggal_sah' => $tanggalSah,
+                                            'nama_kepala' => $namaPejabat,
+                                            'nip' => $nipPejabat,
+                                            'jabatan' => $kepalaAktif->jabatan ?? 'Kepala Bidang P2PTM',
+                                            'catatan' => request('catatan_pengesahan') ?? 'Rekapitulasi intervensi dan tindak lanjut penanganan kasus PTM telah diverifikasi dan disahkan.'
+                                        ])) !!}
                     @else
                         <div style="height: 85px;"></div>
                     @endif
                 </div>
 
                 <div class="name">
-                    {{ $kepalaAktif->nama_kepala ?? config('app.kepala_nama', 'dr. H. DIAUDDIN, M.Kes') }}
+                    {{ $kepalaAktif->nama_kepala ?? 'Dr. H. Anhar Ihwan, SKM, MS' }}
                 </div>
                 <div>
-                    NIP. {{ $kepalaAktif->nip ?? config('app.kepala_nip', '197709232006041015') }}
+                    NIP. {{ $kepalaAktif->nip ?? '197008081990031003' }}
                 </div>
             </div>
         </div>

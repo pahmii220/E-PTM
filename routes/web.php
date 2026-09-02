@@ -85,6 +85,7 @@ Route::get('/struktur', [HomeController::class, 'struktur'])->name('frontend.str
 // 4. CEK HASIL SKRINING PTM PASIEN (PUBLIC)
 Route::post('/cek-riwayat-ptm', [HomeController::class, 'cekRiwayatPTM'])->name('frontend.cek_riwayat');
 Route::get('/cek-riwayat-ptm/{id}/cetak', [HomeController::class, 'cetakSkriningPublic'])->name('frontend.cetak_skrining');
+Route::get('/cek-riwayat-ptm/{id}/cetak-semua', [HomeController::class, 'cetakRiwayatPublic'])->name('frontend.cetak_riwayat');
 
 // DASHBOARD PASIEN
 Route::get('/portal-pasien', [HomeController::class, 'dashboardPasien'])->name('frontend.pasien.dashboard');
@@ -305,8 +306,10 @@ Route::prefix('petugas')
     })->name('faq');
     Route::post('/faq/contact', [\App\Http\Controllers\Petugas\DashboardController::class, 'sendContactEmail'])->name('faq.contact');
 
+    Route::get('peserta/{id}/cetak-riwayat', [PesertaController::class, 'cetakRiwayat'])->name('peserta.cetak_riwayat');
     Route::resource('peserta', PesertaController::class);
     Route::get('deteksi_dini_riwayat', [DeteksiDiniPTMController::class, 'riwayat'])->name('deteksi_dini.riwayat');
+    Route::get('deteksi_dini/{id}/cetak', [DeteksiDiniPTMController::class, 'cetak'])->name('deteksi_dini.cetak');
     Route::resource('deteksi_dini', DeteksiDiniPTMController::class);
     Route::resource('faktor_resiko', FaktorResikoPTMController::class);
     Route::resource('kegiatan', KegiatanPTMController::class);
@@ -364,7 +367,7 @@ Route::prefix('petugas')
 */
 Route::prefix('pegawai')
     ->name('pengguna.')
-    ->middleware(['auth','active'])
+    ->middleware(['auth','active','role:pegawai,admin'])
     ->group(function () {
 
     Route::get('/dashboard', [PenggunaDashboardController::class,'index'])
@@ -586,5 +589,7 @@ Route::get('/cek-token/{token}', function($token) {
     return "BERHASIL! Route jalan. Token Anda adalah: " . $token;
 });
 
-// ROUTE LAINNYA
+// ROUTE VERIFIKASI TANDA TANGAN DIGITAL
+Route::get('/qrcode/{token}', [App\Http\Controllers\KepalaP2ptmController::class, 'verifikasiShortUrl'])->name('verifikasi.qrcode');
+Route::get('/v/{token}', [App\Http\Controllers\KepalaP2ptmController::class, 'verifikasiShortUrl'])->name('verifikasi.short');
 Route::get('/verifikasi-laporan', [App\Http\Controllers\KepalaP2ptmController::class, 'verifikasiLaporan'])->name('verifikasi.laporan');

@@ -22,13 +22,24 @@
                 @endif
             </p>
         </div>
-        @if(Auth::user()->role_name !== 'admin')
-        <div class="text-end">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            {{-- Filter Periode Bulan --}}
+            <form method="GET" action="{{ route('pengguna.laporan_monitoring.index') }}" class="d-flex align-items-center gap-1 bg-white p-1.5 rounded-xl border border-gray-200 shadow-sm">
+                <span class="text-xs fw-semibold text-gray-500 ms-2 me-1"><i class="bi bi-funnel-fill text-teal me-1"></i>Periode:</span>
+                <select name="bulan" class="form-select form-select-sm border-0 bg-transparent fw-bold text-xs text-blue-900" style="min-width: 130px; cursor: pointer;" onchange="this.form.submit()">
+                    @foreach($listBulanIndo as $valBulan => $labelBulan)
+                        <option value="{{ $valBulan }}" {{ $bulanInput == $valBulan ? 'selected' : '' }}>
+                            {{ $labelBulan }} {{ $tahunInput }}
+                        </option>
+                    @endforeach
+                </select>
+            </form>
+            @if(Auth::user()->role_name !== 'admin')
             <button class="btn btn-teal rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalBuatLaporan">
                 <i class="bi bi-plus-lg me-1"></i> Buat Laporan Baru
             </button>
+            @endif
         </div>
-        @endif
     </div>
 
 
@@ -238,11 +249,11 @@
                         <div id="infoPuskesmas" class="mt-2 p-3 rounded-3 shadow-sm border" style="display: none; background-color: #f0fdf4; border-color: #bbf7d0 !important; border-left: 4px solid #22c55e !important; font-size: 0.85rem;">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <span class="d-block text-muted small fw-bold mb-1">Total Pasien Terdaftar</span>
+                                    <span class="d-block text-muted small fw-bold mb-1">Total Pasien Terdaftar ({{ $bulanInput !== 'semua' ? ($listBulanIndo[$bulanInput] ?? '') . ' ' . $tahunInput : 'Semua Bulan' }})</span>
                                     <span class="fs-6 fw-bold text-success"><i class="bi bi-people-fill me-1"></i> <span id="txtJumlahPasien">0</span> Pasien</span>
                                 </div>
                                 <div class="text-end">
-                                    <span class="d-block text-muted small fw-bold mb-1">Penyakit Paling Dominan</span>
+                                    <span class="d-block text-muted small fw-bold mb-1">Penyakit Paling Dominan ({{ $bulanInput !== 'semua' ? ($listBulanIndo[$bulanInput] ?? '') . ' ' . $tahunInput : 'Semua Bulan' }})</span>
                                     <span class="fs-6 fw-bold text-danger"><i class="bi bi-heart-pulse-fill me-1"></i> <span id="txtPenyakitDominan">-</span></span>
                                 </div>
                             </div>

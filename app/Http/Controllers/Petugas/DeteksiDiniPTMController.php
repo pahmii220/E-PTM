@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\DataPtmBaruNotification;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class DeteksiDiniPTMController extends Controller
 {
@@ -490,6 +491,45 @@ private function notifyPetugas($data, $notification)
         return redirect()
             ->route('petugas.deteksi_dini.index')
             ->with('success', 'Data berhasil dihapus.');
+    }
+
+    /**
+     * Cetak Lembar Hasil Skrining Deteksi Dini PTM Pasien (Surat / PDF)
+     */
+    public function cetak($id)
+    {
+        $user = Auth::user();
+        $query = DeteksiDiniPTM::with(['peserta.puskesmas', 'tindakLanjut', 'petugas']);
+
+        if ($user->role_name !== 'admin' && $user->role_name !== 'pegawai') {
+            if (!$user->petugas) {
+                abort(403, 'Akun petugas belum terhubung dengan data puskesmas.');
+            }
+            $query->where('puskesmas_id', $user->petugas->puskesmas_id);
+        }
+
+        $deteksi = $query->findOrFail($id);
+
+        $tindakLanjut = $deteksi->tindakLanjut;
+        if (!$tindakLanjut) {
+            $tindakLanjut = new \App\Models\TindakLanjutPTM([
+                'peserta_id' => $deteksi->peserta_id,
+                'deteksi_dini_id' => $deteksi->id,
+                'jenis_tindak_lanjut' => 'monitoring',
+                'status_tindak_lanjut' => 'belum',
+                'catatan_petugas' => 'Pasien dalam kondisi sehat / belum ada tindakan lanjutan khusus. Dianjurkan tetap menerapkan pola hidup sehat CERDIK.',
+                'tanggal_tindak_lanjut' => $deteksi->tanggal_pemeriksaan,
+            ]);
+            $tindakLanjut->setRelation('peserta', $deteksi->peserta);
+            $tindakLanjut->setRelation('deteksiDini', $deteksi);
+        }
+
+        $pdf = Pdf::loadView('petugas.tindak_lanjut.cetak', compact('tindakLanjut'));
+        $pdf->setPaper('a4', 'portrait');
+
+        $nama = \Illuminate\Support\Str::slug($deteksi->peserta->nama_lengkap ?? 'pasien');
+        $tgl = \Carbon\Carbon::parse($deteksi->tanggal_pemeriksaan)->format('d-m-Y');
+        return $pdf->stream('hasil-skrining-' . $nama . '-' . $tgl . '.pdf');
     }
 
 }

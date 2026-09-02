@@ -288,7 +288,7 @@
                     <tr>
                         <td class="center">{{ $index + 1 }}</td>
                         <td class="left"><strong>{{ $row->diagnosa_penyakit }}</strong></td>
-                        <td class="center">{{ number_format($row->jumlah, 0, ',', '.') }} orang</td>
+                        <td class="center">{{ number_format($row->jumlah, 0, ',', '.') }} kasus</td>
                         <td class="center">
                             <strong>{{ $totalPenyakit > 0 ? round(($row->jumlah / $totalPenyakit) * 100, 1) : 0 }}%</strong>
                         </td>
@@ -300,8 +300,8 @@
                 @endforelse
                 @if(count($dataPenyakit) > 0)
                     <tr style="background-color: #f1f1f1; font-weight: bold;">
-                        <td colspan="2" class="center">TOTAL KASUS PENYAKIT</td>
-                        <td class="center">{{ number_format($totalPenyakit, 0, ',', '.') }} orang</td>
+                        <td colspan="2" class="center">TOTAL TEMUAN KASUS</td>
+                        <td class="center">{{ number_format($totalPenyakit, 0, ',', '.') }} kasus</td>
                         <td class="center">100%</td>
                     </tr>
                 @endif
@@ -318,13 +318,12 @@
         @if($totalSkrining > 0)
         <div style="margin-top: 10px; padding: 10px 14px; background: #f0fdf4; border-left: 4px solid #16a34a; font-size: 12px; line-height: 1.6; text-align: justify;">
             <strong>Keterangan:</strong>
-            Dari total <strong>{{ number_format($totalSkrining, 0, ',', '.') }} pasien</strong> yang mengikuti skrining,
+            Dari total <strong>{{ number_format($totalSkrining, 0, ',', '.') }} peserta</strong> yang mengikuti skrining,
             sebanyak <strong>{{ number_format($jumlahTerindikasi, 0, ',', '.') }} orang ({{ $pctTerindikasi }}%)</strong>
-            terindikasi memiliki diagnosa penyakit tidak menular (PTM) dan masuk dalam kategori berisiko,
+            terindikasi memiliki risiko/diagnosa Penyakit Tidak Menular (PTM),
             sedangkan <strong>{{ number_format($jumlahNormalCetak, 0, ',', '.') }} orang ({{ $pctNormalCetak }}%)</strong>
-            dinyatakan <strong>Normal</strong> (tidak terindikasi PTM).
-            Persentase pada kolom "Pemetaan Jenis Penyakit" dihitung dari total kasus berisiko,
-            bukan dari total seluruh peserta skrining.
+            dinyatakan <strong>Normal / Sehat</strong>.
+            Persentase pada tabel <em>"Pemetaan Jenis Penyakit"</em> dihitung dari total temuan kasus pada pasien berisiko (<strong>{{ number_format($totalPenyakit, 0, ',', '.') }} kasus</strong>).
         </div>
         @endif
 
@@ -342,7 +341,15 @@
                             $nipPejabat = $kepalaAktif->nip ?? '197008081990031003';
                             $tanggalSah = \Carbon\Carbon::now()->setTimezone('Asia/Makassar')->format('d-m-Y H:i');
                         @endphp
-                        {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(85)->generate(url('/verifikasi-laporan?judul=Laporan%20Skrining%20%26%20Jenis%20Penyakit&periode=' . urlencode($textPeriode ?? '') . '&tanggal_sah=' . urlencode($tanggalSah) . '&nama_kepala=' . urlencode($namaPejabat) . '&nip=' . urlencode($nipPejabat))) !!}
+                        {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(85)->generate(\App\Helpers\DocumentSigner::url([
+                            'judul' => 'Laporan Skrining & Jenis Penyakit',
+                            'periode' => $textPeriode ?? '-',
+                            'tanggal_sah' => $tanggalSah,
+                            'nama_kepala' => $namaPejabat,
+                            'nip' => $nipPejabat,
+                            'jabatan' => $kepalaAktif->jabatan ?? 'Kepala Bidang P2PTM',
+                            'catatan' => request('catatan_pengesahan') ?? 'Rekapitulasi temuan skrining dan sebaran jenis penyakit PTM telah diverifikasi sah.'
+                        ])) !!}
                     @else
                         <div style="height:85px; width:85px; border:1px solid #ccc; display:inline-block;"></div>
                     @endif

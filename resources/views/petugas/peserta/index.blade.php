@@ -131,6 +131,11 @@
                                 <td>{{ $p->puskesmas->nama_puskesmas ?? '-' }}</td>
 
                                 <td>
+                                    {{-- 🖨️ CETAK RIWAYAT PASIEN --}}
+                                    <a href="{{ route('petugas.peserta.cetak_riwayat', $p->id) }}" target="_blank" class="btn btn-sm btn-danger me-1" title="Cetak Kartu Riwayat Pasien">
+                                        <i class="bi bi-printer"></i>
+                                    </a>
+
                                     {{-- ✏️ EDIT --}}
                                     <a href="{{ route('petugas.peserta.edit', $p->id) }}" class="btn btn-sm btn-warning me-1" title="Edit Biodata">
                                         <i class="bi bi-pencil-square"></i>
